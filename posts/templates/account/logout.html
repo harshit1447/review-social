@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Log out</title>
+</head>
+<body>
+    <h1>Log out</h1>
+
+    <p>Are you sure you want to log out?</p>
+
+    <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+    </form>
+
+    <p><a href="{% url 'feed' %}">Back to feed</a></p>
+</body>
+</html>

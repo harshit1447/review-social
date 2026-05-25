@@ -1,3 +1,4 @@
+{% load socialaccount %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,13 +8,15 @@
 <body>
     <h1>Create an account</h1>
 
+    <p><a href="{% provider_login_url 'google' %}">Sign up with Google</a></p>
+
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Sign up</button>
     </form>
 
-    <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    <p>Already have an account? <a href="{% url 'account_login' %}">Log in</a></p>
     <p><a href="{% url 'feed' %}">Back to feed</a></p>
 </body>
 </html>

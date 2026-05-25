@@ -1,8 +1,12 @@
 Django==5.2.14
 asgiref==3.11.1
+cryptography==46.0.3
 dj-database-url==3.0.1
+django-allauth==65.17.0
 gunicorn==23.0.0
 psycopg[binary]==3.3.2
+PyJWT==2.10.1
+requests==2.32.5
 sqlparse==0.5.5
 tzdata==2026.2
 whitenoise==6.11.0

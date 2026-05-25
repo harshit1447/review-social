@@ -37,6 +37,21 @@
             margin-right: 16px;
         }
 
+        nav form {
+            display: inline;
+        }
+
+        nav button {
+            background: transparent;
+            border: 0;
+            color: white;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            margin-left: 16px;
+            padding: 0;
+        }
+
         .panel,
         .review {
             background: white;
@@ -72,8 +87,12 @@
                 <a href="{% url 'recommend' %}">Recommend</a>
                 <a href="{% url 'friends' %}">Friends</a>
                 <span>{{ user.username }}</span>
+                <form method="post" action="{% url 'account_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Log out</button>
+                </form>
             {% else %}
-                <a href="{% url 'login' %}">Log in</a>
+                <a href="{% url 'account_login' %}">Log in</a>
                 <a href="{% url 'signup' %}">Sign up</a>
             {% endif %}
         </nav>

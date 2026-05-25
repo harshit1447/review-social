@@ -54,8 +54,25 @@ For real saved user accounts/reviews, create a Render PostgreSQL database and se
 DATABASE_URL=<your Render database internal connection string>
 ```
 
+## 4. Enable Google sign in
+
+In Google Cloud Console, create an OAuth Client ID for a web application.
+
+Add this authorized redirect URI:
+
+```text
+https://<your-service-name>.onrender.com/accounts/google/login/callback/
+```
+
+Then add these Render environment variables:
+
+```text
+GOOGLE_CLIENT_ID=<your Google OAuth client ID>
+GOOGLE_CLIENT_SECRET=<your Google OAuth client secret>
+```
+
 Render can also read `render.yaml`, but you still need to fill in the host and CSRF values after you know your Render URL.
 
-## 4. After deploy
+## 5. After deploy
 
 Open the Render URL, create an account, then add friends/reviews from the app.
