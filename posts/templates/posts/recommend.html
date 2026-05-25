@@ -1,18 +1,19 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Recommend something</title>
-</head>
-<body>
-    <h1>Recommend something</h1>
+{% extends "base.html" %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Send recommendation</button>
-    </form>
+{% block title %}Recommend | Review Social{% endblock %}
+{% block eyebrow %}Pass it on{% endblock %}
+{% block page_title %}Recommend something{% endblock %}
+{% block page_subtitle %}Send a specific pick to a friend, with a note about why it belongs on their list.{% endblock %}
 
-    <p><a href="{% url 'feed' %}">Back to feed</a></p>
-</body>
-</html>
+{% block content %}
+    <section class="card form-card">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit">Send recommendation</button>
+                <a class="button secondary" href="{% url 'feed' %}">Cancel</a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

@@ -1,22 +1,26 @@
+{% extends "base.html" %}
 {% load socialaccount %}
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Sign up</title>
-</head>
-<body>
-    <h1>Create an account</h1>
 
-    <p><a href="{% provider_login_url 'google' %}">Sign up with Google</a></p>
+{% block title %}Sign up | Review Social{% endblock %}
+{% block eyebrow %}Join the feed{% endblock %}
+{% block page_title %}Create an account{% endblock %}
+{% block page_subtitle %}Start a profile, follow friends, and keep your recommendations in one place.{% endblock %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sign up</button>
-    </form>
+{% block content %}
+    <section class="card form-card auth-panel">
+        {% if google_auth_enabled %}
+            <a class="button google-button" href="{% provider_login_url 'google' %}">Sign up with Google</a>
+            <div class="divider">or</div>
+        {% endif %}
 
-    <p>Already have an account? <a href="{% url 'account_login' %}">Log in</a></p>
-    <p><a href="{% url 'feed' %}">Back to feed</a></p>
-</body>
-</html>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit">Create account</button>
+            </div>
+        </form>
+
+        <p class="meta">Already have an account? <a href="{% url 'account_login' %}">Log in</a></p>
+    </section>
+{% endblock %}

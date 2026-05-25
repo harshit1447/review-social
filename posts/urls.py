@@ -9,4 +9,5 @@ urlpatterns = [
     path("friends/remove/<int:user_id>/", views.remove_friend, name="remove_friend"),
     path("reviews/new/", views.new_review, name="new_review"),
     path("recommend/", views.recommend, name="recommend"),
+    path("profile/", views.profile, name="profile"),
 ]

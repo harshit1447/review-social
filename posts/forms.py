@@ -23,5 +23,14 @@ class RecommendationForm(forms.ModelForm):
         model = Recommendation
         fields = ["to_user", "item", "message"]
         widgets = {
-            "message": forms.Textarea(attrs={"rows": 3}),
+            "message": forms.Textarea(
+                attrs={
+                    "maxlength": 140,
+                    "rows": 3,
+                    "placeholder": "Add a short note, up to 140 characters.",
+                }
+            ),
+        }
+        help_texts = {
+            "message": "Keep it short: 140 characters max.",
         }

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | Review Social{% endblock %}
+{% block eyebrow %}Dashboard{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block page_subtitle %}A compact dashboard for your reviews, friend graph, and recommendations.{% endblock %}
+
+{% block content %}
+    <section class="app-tabs" aria-label="App sections">
+        <a class="tab-link" href="{% url 'feed' %}">Feed</a>
+        <a class="tab-link" href="{% url 'friends' %}">Friends</a>
+        <a class="tab-link active" href="{% url 'profile' %}">Profile</a>
+    </section>
+
+    <section class="profile-grid">
+        <div class="stat-card card">
+            <span class="stat-value">{{ review_count }}</span>
+            <span class="stat-label">Reviews posted</span>
+        </div>
+        <div class="stat-card card">
+            <span class="stat-value">{{ friend_count }}</span>
+            <span class="stat-label">Friends</span>
+        </div>
+        <div class="stat-card card">
+            <span class="stat-value">{{ recommendation_count }}</span>
+            <span class="stat-label">Recommendations received</span>
+        </div>
+    </section>
+
+    <div class="layout-grid">
+        <section class="card">
+            <h2 class="card-title">Recent reviews</h2>
+            {% for review in recent_reviews %}
+                <div class="recommendation">
+                    <p><strong>{{ review.item.title }}</strong> <span class="rating">{{ review.rating }}/5</span></p>
+                    <p class="meta">{{ review.review_text|truncatechars:140 }}</p>
+                </div>
+            {% empty %}
+                <p class="empty-state">You have not posted reviews yet.</p>
+            {% endfor %}
+        </section>
+
+        <aside class="card">
+            <h2 class="card-title">Your taste mix</h2>
+            {% for row in top_types %}
+                <div class="person-row">
+                    <strong>{{ row.item__item_type|title }}</strong>
+                    <span class="meta">{{ row.total }} review{{ row.total|pluralize }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">Post reviews to build your profile.</p>
+            {% endfor %}
+        </aside>
+    </div>
+{% endblock %}

@@ -1,19 +1,19 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Log out</title>
-</head>
-<body>
-    <h1>Log out</h1>
+{% extends "base.html" %}
 
-    <p>Are you sure you want to log out?</p>
+{% block title %}Log out | Review Social{% endblock %}
+{% block eyebrow %}Session{% endblock %}
+{% block page_title %}Log out{% endblock %}
+{% block page_subtitle %}Leave your session securely and come back whenever you are ready.{% endblock %}
 
-    <form method="post" action="{% url 'account_logout' %}">
-        {% csrf_token %}
-        <button type="submit">Log out</button>
-    </form>
-
-    <p><a href="{% url 'feed' %}">Back to feed</a></p>
-</body>
-</html>
+{% block content %}
+    <section class="card form-card auth-panel">
+        <h2 class="card-title">Are you sure you want to log out?</h2>
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button class="danger" type="submit">Log out</button>
+                <a class="button secondary" href="{% url 'feed' %}">Stay signed in</a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

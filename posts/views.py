@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import RecommendationForm, ReviewForm, SignUpForm
@@ -9,6 +10,7 @@ from .models import Friendship, Item, Recommendation, Review
 
 def feed(request):
     friends_only = request.GET.get("filter") == "friends"
+    query = request.GET.get("q", "").strip()
     friend_ids = []
 
     if request.user.is_authenticated:
@@ -21,21 +23,23 @@ def feed(request):
     if friends_only and request.user.is_authenticated:
         reviews = reviews.filter(user_id__in=friend_ids)
 
-    reviews = reviews.order_by("-created_at")
-    recommendations = Recommendation.objects.none()
+    if query:
+        reviews = reviews.filter(
+            Q(item__title__icontains=query)
+            | Q(item__item_type__icontains=query)
+            | Q(review_text__icontains=query)
+            | Q(user__username__icontains=query)
+        )
 
-    if request.user.is_authenticated:
-        recommendations = Recommendation.objects.filter(
-            to_user=request.user
-        ).select_related("from_user", "item").order_by("-created_at")[:5]
+    reviews = reviews.order_by("-created_at")
 
     return render(
         request,
         "posts/feed.html",
         {
             "reviews": reviews,
-            "recommendations": recommendations,
             "friends_only": friends_only,
+            "query": query,
         },
     )
 
@@ -77,6 +81,7 @@ def new_review(request):
 
 @login_required
 def friends(request):
+    query = request.GET.get("q", "").strip()
     friend_ids = Friendship.objects.filter(
         from_user=request.user
     ).values_list("to_user_id", flat=True)
@@ -86,6 +91,19 @@ def friends(request):
     ).exclude(
         id__in=friend_ids
     ).order_by("username")
+    recommendations = Recommendation.objects.filter(
+        to_user=request.user,
+        from_user_id__in=friend_ids,
+    ).select_related("from_user", "item").order_by("-created_at")
+
+    if query:
+        friends_list = friends_list.filter(username__icontains=query)
+        suggested_users = suggested_users.filter(username__icontains=query)
+        recommendations = recommendations.filter(
+            Q(from_user__username__icontains=query)
+            | Q(item__title__icontains=query)
+            | Q(message__icontains=query)
+        )
 
     return render(
         request,
@@ -93,6 +111,8 @@ def friends(request):
         {
             "friends": friends_list,
             "suggested_users": suggested_users,
+            "recommendations": recommendations,
+            "query": query,
         },
     )
 
@@ -135,3 +155,30 @@ def recommend(request):
         ).order_by("username")
 
     return render(request, "posts/recommend.html", {"form": form})
+
+
+@login_required
+def profile(request):
+    friend_count = Friendship.objects.filter(from_user=request.user).count()
+    review_count = Review.objects.filter(user=request.user).count()
+    recommendation_count = Recommendation.objects.filter(to_user=request.user).count()
+    recent_reviews = Review.objects.filter(
+        user=request.user
+    ).select_related("item").order_by("-created_at")[:5]
+    top_types = Review.objects.filter(user=request.user).values(
+        "item__item_type"
+    ).annotate(
+        total=Count("id")
+    ).order_by("-total")
+
+    return render(
+        request,
+        "posts/profile.html",
+        {
+            "friend_count": friend_count,
+            "review_count": review_count,
+            "recommendation_count": recommendation_count,
+            "recent_reviews": recent_reviews,
+            "top_types": top_types,
+        },
+    )

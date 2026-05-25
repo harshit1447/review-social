@@ -54,3 +54,28 @@ class SocialReviewTests(TestCase):
                 item=self.item,
             ).exists()
         )
+
+    def test_feed_search_filters_reviews(self):
+        Review.objects.create(
+            user=self.sam,
+            item=self.item,
+            rating=5,
+            review_text="A thoughtful alien story.",
+        )
+        book = Item.objects.create(title="Dune", item_type="book")
+        Review.objects.create(
+            user=self.casey,
+            item=book,
+            rating=4,
+            review_text="Huge and sandy.",
+        )
+
+        response = self.client.get(reverse("feed"), {"q": "alien"})
+
+        self.assertContains(response, "Arrival")
+        self.assertNotContains(response, "Dune")
+
+    def test_profile_requires_login(self):
+        response = self.client.get(reverse("profile"))
+
+        self.assertEqual(response.status_code, 302)
