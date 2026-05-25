@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Review Social</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f5f5f2;
+            color: #1f2933;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: #1f2933;
+            color: white;
+            padding: 24px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) 320px;
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        a {
+            color: #0f766e;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        nav a {
+            color: white;
+            margin-right: 16px;
+        }
+
+        .panel,
+        .review {
+            background: white;
+            border: 1px solid #d9ded8;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .meta {
+            color: #5f6b76;
+            font-size: 0.94rem;
+        }
+
+        .filters {
+            margin: 0 0 16px;
+        }
+
+        @media (max-width: 800px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Review Social</h1>
+        <nav>
+            <a href="{% url 'feed' %}">Feed</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'new_review' %}">Post review</a>
+                <a href="{% url 'recommend' %}">Recommend</a>
+                <a href="{% url 'friends' %}">Friends</a>
+                <span>{{ user.username }}</span>
+            {% else %}
+                <a href="{% url 'login' %}">Log in</a>
+                <a href="{% url 'signup' %}">Sign up</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <div class="filters">
+                <a href="{% url 'feed' %}">Everyone</a>
+                {% if user.is_authenticated %}
+                    |
+                    <a href="{% url 'feed' %}?filter=friends">Friends</a>
+                {% endif %}
+            </div>
+
+            {% for review in reviews %}
+                <article class="review">
+                    <h2>{{ review.item.title }}</h2>
+                    <p class="meta">
+                        {{ review.user.username }} rated it {{ review.rating }}/5
+                        on {{ review.created_at|date:"M j, Y" }}
+                    </p>
+                    <p>{{ review.review_text }}</p>
+                </article>
+            {% empty %}
+                <div class="panel">
+                    <p>No reviews here yet.</p>
+                </div>
+            {% endfor %}
+        </section>
+
+        <aside>
+            <div class="panel">
+                <h2>Recommendations</h2>
+                {% if user.is_authenticated %}
+                    {% for recommendation in recommendations %}
+                        <p>
+                            <strong>{{ recommendation.from_user.username }}</strong>
+                            thinks you should try
+                            <strong>{{ recommendation.item.title }}</strong>.
+                        </p>
+                        {% if recommendation.message %}
+                            <p class="meta">{{ recommendation.message }}</p>
+                        {% endif %}
+                    {% empty %}
+                        <p class="meta">No recommendations yet.</p>
+                    {% endfor %}
+                {% else %}
+                    <p class="meta">Log in to see what friends recommend.</p>
+                {% endif %}
+            </div>
+        </aside>
+    </main>
+</body>
+</html>

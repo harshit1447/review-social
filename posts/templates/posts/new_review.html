@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Post a review</title>
+</head>
+<body>
+    <h1>Post a review</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label for="{{ form.item_title.id_for_label }}">What did you watch/read?</label><br>
+            {{ form.item_title }}
+        </p>
+        <p>
+            <label for="{{ form.item_type.id_for_label }}">Type</label><br>
+            {{ form.item_type }}
+        </p>
+        <p>
+            <label for="{{ form.rating.id_for_label }}">Rating</label><br>
+            {{ form.rating }}
+        </p>
+        <p>
+            <label for="{{ form.review_text.id_for_label }}">Review</label><br>
+            {{ form.review_text }}
+        </p>
+        <button type="submit">Publish</button>
+    </form>
+
+    <p><a href="{% url 'feed' %}">Back to feed</a></p>
+</body>
+</html>

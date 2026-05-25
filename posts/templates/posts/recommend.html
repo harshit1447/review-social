@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Recommend something</title>
+</head>
+<body>
+    <h1>Recommend something</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Send recommendation</button>
+    </form>
+
+    <p><a href="{% url 'feed' %}">Back to feed</a></p>
+</body>
+</html>

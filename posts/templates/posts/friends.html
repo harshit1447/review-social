@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Friends</title>
+</head>
+<body>
+    <h1>Friends</h1>
+
+    <h2>Your friends</h2>
+    {% for friend in friends %}
+        <p>
+            {{ friend.username }}
+            <a href="{% url 'remove_friend' friend.id %}">Remove</a>
+        </p>
+    {% empty %}
+        <p>You have not added friends yet.</p>
+    {% endfor %}
+
+    <h2>Find people</h2>
+    {% for person in suggested_users %}
+        <p>
+            {{ person.username }}
+            <a href="{% url 'add_friend' person.id %}">Add friend</a>
+        </p>
+    {% empty %}
+        <p>No more people to add.</p>
+    {% endfor %}
+
+    <p><a href="{% url 'feed' %}">Back to feed</a></p>
+</body>
+</html>
