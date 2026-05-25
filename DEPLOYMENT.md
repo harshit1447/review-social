@@ -35,7 +35,7 @@ Use these settings:
 ```text
 Runtime: Python
 Build Command: bash build.sh
-Start Command: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+Start Command: python manage.py migrate && python manage.py create_admin && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 ```
 
 Set these environment variables:
@@ -70,6 +70,18 @@ Then add these Render environment variables:
 GOOGLE_CLIENT_ID=<your Google OAuth client ID>
 GOOGLE_CLIENT_SECRET=<your Google OAuth client secret>
 ```
+
+## Create an admin user without Render Shell
+
+On Render's free plan, set these environment variables:
+
+```text
+ADMIN_USERNAME=<your admin username>
+ADMIN_EMAIL=<your email>
+ADMIN_PASSWORD=<a strong password>
+```
+
+Then redeploy. The app will create or update that admin account on startup.
 
 Render can also read `render.yaml`, but you still need to fill in the host and CSRF values after you know your Render URL.
 
