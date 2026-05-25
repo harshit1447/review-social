@@ -7,6 +7,8 @@ services:
     envVars:
       - key: DJANGO_DEBUG
         value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: DJANGO_ALLOWED_HOSTS
         sync: false
       - key: DJANGO_CSRF_TRUSTED_ORIGINS

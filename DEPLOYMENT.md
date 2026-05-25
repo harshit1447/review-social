@@ -42,6 +42,7 @@ Set these environment variables:
 
 ```text
 DJANGO_DEBUG=False
+PYTHON_VERSION=3.11.9
 DJANGO_SECRET_KEY=<generate a long random value>
 DJANGO_ALLOWED_HOSTS=<your-service-name>.onrender.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-service-name>.onrender.com
