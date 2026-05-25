@@ -35,7 +35,7 @@ Use these settings:
 ```text
 Runtime: Python
 Build Command: bash build.sh
-Start Command: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+Start Command: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 ```
 
 Set these environment variables:
