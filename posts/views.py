@@ -8,7 +8,16 @@ from .forms import RecommendationForm, ReviewForm, SignUpForm
 from .models import Friendship, Item, Recommendation, Review
 
 
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect("feed")
+    return render(request, "landing.html")
+
+
 def feed(request):
+    if not request.user.is_authenticated:
+        return redirect("account_login")
+    
     friends_only = request.GET.get("filter") == "friends"
     query = request.GET.get("q", "").strip()
     friend_ids = []

@@ -1,76 +1,74 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Friends | Review Social{% endblock %}
-{% block eyebrow %}Your circle{% endblock %}
-{% block page_title %}Friends{% endblock %}
-{% block page_subtitle %}Find people, manage your friend list, and see what friends recommend to you.{% endblock %}
 
 {% block content %}
-    <section class="app-tabs" aria-label="App sections">
-        <a class="tab-link" href="{% url 'feed' %}">Feed</a>
-        <a class="tab-link active" href="{% url 'friends' %}">Friends</a>
-        <a class="tab-link" href="{% url 'profile' %}">Profile</a>
-    </section>
-
-    <section class="toolbar card">
-        <form class="search-form" method="get">
-            <label for="friends-search">Search friends</label>
-            <div class="search-row">
-                <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search people, recommendations, titles">
-                <button type="submit">Search</button>
-            </div>
-        </form>
-    </section>
-
-    <div class="layout-grid">
-        <section class="stack">
-            <div class="card">
-                <h2 class="card-title">Friend recommendations</h2>
-                {% for recommendation in recommendations %}
-                    <div class="recommendation">
-                        <p>
-                            <strong>{{ recommendation.from_user.username }}</strong>
-                            recommended
-                            <strong>{{ recommendation.item.title }}</strong>
-                        </p>
-                        {% if recommendation.message %}
-                            <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
-                        {% endif %}
-                    </div>
-                {% empty %}
-                    <p class="empty-state">No recommendations from friends yet.</p>
-                {% endfor %}
-            </div>
-
-            <div class="card">
-                <h2 class="card-title">Your friends</h2>
-                {% for friend in friends %}
-                    <div class="person-row">
-                        <div class="person-name">
-                            <span class="avatar">{{ friend.username|first }}</span>
-                            <strong>{{ friend.username }}</strong>
-                        </div>
-                        <a class="button secondary" href="{% url 'remove_friend' friend.id %}">Remove</a>
-                    </div>
-                {% empty %}
-                    <p class="empty-state">You have not added friends yet.</p>
-                {% endfor %}
-            </div>
+    <div class="page">
+        <section class="page-header">
+            <h1>Friends</h1>
+            <p class="page-subtitle">Find people, manage your friend list, and see what friends recommend to you</p>
         </section>
 
-        <aside class="card">
-            <h2 class="card-title">Find people</h2>
-            {% for person in suggested_users %}
-                <div class="person-row">
-                    <div class="person-name">
-                        <span class="avatar">{{ person.username|first }}</span>
-                        <strong>{{ person.username }}</strong>
-                    </div>
-                    <a class="button" href="{% url 'add_friend' person.id %}">Add friend</a>
+        <section class="toolbar card">
+            <form class="search-form" method="get">
+                <label for="friends-search">Search friends</label>
+                <div class="search-row">
+                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search people, recommendations, titles">
+                    <button type="submit">Search</button>
                 </div>
-            {% empty %}
-                <p class="empty-state">No more people match this search.</p>
-            {% endfor %}
-        </aside>
+            </form>
+        </section>
+
+        <div class="layout-grid">
+            <section class="stack">
+                <div class="card">
+                    <h2 class="card-title">Friend recommendations</h2>
+                    {% for recommendation in recommendations %}
+                        <div class="recommendation">
+                            <p>
+                                <strong>{{ recommendation.from_user.username }}</strong>
+                                recommended
+                                <strong>{{ recommendation.item.title }}</strong>
+                            </p>
+                            {% if recommendation.message %}
+                                <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No recommendations from friends yet.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Your friends</h2>
+                    {% for friend in friends %}
+                        <div class="person-row">
+                            <div class="person-name">
+                                <span class="avatar">{{ friend.username|first }}</span>
+                                <strong>{{ friend.username }}</strong>
+                            </div>
+                            <a class="button secondary" href="{% url 'remove_friend' friend.id %}">Remove</a>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">You have not added friends yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <aside class="card">
+                <h2 class="card-title">Find people</h2>
+                {% for person in suggested_users %}
+                    <div class="person-row">
+                        <div class="person-name">
+                            <span class="avatar">{{ person.username|first }}</span>
+                            <strong>{{ person.username }}</strong>
+                        </div>
+                        <a class="button" href="{% url 'add_friend' person.id %}">Add friend</a>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">No more people match this search.</p>
+                {% endfor %}
+            </aside>
+        </div>
     </div>
 {% endblock %}

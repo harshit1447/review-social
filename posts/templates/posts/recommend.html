@@ -1,19 +1,23 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Recommend | Review Social{% endblock %}
-{% block eyebrow %}Pass it on{% endblock %}
-{% block page_title %}Recommend something{% endblock %}
-{% block page_subtitle %}Send a specific pick to a friend, with a note about why it belongs on their list.{% endblock %}
 
 {% block content %}
-    <section class="card form-card">
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <div class="form-actions">
-                <button type="submit">Send recommendation</button>
-                <a class="button secondary" href="{% url 'feed' %}">Cancel</a>
-            </div>
-        </form>
-    </section>
+    <div class="page">
+        <section class="page-header">
+            <h1>Recommend something</h1>
+            <p class="page-subtitle">Send a specific pick to a friend, with a note about why it belongs on their list</p>
+        </section>
+
+        <section class="card form-card">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="form-actions">
+                    <button type="submit">Send recommendation</button>
+                    <a class="button secondary" href="{% url 'feed' %}">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </div>
 {% endblock %}

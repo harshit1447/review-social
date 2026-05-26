@@ -1,56 +1,53 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Feed | Review Social{% endblock %}
-{% block page_title %}Feed{% endblock %}
-{% block page_subtitle %}The center of the app: search reviews, browse everyone, or narrow it to people you follow.{% endblock %}
 
 {% block content %}
-    <section class="app-tabs" aria-label="App sections">
-        <a class="tab-link active" href="{% url 'feed' %}">Feed</a>
-        {% if user.is_authenticated %}
-            <a class="tab-link" href="{% url 'friends' %}">Friends</a>
-            <a class="tab-link" href="{% url 'profile' %}">Profile</a>
-        {% endif %}
-    </section>
+    <div class="page">
+        <section class="page-header">
+            <h1>Feed</h1>
+            <p class="page-subtitle">Browse reviews from everyone or just your friends</p>
+        </section>
 
-    <section class="toolbar card">
-        <form class="search-form" method="get">
-            {% if friends_only %}
-                <input type="hidden" name="filter" value="friends">
-            {% endif %}
-            <label for="feed-search">Search feed</label>
-            <div class="search-row">
-                <input id="feed-search" type="search" name="q" value="{{ query }}" placeholder="Search titles, reviews, people">
-                <button type="submit">Search</button>
-            </div>
-        </form>
-        <div class="filters">
-            <a class="filter-link {% if not friends_only %}active{% endif %}" href="{% url 'feed' %}{% if query %}?q={{ query|urlencode }}{% endif %}">Everyone</a>
-            {% if user.is_authenticated %}
-                <a class="filter-link {% if friends_only %}active{% endif %}" href="{% url 'feed' %}?filter=friends{% if query %}&q={{ query|urlencode }}{% endif %}">Friends</a>
-            {% endif %}
-        </div>
-    </section>
-
-    <section class="stack feed-stack">
-        {% for review in reviews %}
-            <article class="card review-card">
-                <div class="review-topline">
-                    <div>
-                        <h2 class="item-title">{{ review.item.title }}</h2>
-                        <p class="meta">
-                            {{ review.user.username }} reviewed a {{ review.item.get_item_type_display|lower }}
-                            on {{ review.created_at|date:"M j, Y" }}
-                        </p>
-                    </div>
-                    <span class="rating">{{ review.rating }}/5</span>
+        <section class="toolbar card">
+            <form class="search-form" method="get">
+                {% if friends_only %}
+                    <input type="hidden" name="filter" value="friends">
+                {% endif %}
+                <label for="feed-search">Search feed</label>
+                <div class="search-row">
+                    <input id="feed-search" type="search" name="q" value="{{ query }}" placeholder="Search titles, reviews, people">
+                    <button type="submit">Search</button>
                 </div>
-                <p>{{ review.review_text }}</p>
-            </article>
-        {% empty %}
-            <div class="card">
-                <p class="empty-state">No reviews match this feed yet.</p>
+            </form>
+            <div class="filters">
+                <a class="filter-link {% if not friends_only %}active{% endif %}" href="{% url 'feed' %}{% if query %}?q={{ query|urlencode }}{% endif %}">Everyone</a>
+                {% if user.is_authenticated %}
+                    <a class="filter-link {% if friends_only %}active{% endif %}" href="{% url 'feed' %}?filter=friends{% if query %}&q={{ query|urlencode }}{% endif %}">Friends</a>
+                {% endif %}
             </div>
-        {% endfor %}
-    </section>
+        </section>
+
+        <section class="stack feed-stack">
+            {% for review in reviews %}
+                <article class="card review-card">
+                    <div class="review-topline">
+                        <div>
+                            <h2 class="item-title">{{ review.item.title }}</h2>
+                            <p class="meta">
+                                {{ review.user.username }} reviewed a {{ review.item.get_item_type_display|lower }}
+                                on {{ review.created_at|date:"M j, Y" }}
+                            </p>
+                        </div>
+                        <span class="rating">{{ review.rating }}/5</span>
+                    </div>
+                    <p>{{ review.review_text }}</p>
+                </article>
+            {% empty %}
+                <div class="card">
+                    <p class="empty-state">No reviews match this feed yet.</p>
+                </div>
+            {% endfor %}
+        </section>
+    </div>
 {% endblock %}

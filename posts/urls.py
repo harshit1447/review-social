@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.feed, name="feed"),
+    path("", views.landing, name="landing"),
+    path("feed/", views.feed, name="feed"),
     path("signup/", views.signup, name="signup"),
     path("friends/", views.friends, name="friends"),
     path("friends/add/<int:user_id>/", views.add_friend, name="add_friend"),
