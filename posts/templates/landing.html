@@ -4,31 +4,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Review Social - Share recommendations with friends</title>
+    <title>Revue - Share what you think</title>
     <link rel="stylesheet" href="{% static 'posts/styles.css' %}">
 </head>
-<body>
-    <div class="app-shell">
-        <header class="site-header">
-            <div class="site-header-inner">
-                <div class="topbar">
-                    <a class="brand" href="{% url 'landing' %}">
-                        <span class="brand-mark">R</span>
-                        <span>Review Social</span>
-                    </a>
-                    <nav class="nav" aria-label="Primary">
-                        <a href="{% url 'account_login' %}">Log in</a>
-                        <a href="{% url 'signup' %}">Sign up</a>
-                    </nav>
-                </div>
-                <div class="header-content">
-                    <p class="eyebrow">Watch, read, share</p>
-                    <h1 class="page-title">A friend-powered review feed</h1>
-                    <p class="page-subtitle">Post what you loved, follow people you trust, and trade recommendations without losing the human taste behind them.</p>
-                    <a href="{% url 'signup' %}" class="button cta-button" style="margin-top: 24px; display: inline-block;">Get Started</a>
-                </div>
-            </div>
-        </header>
-    </div>
+<body class="first-page-body">
+    <main class="first-page" aria-label="Revue landing page">
+        <img class="first-page-art" src="{% static 'posts/images/revue-first-page.png' %}" alt="Revue landing page with books, movies, reviews, and community recommendations.">
+
+        <a class="landing-hotspot login-hotspot" href="{% url 'account_login' %}" aria-label="Log in"></a>
+        <a class="landing-hotspot signup-hotspot" href="{% url 'signup' %}" aria-label="Sign up"></a>
+        <a class="landing-hotspot join-hotspot" href="{% url 'signup' %}" aria-label="Join the community"></a>
+        <a class="landing-hotspot see-more-hotspot" href="{% url 'account_login' %}" aria-label="See more community reviews"></a>
+    </main>
 </body>
 </html>

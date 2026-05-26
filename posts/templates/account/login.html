@@ -1,26 +1,63 @@
-{% extends "base.html" %}
+{% load static %}
 {% load socialaccount %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log in | Revue</title>
+    <link rel="stylesheet" href="{% static 'posts/styles.css' %}">
+</head>
+<body class="auth-body">
+    <nav class="marketing-nav auth-nav" aria-label="Primary">
+        <a class="wordmark" href="{% url 'landing' %}">Revue</a>
+        <div class="marketing-actions">
+            <a class="plain-link" href="{% url 'account_login' %}">Log in</a>
+            <a class="pill-button warm" href="{% url 'signup' %}">Sign up</a>
+        </div>
+    </nav>
 
-{% block title %}Log in | Review Social{% endblock %}
-{% block eyebrow %}Welcome back{% endblock %}
-{% block page_title %}Log in{% endblock %}
-{% block page_subtitle %}Jump back into the feed and see what your friends have found.{% endblock %}
+    <main class="auth-shell">
+        <section class="auth-story">
+            <p class="auth-eyebrow">Welcome back</p>
+            <h1>Log in</h1>
+            <p>Jump back into the community and see what your friends have found.</p>
+            <div class="auth-still" aria-hidden="true"></div>
+        </section>
 
-{% block content %}
-    <section class="card form-card auth-panel">
-        {% if google_auth_enabled %}
-            <a class="button google-button" href="{% provider_login_url 'google' %}">Continue with Google</a>
-            <div class="divider">or</div>
-        {% endif %}
+        <section class="auth-card">
+            <form method="post" action="{% url 'account_login' %}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    {{ form.non_field_errors }}
+                {% endif %}
 
-        <form method="post" action="{% url 'account_login' %}">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <div class="form-actions">
-                <button type="submit">Log in</button>
-            </div>
-        </form>
+                <div class="auth-field">
+                    <label for="{{ form.login.id_for_label }}">Email or Username</label>
+                    {{ form.login }}
+                </div>
+                <div class="auth-field">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    {{ form.password }}
+                </div>
+                <a class="forgot-link" href="{% url 'account_reset_password' %}">Forgot your password?</a>
 
-        <p class="meta">New here? <a href="{% url 'signup' %}">Create an account</a></p>
-    </section>
-{% endblock %}
+                {% if google_auth_enabled %}
+                    <div class="auth-divider">OR</div>
+                    <a class="google-auth" href="{% provider_login_url 'google' %}">Continue with Google</a>
+                {% endif %}
+
+                {% if form.remember %}
+                    <label class="remember-row">
+                        {{ form.remember }}
+                        <span>Remember me</span>
+                    </label>
+                {% endif %}
+
+                <button class="auth-submit" type="submit">Log in</button>
+            </form>
+            <p class="auth-switch">New here? <a href="{% url 'signup' %}">Create an account</a></p>
+        </section>
+    </main>
+</body>
+</html>

@@ -11,9 +11,7 @@
     <div class="app-shell app-shell-authenticated">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a class="sidebar-brand" href="{% url 'feed' %}">
-                    <span class="brand-mark">R</span>
-                </a>
+                <a class="sidebar-brand wordmark" href="{% url 'feed' %}">Revue</a>
             </div>
             
             <nav class="sidebar-nav" aria-label="Main navigation">
@@ -22,16 +20,16 @@
                     <span class="sidebar-label">Feed</span>
                 </a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">
-                    <span class="sidebar-icon">N</span>
+                    <span class="sidebar-icon">Fr</span>
                     <span class="sidebar-label">Friends</span>
                 </a>
                 <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
-                    <span class="sidebar-icon">P</span>
+                    <span class="sidebar-icon">Pr</span>
                     <span class="sidebar-label">Profile</span>
                 </a>
                 <a href="{% url 'new_review' %}" class="sidebar-link {% if request.resolver_match.url_name == 'new_review' %}active{% endif %}">
                     <span class="sidebar-icon">+</span>
-                    <span class="sidebar-label">Post</span>
+                    <span class="sidebar-label">Post Review</span>
                 </a>
                 <a href="{% url 'recommend' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommend' %}active{% endif %}">
                     <span class="sidebar-icon">R</span>
