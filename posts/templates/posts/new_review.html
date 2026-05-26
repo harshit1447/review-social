@@ -1,34 +1,38 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Post a review | Review Social{% endblock %}
-{% block eyebrow %}Share your take{% endblock %}
-{% block page_title %}Post a review{% endblock %}
-{% block page_subtitle %}Add a movie, book, or series and tell your friends what made it worth their time.{% endblock %}
 
 {% block content %}
-    <section class="card form-card">
-        <form method="post">
-            {% csrf_token %}
-            <div class="field">
-                <label for="{{ form.item_title.id_for_label }}">Title</label>
-                {{ form.item_title }}
-            </div>
-            <div class="field">
-                <label for="{{ form.item_type.id_for_label }}">Type</label>
-                {{ form.item_type }}
-            </div>
-            <div class="field">
-                <label for="{{ form.rating.id_for_label }}">Rating</label>
-                {{ form.rating }}
-            </div>
-            <div class="field">
-                <label for="{{ form.review_text.id_for_label }}">Review</label>
-                {{ form.review_text }}
-            </div>
-            <div class="form-actions">
-                <button type="submit">Publish review</button>
-                <a class="button secondary" href="{% url 'feed' %}">Cancel</a>
-            </div>
-        </form>
-    </section>
+    <div class="page">
+        <section class="page-header">
+            <h1>Post a review</h1>
+            <p class="page-subtitle">Add a movie, book, or series and tell your friends what made it worth their time</p>
+        </section>
+
+        <section class="card form-card">
+            <form method="post">
+                {% csrf_token %}
+                <div class="field">
+                    <label for="{{ form.item_title.id_for_label }}">Title</label>
+                    {{ form.item_title }}
+                </div>
+                <div class="field">
+                    <label for="{{ form.item_type.id_for_label }}">Type</label>
+                    {{ form.item_type }}
+                </div>
+                <div class="field">
+                    <label for="{{ form.rating.id_for_label }}">Rating</label>
+                    {{ form.rating }}
+                </div>
+                <div class="field">
+                    <label for="{{ form.review_text.id_for_label }}">Review</label>
+                    {{ form.review_text }}
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Publish review</button>
+                    <a class="button secondary" href="{% url 'feed' %}">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </div>
 {% endblock %}
