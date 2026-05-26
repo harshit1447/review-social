@@ -14,10 +14,8 @@ def landing(request):
     return render(request, "landing.html")
 
 
+@login_required
 def feed(request):
-    if not request.user.is_authenticated:
-        return redirect("account_login")
-    
     friends_only = request.GET.get("filter") == "friends"
     query = request.GET.get("q", "").strip()
     friend_ids = []

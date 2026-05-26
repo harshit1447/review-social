@@ -69,6 +69,7 @@ class SocialReviewTests(TestCase):
             rating=4,
             review_text="Huge and sandy.",
         )
+        self.client.login(username="alex", password="pass")
 
         response = self.client.get(reverse("feed"), {"q": "alien"})
 
