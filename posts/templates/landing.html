@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Review Social - Share recommendations with friends</title>
+    <link rel="stylesheet" href="{% static 'posts/styles.css' %}">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="site-header">
+            <div class="site-header-inner">
+                <div class="topbar">
+                    <a class="brand" href="{% url 'landing' %}">
+                        <span class="brand-mark">R</span>
+                        <span>Review Social</span>
+                    </a>
+                    <nav class="nav" aria-label="Primary">
+                        <a href="{% url 'account_login' %}">Log in</a>
+                        <a href="{% url 'signup' %}">Sign up</a>
+                    </nav>
+                </div>
+                <div class="header-content">
+                    <p class="eyebrow">Watch, read, share</p>
+                    <h1 class="page-title">A friend-powered review feed</h1>
+                    <p class="page-subtitle">Post what you loved, follow people you trust, and trade recommendations without losing the human taste behind them.</p>
+                    <a href="{% url 'signup' %}" class="button cta-button" style="margin-top: 24px; display: inline-block;">Get Started</a>
+                </div>
+            </div>
+        </header>
+    </div>
+</body>
+</html>
