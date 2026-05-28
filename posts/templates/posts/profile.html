@@ -16,7 +16,11 @@
             </div>
             <div class="stat-card card">
                 <span class="stat-value">{{ friend_count }}</span>
-                <span class="stat-label">Friends</span>
+                <span class="stat-label">Following</span>
+            </div>
+            <div class="stat-card card">
+                <span class="stat-value">{{ followers_count }}</span>
+                <span class="stat-label">Followers</span>
             </div>
             <div class="stat-card card">
                 <span class="stat-value">{{ recommendation_count }}</span>
@@ -37,16 +41,67 @@
                 {% endfor %}
             </section>
 
-            <aside class="card">
-                <h2 class="card-title">Your taste mix</h2>
-                {% for row in top_types %}
-                    <div class="person-row">
-                        <strong>{{ row.item__item_type|title }}</strong>
-                        <span class="meta">{{ row.total }} review{{ row.total|pluralize }}</span>
+            <aside class="stack">
+                <article class="card">
+                    <h2 class="card-title">Your taste mix</h2>
+                    {% for row in top_types %}
+                        <div class="person-row">
+                            <strong>{{ row.item__item_type|title }}</strong>
+                            <span class="meta">{{ row.total }} review{{ row.total|pluralize }}</span>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">Post reviews to build your profile.</p>
+                    {% endfor %}
+                </article>
+
+                <article class="card">
+                    <h2 class="card-title">Lists</h2>
+                    <div class="recommendation">
+                        <p><strong>Watchlist</strong></p>
+                        {% for saved in watchlist_items|slice:":3" %}
+                            <div class="form-actions">
+                                <p class="meta">{{ saved.item.title }}</p>
+                                <form method="post" action="{% url 'toggle_saved_item' saved.item_id 'watchlist' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'profile' %}">
+                                    <button type="submit" class="button secondary">Remove</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="meta">No items saved yet.</p>
+                        {% endfor %}
                     </div>
-                {% empty %}
-                    <p class="empty-state">Post reviews to build your profile.</p>
-                {% endfor %}
+                    <div class="recommendation">
+                        <p><strong>Readlist</strong></p>
+                        {% for saved in readlist_items|slice:":3" %}
+                            <div class="form-actions">
+                                <p class="meta">{{ saved.item.title }}</p>
+                                <form method="post" action="{% url 'toggle_saved_item' saved.item_id 'readlist' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'profile' %}">
+                                    <button type="submit" class="button secondary">Remove</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="meta">No items saved yet.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="recommendation">
+                        <p><strong>Favorites</strong></p>
+                        {% for saved in favorite_items|slice:":3" %}
+                            <div class="form-actions">
+                                <p class="meta">{{ saved.item.title }}</p>
+                                <form method="post" action="{% url 'toggle_saved_item' saved.item_id 'favorites' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'profile' %}">
+                                    <button type="submit" class="button secondary">Remove</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="meta">No items saved yet.</p>
+                        {% endfor %}
+                    </div>
+                </article>
             </aside>
         </div>
     </div>

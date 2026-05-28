@@ -5,34 +5,37 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Review Social{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'posts/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=revue-fit-1">
 </head>
 <body>
     <div class="app-shell app-shell-authenticated">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a class="sidebar-brand wordmark" href="{% url 'feed' %}">Revue</a>
+                <a class="sidebar-brand logo-image-link" href="{% url 'feed' %}">
+                    <img src="{% static 'posts/images/revue-wordmark-clean.png' %}" alt="Revue">
+                </a>
             </div>
             
             <nav class="sidebar-nav" aria-label="Main navigation">
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">
-                    <span class="sidebar-icon">F</span>
                     <span class="sidebar-label">Feed</span>
                 </a>
+                <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">
+                    <span class="sidebar-label">Discover</span>
+                </a>
+                <a href="{% url 'search' %}" class="sidebar-link {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+                    <span class="sidebar-label">Search</span>
+                </a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">
-                    <span class="sidebar-icon">Fr</span>
                     <span class="sidebar-label">Friends</span>
                 </a>
                 <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
-                    <span class="sidebar-icon">Pr</span>
                     <span class="sidebar-label">Profile</span>
                 </a>
                 <a href="{% url 'new_review' %}" class="sidebar-link {% if request.resolver_match.url_name == 'new_review' %}active{% endif %}">
-                    <span class="sidebar-icon">+</span>
                     <span class="sidebar-label">Post Review</span>
                 </a>
                 <a href="{% url 'recommend' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommend' %}active{% endif %}">
-                    <span class="sidebar-icon">R</span>
                     <span class="sidebar-label">Recommend</span>
                 </a>
             </nav>
@@ -49,5 +52,62 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <script>
+        (function () {
+            function updateButton(button, data) {
+                if (!button || !data) return;
+                if (button.hasAttribute("data-icon-button")) {
+                    button.classList.toggle("active", Boolean(data.active));
+                    if (data.label) {
+                        button.setAttribute("aria-label", data.label);
+                        button.setAttribute("title", data.label);
+                        var label = button.querySelector(".sr-only");
+                        if (label) label.textContent = data.label;
+                    }
+                    if (typeof data.count !== "undefined") {
+                        var count = button.querySelector(".icon-count");
+                        if (count) count.textContent = data.count;
+                    }
+                    return;
+                }
+                if (button.hasAttribute("data-like-button") && typeof data.count !== "undefined") {
+                    button.textContent = data.label + " (" + data.count + ")";
+                    return;
+                }
+                if (button.hasAttribute("data-plain-button")) {
+                    button.textContent = data.label;
+                }
+            }
+
+            document.addEventListener("submit", async function (event) {
+                var form = event.target;
+                if (!(form instanceof HTMLFormElement) || !form.classList.contains("js-async-form")) {
+                    return;
+                }
+                event.preventDefault();
+                var button = form.querySelector("button[type='submit']");
+                if (button) button.disabled = true;
+                try {
+                    var response = await fetch(form.action, {
+                        method: form.method || "POST",
+                        body: new FormData(form),
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    });
+                    if (!response.ok) {
+                        window.location.reload();
+                        return;
+                    }
+                    var data = await response.json();
+                    updateButton(button, data);
+                } catch (error) {
+                    window.location.reload();
+                } finally {
+                    if (button) button.disabled = false;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

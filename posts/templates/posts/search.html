@@ -1,0 +1,137 @@
+{% extends "base_app.html" %}
+
+{% block title %}Search | Review Social{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <section class="page-header">
+            <h1>Search</h1>
+            <p class="page-subtitle">Search people, reviews, books, movies, and recommendations in one place.</p>
+        </section>
+
+        <section class="toolbar card">
+            <form class="search-form" method="get">
+                <input type="hidden" name="section" value="{{ section }}">
+                <label for="search-input">Search everything</label>
+                <div class="search-row">
+                    <input id="search-input" type="search" name="q" value="{{ query }}" placeholder="Try: past lives, aman, sci-fi">
+                    <button type="submit">Search</button>
+                </div>
+            </form>
+            <div class="filters">
+                <a class="filter-link {% if section == 'all' %}active{% endif %}" href="{% url 'search' %}?section=all{% if query %}&q={{ query|urlencode }}{% endif %}">All</a>
+                <a class="filter-link {% if section == 'people' %}active{% endif %}" href="{% url 'search' %}?section=people{% if query %}&q={{ query|urlencode }}{% endif %}">People</a>
+                <a class="filter-link {% if section == 'movies' %}active{% endif %}" href="{% url 'search' %}?section=movies{% if query %}&q={{ query|urlencode }}{% endif %}">Movies</a>
+                <a class="filter-link {% if section == 'books' %}active{% endif %}" href="{% url 'search' %}?section=books{% if query %}&q={{ query|urlencode }}{% endif %}">Books</a>
+                <a class="filter-link {% if section == 'reviews' %}active{% endif %}" href="{% url 'search' %}?section=reviews{% if query %}&q={{ query|urlencode }}{% endif %}">Reviews</a>
+                <a class="filter-link {% if section == 'lists' %}active{% endif %}" href="{% url 'search' %}?section=lists{% if query %}&q={{ query|urlencode }}{% endif %}">Lists</a>
+            </div>
+        </section>
+
+        <div class="layout-grid">
+            <section class="stack">
+                <article class="card">
+                    <h2 class="card-title">Items</h2>
+                    {% for item in items %}
+                        <div class="recommendation">
+                            <p><strong><a href="{% url 'item_reviews' item.id %}">{{ item.title }}</a></strong></p>
+                            <p class="meta">{{ item.get_item_type_display }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">Search for a movie, book, or series to see results.</p>
+                    {% endfor %}
+                    {% if items_page_obj and items_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if items_page_obj.has_previous %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&items_page={{ items_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ items_page_obj.number }}/{{ items_page_obj.paginator.num_pages }}</span>
+                            {% if items_page_obj.has_next %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&items_page={{ items_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+
+                <article class="card">
+                    <h2 class="card-title">Reviews</h2>
+                    {% for review in reviews %}
+                        <div class="recommendation">
+                            <p><strong>{{ review.user.username }}</strong> reviewed <strong><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></strong></p>
+                            <p class="meta">{{ review.review_text|truncatechars:140 }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No matching reviews found yet.</p>
+                    {% endfor %}
+                    {% if reviews_page_obj and reviews_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if reviews_page_obj.has_previous %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&reviews_page={{ reviews_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ reviews_page_obj.number }}/{{ reviews_page_obj.paginator.num_pages }}</span>
+                            {% if reviews_page_obj.has_next %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&reviews_page={{ reviews_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+            </section>
+
+            <aside class="stack">
+                <article class="card">
+                    <h2 class="card-title">People</h2>
+                    {% for person in people %}
+                        <div class="person-row">
+                            <div class="person-name">
+                                <span class="avatar">{{ person.username|first }}</span>
+                                <strong>{{ person.username }}</strong>
+                            </div>
+                            <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                                {% csrf_token %}
+                                <button type="submit" class="button" data-plain-button="1">Follow</button>
+                            </form>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No people match this search.</p>
+                    {% endfor %}
+                    {% if people_page_obj and people_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if people_page_obj.has_previous %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&people_page={{ people_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ people_page_obj.number }}/{{ people_page_obj.paginator.num_pages }}</span>
+                            {% if people_page_obj.has_next %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&people_page={{ people_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+
+                <article class="card">
+                    <h2 class="card-title">Lists & recommendations</h2>
+                    {% for row in lists %}
+                        <div class="recommendation">
+                            <p><strong>{{ row.from_user.username }}</strong> recommended <strong>{{ row.item.title }}</strong></p>
+                            {% if row.message %}
+                                <p class="meta">{{ row.message|truncatechars:120 }}</p>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No list-style recommendations yet.</p>
+                    {% endfor %}
+                    {% if lists_page_obj and lists_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if lists_page_obj.has_previous %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&lists_page={{ lists_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ lists_page_obj.number }}/{{ lists_page_obj.paginator.num_pages }}</span>
+                            {% if lists_page_obj.has_next %}
+                                <a class="button secondary" href="?section={{ section }}{% if query %}&q={{ query|urlencode }}{% endif %}&lists_page={{ lists_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+            </aside>
+        </div>
+    </div>
+{% endblock %}

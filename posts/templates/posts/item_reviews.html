@@ -1,0 +1,109 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ item.title }} | Review Social{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <section class="item-hero card">
+            <div class="item-hero-copy">
+                <p class="meta">{{ item.get_item_type_display }}{% if item.release_year %} · {{ item.release_year }}{% endif %}</p>
+                <h1>{{ item.title }}</h1>
+                {% if item.description %}
+                    <p class="item-synopsis">{{ item.description }}</p>
+                {% else %}
+                    <p class="item-synopsis">No synopsis is available yet.</p>
+                {% endif %}
+
+                <dl class="item-facts">
+                    {% if item.creator_name %}
+                        <div>
+                            <dt>{% if item.item_type == "book" %}Writer{% else %}Director{% endif %}</dt>
+                            <dd>{{ item.creator_name }}</dd>
+                        </div>
+                    {% endif %}
+                    {% if item.cast_names %}
+                        <div>
+                            <dt>Cast</dt>
+                            <dd>{{ item.cast_names }}</dd>
+                        </div>
+                    {% endif %}
+                    {% if item.producer_name %}
+                        <div>
+                            <dt>Producer</dt>
+                            <dd>{{ item.producer_name }}</dd>
+                        </div>
+                    {% endif %}
+                    {% if item.release_year %}
+                        <div>
+                            <dt>Year</dt>
+                            <dd>{{ item.release_year }}</dd>
+                        </div>
+                    {% endif %}
+                </dl>
+
+                {% if item.imdb_rating or item.rotten_tomatoes_rating or item.book_rating %}
+                    <div class="external-ratings">
+                        {% if item.imdb_rating %}
+                            <span>IMDb {{ item.imdb_rating }}/10</span>
+                        {% endif %}
+                        {% if item.rotten_tomatoes_rating %}
+                            <span>Rotten Tomatoes {{ item.rotten_tomatoes_rating }}</span>
+                        {% endif %}
+                        {% if item.book_rating %}
+                            <span>{{ item.book_rating_source|default:"Google Books" }} {{ item.book_rating }}/5</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
+                    <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+                </div>
+            </div>
+            <div class="item-hero-poster">
+                <img src="{% if item.image_url %}{{ item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+            </div>
+        </section>
+
+        <section class="page-header compact-header">
+            <h2>Reviews</h2>
+            <p class="page-subtitle">What people are saying about {{ item.title }}</p>
+        </section>
+
+        <section class="stack feed-stack">
+            {% for review in reviews %}
+                <article class="card item-review-card">
+                    <div class="review-topline">
+                        <div>
+                            <p><strong>{{ review.user.username }}</strong></p>
+                            <p class="meta">{{ review.created_at|date:"M j, Y" }}</p>
+                        </div>
+                        <span class="rating">{{ review.rating }}/5</span>
+                    </div>
+                    <p class="review-text">{{ review.review_text }}</p>
+                </article>
+            {% empty %}
+                <div class="card">
+                    <p class="empty-state">No reviews posted yet for this item.</p>
+                    <div class="form-actions">
+                        <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Be the first to review</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+
+        {% if page_obj and page_obj.paginator.num_pages > 1 %}
+            <section class="card">
+                <div class="form-actions">
+                    {% if page_obj.has_previous %}
+                        <a class="button secondary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    {% endif %}
+                    <span class="meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}
+                        <a class="button secondary" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    {% endif %}
+                </div>
+            </section>
+        {% endif %}
+    </div>
+{% endblock %}

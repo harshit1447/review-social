@@ -13,12 +13,28 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="field">
-                    <label for="{{ form.item_title.id_for_label }}">Title</label>
-                    {{ form.item_title }}
-                </div>
-                <div class="field">
                     <label for="{{ form.item_type.id_for_label }}">Type</label>
                     {{ form.item_type }}
+                </div>
+                <div class="field">
+                    <label for="{{ form.item_title.id_for_label }}">Title</label>
+                    {{ form.item_title }}
+                    {{ form.selected_item_key }}
+                    {{ form.selected_item_title }}
+                    {{ form.selected_item_year }}
+                    {{ form.selected_item_creator }}
+                    {{ form.selected_item_image_url }}
+                    {{ form.selected_item_external_source }}
+                    {{ form.selected_item_external_id }}
+                    <p id="item-suggestion-message" class="meta" style="display:none; margin:6px 0;"></p>
+                    <div id="item-suggestions" class="card" style="display:none; margin-top:8px; padding:8px;"></div>
+                    {% if form.non_field_errors %}
+                        <ul class="errorlist">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="field">
                     <label for="{{ form.rating.id_for_label }}">Rating</label>
@@ -35,4 +51,154 @@
             </form>
         </section>
     </div>
+    <script>
+        (function () {
+            var titleInput = document.getElementById("id_item_title");
+            var typeInput = document.getElementById("id_item_type");
+            var keyInput = document.getElementById("id_selected_item_key");
+            var selectedTitleInput = document.getElementById("id_selected_item_title");
+            var selectedYearInput = document.getElementById("id_selected_item_year");
+            var selectedCreatorInput = document.getElementById("id_selected_item_creator");
+            var selectedImageInput = document.getElementById("id_selected_item_image_url");
+            var selectedSourceInput = document.getElementById("id_selected_item_external_source");
+            var selectedExternalIdInput = document.getElementById("id_selected_item_external_id");
+            var list = document.getElementById("item-suggestions");
+            var suggestionMessage = document.getElementById("item-suggestion-message");
+            var activeRequest = null;
+            var debounceTimer = null;
+
+            if (!titleInput || !typeInput || !keyInput || !selectedTitleInput || !list) return;
+
+            function clearSelection() {
+                keyInput.value = "";
+                selectedTitleInput.value = "";
+                if (selectedYearInput) selectedYearInput.value = "";
+                if (selectedCreatorInput) selectedCreatorInput.value = "";
+                if (selectedImageInput) selectedImageInput.value = "";
+                if (selectedSourceInput) selectedSourceInput.value = "";
+                if (selectedExternalIdInput) selectedExternalIdInput.value = "";
+            }
+
+            function hideList() {
+                list.style.display = "none";
+                list.innerHTML = "";
+            }
+
+            function setMessage(text) {
+                if (!suggestionMessage) return;
+                if (!text) {
+                    suggestionMessage.style.display = "none";
+                    suggestionMessage.textContent = "";
+                    return;
+                }
+                suggestionMessage.style.display = "block";
+                suggestionMessage.textContent = text;
+            }
+
+            function renderSuggestions(items) {
+                if (!items.length) {
+                    hideList();
+                    return;
+                }
+                setMessage("");
+                list.innerHTML = "";
+                items.forEach(function (item) {
+                    var button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "button secondary";
+                    button.style.width = "100%";
+                    button.style.justifyContent = "flex-start";
+                    button.style.marginBottom = "6px";
+                    button.style.gap = "10px";
+
+                    var image = document.createElement("img");
+                    image.alt = "";
+                    image.style.width = "38px";
+                    image.style.height = "54px";
+                    image.style.objectFit = "cover";
+                    image.style.borderRadius = "6px";
+                    image.style.flex = "0 0 auto";
+                    image.src = item.image_url || "/static/posts/images/revue-layouts.png";
+                    button.appendChild(image);
+
+                    var creator = item.creator || (item.item_type === "book" ? "Unknown writer" : "Unknown director");
+                    var year = item.year || "Unknown year";
+                    var text = document.createElement("span");
+                    text.textContent = item.title + " | " + item.item_type + " | " + year + " | " + creator;
+                    button.appendChild(text);
+
+                    button.addEventListener("click", function () {
+                        titleInput.value = item.title;
+                        keyInput.value = item.key;
+                        selectedTitleInput.value = item.title;
+                        if (selectedYearInput) selectedYearInput.value = item.year || "";
+                        if (selectedCreatorInput) selectedCreatorInput.value = item.creator || "";
+                        if (selectedImageInput) selectedImageInput.value = item.image_url || "";
+                        if (selectedSourceInput) selectedSourceInput.value = item.external_source || "";
+                        if (selectedExternalIdInput) selectedExternalIdInput.value = item.external_id || "";
+                        hideList();
+                    });
+                    list.appendChild(button);
+                });
+                list.style.display = "block";
+            }
+
+            async function fetchSuggestions() {
+                var q = titleInput.value.trim();
+                if (q.length < 2) {
+                    hideList();
+                    setMessage("");
+                    return;
+                }
+                if (activeRequest) {
+                    activeRequest.abort();
+                }
+                activeRequest = new AbortController();
+                try {
+                    var params = new URLSearchParams({
+                        q: q,
+                        item_type: typeInput.value
+                    });
+                    var response = await fetch("{% url 'suggest_items' %}?" + params.toString(), {
+                        signal: activeRequest.signal
+                    });
+                    if (!response.ok) {
+                        hideList();
+                        setMessage("Could not fetch suggestions right now.");
+                        return;
+                    }
+                    var data = await response.json();
+                    if (data.error) {
+                        setMessage(data.error);
+                    } else {
+                        setMessage("");
+                    }
+                    renderSuggestions(data.results || []);
+                } catch (error) {
+                    if (error.name === "AbortError") return;
+                    hideList();
+                    setMessage("Could not fetch suggestions right now.");
+                }
+            }
+
+            function scheduleSuggestions() {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(fetchSuggestions, 250);
+            }
+
+            titleInput.addEventListener("input", function () {
+                clearSelection();
+                scheduleSuggestions();
+            });
+            typeInput.addEventListener("change", function () {
+                clearSelection();
+                scheduleSuggestions();
+            });
+            document.addEventListener("click", function (event) {
+                if (!list.contains(event.target) && event.target !== titleInput) {
+                    hideList();
+                }
+            });
+        })();
+    </script>
 {% endblock %}

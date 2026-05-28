@@ -80,3 +80,56 @@ class SocialReviewTests(TestCase):
         response = self.client.get(reverse("profile"))
 
         self.assertEqual(response.status_code, 302)
+
+    def test_discover_requires_login(self):
+        response = self.client.get(reverse("discover"))
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_search_returns_matching_item_and_person(self):
+        self.client.login(username="alex", password="pass")
+        ResponseItem = Item.objects.create(title="Past Lives", item_type="movie")
+        Review.objects.create(
+            user=self.sam,
+            item=ResponseItem,
+            rating=4,
+            review_text="Quiet and reflective.",
+        )
+
+        response = self.client.get(reverse("search"), {"q": "sam"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "sam")
+        self.assertContains(response, "People")
+
+    def test_new_review_reuses_existing_item_for_selected_google_title(self):
+        self.client.login(username="alex", password="pass")
+
+        first = self.client.post(
+            reverse("new_review"),
+            {
+                "item_title": "Interstellar",
+                "item_type": "movie",
+                "selected_item_key": "google:Interstellar",
+                "selected_item_title": "Interstellar",
+                "rating": 5,
+                "review_text": "Great.",
+            },
+        )
+        second = self.client.post(
+            reverse("new_review"),
+            {
+                "item_title": "interstellar",
+                "item_type": "movie",
+                "selected_item_key": "google:interstellar",
+                "selected_item_title": "interstellar",
+                "rating": 4,
+                "review_text": "Still great.",
+            },
+        )
+
+        self.assertRedirects(first, reverse("feed"))
+        self.assertRedirects(second, reverse("feed"))
+        self.assertEqual(Item.objects.filter(title__iexact="interstellar", item_type="movie").count(), 1)
+        item = Item.objects.get(title__iexact="interstellar", item_type="movie")
+        self.assertEqual(Review.objects.filter(item=item).count(), 2)

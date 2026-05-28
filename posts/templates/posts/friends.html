@@ -11,12 +11,18 @@
 
         <section class="toolbar card">
             <form class="search-form" method="get">
+                <input type="hidden" name="tab" value="{{ active_tab }}">
                 <label for="friends-search">Search friends</label>
                 <div class="search-row">
                     <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search people, recommendations, titles">
                     <button type="submit">Search</button>
                 </div>
             </form>
+            <div class="filters">
+                <a class="filter-link {% if active_tab == 'following' %}active{% endif %}" href="{% url 'friends' %}?tab=following{% if query %}&q={{ query|urlencode }}{% endif %}">Following</a>
+                <a class="filter-link {% if active_tab == 'followers' %}active{% endif %}" href="{% url 'friends' %}?tab=followers{% if query %}&q={{ query|urlencode }}{% endif %}">Followers</a>
+                <a class="filter-link {% if active_tab == 'suggestions' %}active{% endif %}" href="{% url 'friends' %}?tab=suggestions{% if query %}&q={{ query|urlencode }}{% endif %}">Suggestions</a>
+            </div>
         </section>
 
         <div class="layout-grid">
@@ -40,18 +46,55 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title">Your friends</h2>
-                    {% for friend in friends %}
-                        <div class="person-row">
-                            <div class="person-name">
-                                <span class="avatar">{{ friend.username|first }}</span>
-                                <strong>{{ friend.username }}</strong>
+                    {% if active_tab == "followers" %}
+                        <h2 class="card-title">People following you</h2>
+                        {% for follower in followers %}
+                            <div class="person-row">
+                                <div class="person-name">
+                                    <span class="avatar">{{ follower.username|first }}</span>
+                                    <strong>{{ follower.username }}</strong>
+                                </div>
+                                <form method="post" action="{% url 'add_friend' follower.id %}" class="js-async-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button" data-plain-button="1">Follow back</button>
+                                </form>
                             </div>
-                            <a class="button secondary" href="{% url 'remove_friend' friend.id %}">Remove</a>
-                        </div>
-                    {% empty %}
-                        <p class="empty-state">You have not added friends yet.</p>
-                    {% endfor %}
+                        {% empty %}
+                            <p class="empty-state">No followers yet.</p>
+                        {% endfor %}
+                    {% elif active_tab == "suggestions" %}
+                        <h2 class="card-title">People you may know</h2>
+                        {% for person in suggested_users %}
+                            <div class="person-row">
+                                <div class="person-name">
+                                    <span class="avatar">{{ person.username|first }}</span>
+                                    <strong>{{ person.username }}</strong>
+                                </div>
+                                <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button" data-plain-button="1">Follow</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="empty-state">No more suggestions match this search.</p>
+                        {% endfor %}
+                    {% else %}
+                        <h2 class="card-title">People you follow</h2>
+                        {% for friend in friends %}
+                            <div class="person-row">
+                                <div class="person-name">
+                                    <span class="avatar">{{ friend.username|first }}</span>
+                                    <strong>{{ friend.username }}</strong>
+                                </div>
+                                <form method="post" action="{% url 'remove_friend' friend.id %}" class="js-async-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button secondary" data-plain-button="1">Unfollow</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="empty-state">You are not following anyone yet.</p>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </section>
 
@@ -63,7 +106,10 @@
                             <span class="avatar">{{ person.username|first }}</span>
                             <strong>{{ person.username }}</strong>
                         </div>
-                        <a class="button" href="{% url 'add_friend' person.id %}">Add friend</a>
+                        <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                            {% csrf_token %}
+                            <button type="submit" class="button" data-plain-button="1">Add friend</button>
+                        </form>
                     </div>
                 {% empty %}
                     <p class="empty-state">No more people match this search.</p>

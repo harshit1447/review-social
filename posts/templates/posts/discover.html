@@ -1,0 +1,111 @@
+{% extends "base_app.html" %}
+
+{% block title %}Discover | Review Social{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <section class="page-header">
+            <h1>Discover</h1>
+            <p class="page-subtitle">Find trending reviews, what your friends are into, and recent highlights.</p>
+        </section>
+
+        <section class="toolbar card">
+            <form class="search-form" method="get">
+                <input type="hidden" name="chip" value="{{ chip }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <label for="discover-search">Search discover</label>
+                <div class="search-row">
+                    <input id="discover-search" type="search" name="q" value="{{ query }}" placeholder="Search reviews, titles, people">
+                    <button type="submit">Search</button>
+                </div>
+            </form>
+            <div class="filters">
+                <a class="filter-link {% if chip == 'for-you' %}active{% endif %}" href="{% url 'discover' %}?chip=for-you&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">For you</a>
+                <a class="filter-link {% if chip == 'trending' %}active{% endif %}" href="{% url 'discover' %}?chip=trending&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">Trending</a>
+                <a class="filter-link {% if chip == 'new-releases' %}active{% endif %}" href="{% url 'discover' %}?chip=new-releases&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">New releases</a>
+                <a class="filter-link {% if sort == 'newest' %}active{% endif %}" href="{% url 'discover' %}?chip={{ chip }}&sort=newest{% if query %}&q={{ query|urlencode }}{% endif %}">Newest</a>
+                <a class="filter-link {% if sort == 'top' %}active{% endif %}" href="{% url 'discover' %}?chip={{ chip }}&sort=top{% if query %}&q={{ query|urlencode }}{% endif %}">Top</a>
+            </div>
+        </section>
+
+        <div class="layout-grid">
+            <section class="stack">
+                <article class="card">
+                    <h2 class="card-title">Trending this week</h2>
+                    {% for review in trending_reviews %}
+                        <div class="recommendation">
+                            <p><strong>{{ review.item.title }}</strong> by <strong>{{ review.user.username }}</strong></p>
+                            <p class="meta">{{ review.item.get_item_type_display }} · {{ review.rating }}/5 · {{ review.created_at|date:"M j" }}</p>
+                            <p class="meta">{{ review.review_text|truncatechars:120 }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No trending reviews yet. Add a few reviews to spark this section.</p>
+                    {% endfor %}
+                    {% if trending_page_obj and trending_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if trending_page_obj.has_previous %}
+                                <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&trending_page={{ trending_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ trending_page_obj.number }}/{{ trending_page_obj.paginator.num_pages }}</span>
+                            {% if trending_page_obj.has_next %}
+                                <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&trending_page={{ trending_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+
+                <article class="card">
+                    <h2 class="card-title">Popular with your friends</h2>
+                    {% for review in friend_favorites %}
+                        <div class="recommendation">
+                            <p><strong>{{ review.item.title }}</strong> from {{ review.user.username }}</p>
+                            <p class="meta">{{ review.item.get_item_type_display }} · Rated {{ review.rating }}/5 · {{ review.created_at|date:"M j" }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">Follow a few friends to personalize this feed.</p>
+                    {% endfor %}
+                    {% if friends_page_obj and friends_page_obj.paginator.num_pages > 1 %}
+                        <div class="form-actions">
+                            {% if friends_page_obj.has_previous %}
+                                <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&friends_page={{ friends_page_obj.previous_page_number }}">Prev</a>
+                            {% endif %}
+                            <span class="meta">Page {{ friends_page_obj.number }}/{{ friends_page_obj.paginator.num_pages }}</span>
+                            {% if friends_page_obj.has_next %}
+                                <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&friends_page={{ friends_page_obj.next_page_number }}">Next</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+            </section>
+
+            <aside class="card">
+                <h2 class="card-title">Recently posted</h2>
+                {% for review in recent_reviews %}
+                    <div class="person-row">
+                        <div class="person-name">
+                            <span class="avatar">{{ review.user.username|first }}</span>
+                            <div>
+                                <strong>{{ review.item.title }}</strong>
+                                <p class="meta">{{ review.user.username }}</p>
+                            </div>
+                        </div>
+                        <span class="meta">{{ review.created_at|date:"M j" }}</span>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">Nothing recent yet.</p>
+                {% endfor %}
+                {% if recent_page_obj and recent_page_obj.paginator.num_pages > 1 %}
+                    <div class="form-actions">
+                        {% if recent_page_obj.has_previous %}
+                            <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&recent_page={{ recent_page_obj.previous_page_number }}">Prev</a>
+                        {% endif %}
+                        <span class="meta">Page {{ recent_page_obj.number }}/{{ recent_page_obj.paginator.num_pages }}</span>
+                        {% if recent_page_obj.has_next %}
+                            <a class="button secondary" href="?chip={{ chip }}{% if query %}&q={{ query|urlencode }}{% endif %}&recent_page={{ recent_page_obj.next_page_number }}">Next</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+{% endblock %}
