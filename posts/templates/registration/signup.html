@@ -6,52 +6,304 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign up | Revue</title>
-    <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=revue-fit-1">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100svh;
+            color: #151515;
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 76% 10%, rgba(183, 121, 63, 0.18), transparent 30%),
+                linear-gradient(135deg, #fff9ef 0%, #efd8ba 100%);
+            overflow: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            height: 100svh;
+            max-width: 1460px;
+            margin: 0 auto;
+            padding: clamp(22px, 3.1vh, 36px) clamp(20px, 4vw, 56px);
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 14px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wordmark img {
+            display: block;
+            height: clamp(70px, 10vh, 118px);
+            width: auto;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .top-actions a {
+            border: 1px solid rgba(20, 20, 20, 0.18);
+            border-radius: 999px;
+            min-height: 44px;
+            min-width: 104px;
+            padding: 9px 20px;
+            font-weight: 800;
+            font-size: clamp(0.95rem, 1.2vw, 1.12rem);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .top-actions a:hover,
+        .top-actions a:focus-visible {
+            background: #171615;
+            border-color: #171615;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(320px, 0.8fr) minmax(560px, 1.1fr);
+            gap: clamp(24px, 3.2vw, 52px);
+            align-items: start;
+            min-height: 0;
+        }
+
+        .story {
+            display: grid;
+            align-content: start;
+            padding-top: clamp(4px, 1vh, 12px);
+        }
+
+        .eyebrow {
+            margin: 0 0 18px;
+            text-transform: uppercase;
+            color: #a86432;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(3.6rem, 6.8vw, 5.8rem);
+            line-height: 0.94;
+        }
+
+        .lead {
+            margin: 16px 0 0;
+            max-width: 520px;
+            font-size: clamp(1.08rem, 1.45vw, 1.55rem);
+            line-height: 1.4;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(20, 20, 20, 0.12);
+            border-radius: 20px;
+            padding: clamp(18px, 2vw, 28px);
+            box-shadow: 0 18px 46px rgba(74, 45, 22, 0.08);
+            max-width: 720px;
+            width: 100%;
+            justify-self: end;
+        }
+
+        .errors,
+        .errorlist {
+            color: #9f2f2f;
+            margin: 0 0 12px;
+            padding-left: 18px;
+        }
+
+        .field {
+            display: grid;
+            gap: 7px;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            min-height: 56px;
+            border-radius: 12px;
+            border: 1px solid #d9d3cb;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 14px;
+            font-size: 1.06rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: 2px solid rgba(168, 100, 50, 0.26);
+            outline-offset: 0;
+            border-color: #b58a64;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #645d56;
+            margin: 12px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ded5ca;
+        }
+
+        .google {
+            min-height: 54px;
+            border: 1px solid #d9d3cb;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.02rem;
+        }
+
+        .google-disabled {
+            color: #7a736c;
+        }
+
+        .google-mark {
+            color: #4285f4;
+            font-size: 1.45rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .submit {
+            width: 100%;
+            min-height: 58px;
+            border: 0;
+            border-radius: 12px;
+            background: #171615;
+            color: #fff;
+            font-size: 1.08rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.18s ease;
+        }
+
+        .submit:hover,
+        .submit:focus-visible {
+            background: #7b451f;
+        }
+
+        .switch {
+            margin: 14px 0 0;
+            text-align: center;
+            color: #5e5852;
+            font-size: 0.95rem;
+        }
+
+        .switch a {
+            color: #a86432;
+            font-weight: 800;
+        }
+
+        @media (max-width: 940px) {
+            .layout {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            body {
+                overflow: auto;
+            }
+
+            .page {
+                height: auto;
+                min-height: 100svh;
+            }
+        }
+    </style>
 </head>
-<body class="auth-body">
-    <nav class="marketing-nav auth-nav" aria-label="Primary">
-        <a class="wordmark" href="{% url 'landing' %}">Revue</a>
-        <div class="marketing-actions">
-            <a class="plain-link" href="{% url 'account_login' %}">Log in</a>
-            <a class="pill-button warm" href="{% url 'signup' %}">Sign up</a>
-        </div>
-    </nav>
+<body>
+    <main class="page">
+        <nav class="topbar" aria-label="Primary">
+            <a class="wordmark" href="{% url 'landing' %}">
+                <img src="{% static 'posts/images/revue-wordmark-clean.png' %}" alt="Revue">
+            </a>
+            <div class="top-actions">
+                <a href="{% url 'account_login' %}">Log in</a>
+                <a href="{% url 'signup' %}">Sign up</a>
+            </div>
+        </nav>
 
-    <main class="auth-shell">
-        <section class="auth-story">
-            <p class="auth-eyebrow">Join Revue</p>
-            <h1>Sign up</h1>
-            <p>Create your taste profile, follow friends, and keep every recommendation in one place.</p>
-            <div class="auth-still" aria-hidden="true"></div>
-        </section>
+        <section class="layout">
+            <section class="story">
+                <div>
+                    <p class="eyebrow">Join Revue</p>
+                    <h1>Sign up</h1>
+                    <p class="lead">Create your taste profile, follow friends, and keep every recommendation in one place.</p>
+                </div>
+            </section>
 
-        <section class="auth-card">
-            {% if google_auth_enabled %}
-                <a class="google-auth" href="{% provider_login_url 'google' %}">Continue with Google</a>
-                <div class="auth-divider">OR</div>
-            {% endif %}
+            <section class="card">
+                {% if google_auth_enabled %}
+                    <a class="google" href="{% provider_login_url 'google' %}">
+                        <span class="google-mark" aria-hidden="true">G</span>
+                        <span>Continue with Google</span>
+                    </a>
+                    <div class="divider">OR</div>
+                {% else %}
+                    <div class="google google-disabled" aria-disabled="true">
+                        <span class="google-mark" aria-hidden="true">G</span>
+                        <span>Continue with Google</span>
+                    </div>
+                    <div class="divider">OR</div>
+                {% endif %}
 
-            <form method="post">
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-                <div class="auth-field">
-                    <label for="{{ form.username.id_for_label }}">Username</label>
-                    {{ form.username }}
-                    {{ form.username.errors }}
-                </div>
-                <div class="auth-field">
-                    <label for="{{ form.password1.id_for_label }}">Password</label>
-                    {{ form.password1 }}
-                    {{ form.password1.errors }}
-                </div>
-                <div class="auth-field">
-                    <label for="{{ form.password2.id_for_label }}">Confirm password</label>
-                    {{ form.password2 }}
-                    {{ form.password2.errors }}
-                </div>
-                <button class="auth-submit" type="submit">Create account</button>
-            </form>
-            <p class="auth-switch">Already here? <a href="{% url 'account_login' %}">Log in</a></p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="field">
+                        <label for="{{ form.username.id_for_label }}">Username</label>
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+                    <div class="field">
+                        <label for="{{ form.password1.id_for_label }}">Password</label>
+                        {{ form.password1 }}
+                        {{ form.password1.errors }}
+                    </div>
+                    <div class="field">
+                        <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+                        {{ form.password2 }}
+                        {{ form.password2.errors }}
+                    </div>
+                    <button class="submit" type="submit">Create account</button>
+                </form>
+                <p class="switch">Already here? <a href="{% url 'account_login' %}">Log in</a></p>
+            </section>
         </section>
     </main>
 </body>
