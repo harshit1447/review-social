@@ -78,7 +78,7 @@
 
         .layout {
             display: grid;
-            grid-template-columns: minmax(320px, 0.8fr) minmax(560px, 1.1fr);
+            grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 0.8fr);
             gap: clamp(24px, 3.2vw, 52px);
             align-items: start;
             min-height: 0;
@@ -116,9 +116,9 @@
             background: rgba(255, 255, 255, 0.78);
             border: 1px solid rgba(20, 20, 20, 0.12);
             border-radius: 20px;
-            padding: clamp(18px, 2vw, 28px);
+            padding: clamp(16px, 1.7vw, 22px);
             box-shadow: 0 18px 46px rgba(74, 45, 22, 0.08);
-            max-width: 720px;
+            max-width: 480px;
             width: 100%;
             justify-self: end;
         }
@@ -144,12 +144,12 @@
         input[type="text"],
         input[type="password"] {
             width: 100%;
-            min-height: 56px;
+            min-height: 46px;
             border-radius: 12px;
             border: 1px solid #d9d3cb;
             background: rgba(255, 255, 255, 0.9);
-            padding: 12px 14px;
-            font-size: 1.06rem;
+            padding: 9px 12px;
+            font-size: 0.98rem;
         }
 
         input[type="text"]:focus,
@@ -176,7 +176,7 @@
         }
 
         .google {
-            min-height: 54px;
+            min-height: 46px;
             border: 1px solid #d9d3cb;
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.92);
@@ -185,7 +185,7 @@
             justify-content: center;
             gap: 10px;
             font-weight: 800;
-            font-size: 1.02rem;
+            font-size: 0.96rem;
         }
 
         .google-disabled {
@@ -201,12 +201,12 @@
 
         .submit {
             width: 100%;
-            min-height: 58px;
+            min-height: 48px;
             border: 0;
             border-radius: 12px;
             background: #171615;
             color: #fff;
-            font-size: 1.08rem;
+            font-size: 1rem;
             font-weight: 800;
             cursor: pointer;
             transition: background 0.18s ease;

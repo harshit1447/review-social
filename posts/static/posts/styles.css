@@ -679,6 +679,20 @@ textarea {
     margin-left: 6px;
 }
 
+.app-wordmark-link span {
+    display: none;
+}
+
+.app-wordmark-link img:not([src]),
+.app-wordmark-link img[src=""] {
+    display: none;
+}
+
+.app-wordmark-link img:not([src]) + span,
+.app-wordmark-link img[src=""] + span {
+    display: inline-block;
+}
+
 .sidebar-nav {
     display: grid;
     gap: 0;
