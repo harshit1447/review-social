@@ -1,0 +1,31 @@
+{% extends "base_app.html" %}
+
+{% block title %}Notifications | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="page-header">
+        <h1>Notifications</h1>
+        <p class="page-subtitle">Follows, likes, comments, and replies.</p>
+    </section>
+    <section class="card">
+        <form method="post" class="form-actions">
+            {% csrf_token %}
+            <button type="submit">Mark all read</button>
+        </form>
+    </section>
+    <section class="feed-stack">
+        {% for notification in notifications %}
+            <article class="card activity-card">
+                <span class="mini-avatar">{{ notification.actor.username|first }}</span>
+                <div>
+                    <strong>{{ notification.message }}</strong>
+                    <p class="meta">{{ notification.created_at|timesince }} ago{% if not notification.is_read %} - unread{% endif %}</p>
+                </div>
+            </article>
+        {% empty %}
+            <div class="card empty-panel"><h2>No notifications</h2><p>Your social updates will appear here.</p></div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

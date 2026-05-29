@@ -35,7 +35,8 @@
                 radial-gradient(circle at 86% 4%, rgba(179, 106, 50, 0.12), transparent 28%),
                 linear-gradient(135deg, #fbf6ee 0%, #ead8c4 100%);
             color: var(--text);
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
+            font-size: 14px;
             line-height: 1.5;
         }
 
@@ -56,7 +57,7 @@
             flex-direction: column;
             gap: 14px;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
             padding: 20px 16px;
         }
 
@@ -139,6 +140,72 @@
             padding-top: 0;
         }
 
+        .sidebar-profile-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,253,249,0.9));
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 22px;
+            padding: 14px;
+        }
+
+        .sidebar-profile-top {
+            align-items: center;
+            display: flex;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .sidebar-name {
+            display: block;
+            font-weight: 950;
+            line-height: 1.1;
+            overflow-wrap: anywhere;
+        }
+
+        .sidebar-handle {
+            color: var(--muted);
+            display: block;
+            font-size: 0.78rem;
+            margin-top: 2px;
+        }
+
+        .sidebar-stats {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-top: 14px;
+        }
+
+        .sidebar-stat {
+            background: rgba(179, 106, 50, 0.08);
+            border-radius: 14px;
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .sidebar-stat strong,
+        .sidebar-stat span {
+            display: block;
+        }
+
+        .sidebar-stat strong {
+            font-size: 1rem;
+        }
+
+        .sidebar-stat span {
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 850;
+        }
+
+        .sidebar-section-title {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+            margin: 8px 4px 0;
+            text-transform: uppercase;
+        }
+
         .main-content {
             height: 100vh;
             overflow-y: auto;
@@ -202,7 +269,7 @@
             align-items: start;
             display: grid;
             gap: 22px;
-            grid-template-columns: minmax(0, 1fr) 320px;
+            grid-template-columns: minmax(0, 1fr) 340px;
         }
 
         .social-center,
@@ -527,7 +594,7 @@
         }
 
         .profile-info {
-            align-items: end;
+            align-items: center;
             display: grid;
             gap: 18px;
             grid-template-columns: auto minmax(0, 1fr) auto;
@@ -554,7 +621,7 @@
         .stat-grid {
             display: grid;
             gap: 12px;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         }
 
         .stat-card {
@@ -730,6 +797,279 @@
             max-width: 520px;
         }
 
+        .feed-hero {
+            align-items: end;
+            display: flex;
+            gap: 18px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .feed-hero h1 {
+            font-size: clamp(2.4rem, 5vw, 4.8rem);
+            font-weight: 950;
+            letter-spacing: -0.065em;
+            line-height: 0.92;
+            margin: 0;
+            max-width: 760px;
+        }
+
+        .feed-hero p {
+            color: var(--muted);
+            margin: 12px 0 0;
+            max-width: 680px;
+        }
+
+        .composer-panel {
+            display: grid;
+            gap: 16px;
+        }
+
+        .composer-title-row {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .composer-title-row h2,
+        .section-heading h2 {
+            font-size: 1.35rem;
+            letter-spacing: -0.035em;
+            margin: 0;
+        }
+
+        .composer-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 150px minmax(0, 1fr) 120px;
+        }
+
+        .composer-grid label {
+            color: var(--muted);
+            display: grid;
+            font-size: 0.78rem;
+            font-weight: 900;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+
+        .composer-grid select,
+        .composer-grid input,
+        .composer-textarea {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 16px;
+            min-height: 46px;
+            padding: 10px 12px;
+            width: 100%;
+        }
+
+        .composer-textarea {
+            min-height: 86px;
+            resize: vertical;
+        }
+
+        .quick-reactions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .reaction-chip,
+        .topic-chip {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 999px;
+            color: #40372f;
+            font-size: 0.86rem;
+            font-weight: 850;
+            padding: 8px 11px;
+        }
+
+        .section-heading {
+            align-items: center;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin: 6px 0 -4px;
+        }
+
+        .rank-label {
+            background: #171513;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.76rem;
+            font-weight: 950;
+            padding: 6px 10px;
+        }
+
+        .review-context {
+            background: rgba(179, 106, 50, 0.08);
+            border-left: 3px solid var(--accent);
+            border-radius: 14px;
+            color: #4a3e34;
+            font-size: 0.92rem;
+            font-weight: 800;
+            margin-top: 12px;
+            padding: 10px 12px;
+        }
+
+        .rating-stars {
+            color: var(--accent-dark);
+            font-weight: 950;
+            letter-spacing: 0.08em;
+        }
+
+        .review-image-strip {
+            background: linear-gradient(135deg, rgba(23, 21, 19, 0.08), rgba(179, 106, 50, 0.12));
+            border-radius: 20px;
+            min-height: 76px;
+            padding: 14px;
+        }
+
+        .interaction-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .interaction-button {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 14px;
+            color: #342d27;
+            cursor: pointer;
+            display: inline-flex;
+            flex-direction: column;
+            font-size: 0.78rem;
+            font-weight: 900;
+            gap: 3px;
+            justify-content: center;
+            min-height: 54px;
+            padding: 8px 6px;
+            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+
+        button.interaction-button,
+        button.interaction-button[type="submit"] {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(126, 67, 30, 0.14);
+            border-radius: 14px;
+            color: #342d27;
+            min-height: 54px;
+            padding: 8px 6px;
+            width: 100%;
+        }
+
+        .interaction-button:hover,
+        .interaction-button.active,
+        button.interaction-button:hover,
+        button.interaction-button.active {
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .recommendation-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.68);
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 20px;
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+        }
+
+        .recommendation-card small {
+            color: var(--accent-dark);
+            font-weight: 950;
+            text-transform: uppercase;
+        }
+
+        .activity-card {
+            align-items: start;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 36px minmax(0, 1fr);
+        }
+
+        .mini-avatar {
+            align-items: center;
+            background: #171513;
+            border-radius: 50%;
+            color: #fff;
+            display: inline-flex;
+            font-size: 0.88rem;
+            font-weight: 950;
+            height: 36px;
+            justify-content: center;
+            width: 36px;
+        }
+
+        .widget-number {
+            font-size: 2rem;
+            font-weight: 950;
+            letter-spacing: -0.06em;
+            line-height: 1;
+        }
+
+        .heatmap {
+            display: grid;
+            gap: 5px;
+            grid-template-columns: repeat(14, 1fr);
+            margin-top: 12px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1;
+            background: rgba(179, 106, 50, 0.1);
+            border-radius: 4px;
+        }
+
+        .heat-cell.hot { background: rgba(179, 106, 50, 0.72); }
+        .heat-cell.warm { background: rgba(179, 106, 50, 0.34); }
+
+        .mobile-create {
+            align-items: center;
+            background: var(--accent);
+            border-radius: 999px;
+            bottom: 18px;
+            box-shadow: 0 18px 40px rgba(77, 49, 27, 0.24);
+            color: #fff;
+            display: none;
+            font-weight: 950;
+            min-height: 54px;
+            padding: 0 18px;
+            position: fixed;
+            right: 18px;
+            z-index: 20;
+        }
+
+        .toast-stack {
+            bottom: 20px;
+            display: grid;
+            gap: 10px;
+            position: fixed;
+            right: 20px;
+            z-index: 30;
+        }
+
+        .toast {
+            background: #171513;
+            border-radius: 16px;
+            box-shadow: 0 18px 48px rgba(23, 21, 19, 0.22);
+            color: #fff;
+            font-weight: 850;
+            padding: 12px 14px;
+        }
+
         @keyframes like-pop {
             0% { transform: scale(1); }
             45% { transform: scale(1.12) translateY(-1px); }
@@ -759,11 +1099,23 @@
         }
 
         .profile-info h1 {
-            font-size: clamp(2.4rem, 5vw, 4.1rem);
+            font-size: clamp(2rem, 3.8vw, 3.25rem);
             font-weight: 950;
             letter-spacing: -0.055em;
-            line-height: 0.98;
+            line-height: 1;
             margin: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .profile-info .button {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .profile-copy {
+            min-width: 0;
         }
 
         .button.secondary,
@@ -860,6 +1212,359 @@
             width: 1px;
         }
 
+        /* Tidy feed pass */
+        .feed-page {
+            max-width: 1080px;
+        }
+
+        .feed-layout-tidy {
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 22px;
+        }
+
+        .feed-layout-tidy .social-center {
+            gap: 22px;
+        }
+
+        .feed-hero-compact {
+            margin-bottom: 16px;
+            min-height: auto;
+        }
+
+        .feed-hero-compact h1 {
+            font-size: clamp(1.65rem, 2.55vw, 2.45rem);
+            letter-spacing: -0.045em;
+        }
+
+        .feed-hero-compact p,
+        .tidy-feed-stack .meta,
+        .tidy-right-rail .meta {
+            font-size: 0.84rem;
+        }
+
+        .tidy-composer-panel,
+        .tidy-toolbar,
+        .tidy-review-card,
+        .tidy-right-rail .card {
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .tidy-composer-panel h2,
+        .tidy-right-rail .card-title {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .composer-title-row {
+            align-items: start;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .inline-review-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .inline-review-form label {
+            color: #342d27;
+            display: grid;
+            font-size: 0.76rem;
+            font-weight: 900;
+            gap: 6px;
+        }
+
+        .inline-review-form input,
+        .inline-review-form select,
+        .inline-review-form textarea,
+        .tidy-toolbar input {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 0.9rem;
+            min-height: 38px;
+            padding: 8px 11px;
+            width: 100%;
+        }
+
+        .inline-review-form textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        .inline-review-form input:focus,
+        .inline-review-form select:focus,
+        .inline-review-form textarea:focus,
+        .tidy-toolbar input:focus {
+            border-color: rgba(179, 106, 50, 0.5);
+            box-shadow: 0 0 0 4px rgba(179, 106, 50, 0.1);
+            outline: 0;
+        }
+
+        .composer-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 118px minmax(0, 1fr) 94px;
+        }
+
+        .suggestion-message {
+            display: none;
+            margin: 0;
+        }
+
+        .item-suggestions {
+            background: rgba(255, 253, 249, 0.98);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 16px;
+            box-shadow: 0 16px 42px rgba(77, 49, 27, 0.12);
+            display: grid;
+            gap: 6px;
+            max-height: 310px;
+            overflow: auto;
+            padding: 8px;
+        }
+
+        .item-suggestions[hidden] {
+            display: none;
+        }
+
+        .suggestion-button {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 12px;
+            color: var(--text);
+            cursor: pointer;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 42px minmax(0, 1fr);
+            min-height: 58px;
+            padding: 6px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .suggestion-button:hover {
+            background: var(--accent-soft);
+        }
+
+        .suggestion-button img {
+            aspect-ratio: 2 / 3;
+            border-radius: 8px;
+            object-fit: cover;
+            width: 42px;
+        }
+
+        .suggestion-copy {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .suggestion-copy strong,
+        .rail-item strong,
+        .person-name strong {
+            overflow-wrap: anywhere;
+        }
+
+        .suggestion-copy small {
+            color: var(--muted);
+            font-weight: 750;
+        }
+
+        .feed-quick-filters {
+            border-bottom: 1px solid rgba(126, 67, 30, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tidy-feed-stack {
+            gap: 24px;
+        }
+
+        .tidy-review-card {
+            gap: 12px;
+        }
+
+        .tidy-review-card .post-header {
+            grid-template-columns: 34px minmax(0, 1fr) auto !important;
+        }
+
+        .tidy-review-card .post-avatar,
+        .tidy-review-card .avatar {
+            height: 34px;
+            width: 34px;
+        }
+
+        .tidy-review-card .post-name {
+            font-size: 0.9rem;
+        }
+
+        .tidy-review-card .post-item {
+            align-items: stretch !important;
+            grid-template-columns: 88px minmax(0, 1fr) !important;
+            gap: 13px;
+        }
+
+        .tidy-review-card .review-poster {
+            border-radius: 14px;
+            height: 128px !important;
+            min-height: 128px !important;
+            width: 88px !important;
+        }
+
+        .tidy-review-card .item-title {
+            font-size: 1rem;
+            letter-spacing: -0.025em;
+            margin-top: 5px;
+        }
+
+        .tidy-review-card .review-text {
+            font-size: 0.9rem;
+            line-height: 1.42;
+            margin-top: 7px;
+        }
+
+        .tidy-review-card .rating,
+        .tidy-review-card .badge {
+            font-size: 0.76rem;
+            padding: 4px 8px;
+        }
+
+        .review-copy {
+            display: flex;
+            flex-direction: column;
+            min-height: 128px;
+            min-width: 0;
+        }
+
+        .review-meta-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 10px;
+        }
+
+        .review-meta-actions .external-ratings {
+            margin-top: 0;
+        }
+
+        .review-meta-actions .external-ratings span {
+            font-size: 0.76rem;
+            padding: 4px 8px;
+        }
+
+        .compact-actions {
+            align-items: center;
+            display: flex !important;
+            gap: 8px;
+            padding-top: 0;
+            border-top: 0;
+        }
+
+        .compact-actions .icon-button {
+            border-radius: 999px;
+            min-height: 30px;
+            min-width: 36px;
+            padding: 6px 9px;
+        }
+
+        .compact-actions .icon-button svg {
+            height: 15px;
+            width: 15px;
+        }
+
+        .tidy-right-rail {
+            gap: 20px;
+        }
+
+        .tidy-right-rail .button {
+            min-height: 34px;
+            padding: 7px 11px;
+        }
+
+        .tidy-right-rail .avatar {
+            height: 36px;
+            width: 36px;
+        }
+
+        /* LinkedIn-like type pass: calmer system font and fewer ultra-bold weights. */
+        body,
+        input,
+        select,
+        textarea,
+        button {
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
+        }
+
+        strong,
+        b,
+        .post-name,
+        .sidebar-name,
+        .person-name strong,
+        .rail-item strong {
+            font-weight: 600;
+        }
+
+        .page-header h1,
+        .page-header h2,
+        .feed-hero h1,
+        .item-title,
+        .profile-info h1,
+        .item-hero-copy h1 {
+            font-weight: 700;
+        }
+
+        .card-title,
+        .composer-title-row h2,
+        .section-heading h2,
+        .widget-number,
+        .stat-value {
+            font-weight: 650;
+        }
+
+        .sidebar-link,
+        .sidebar-logout,
+        .button,
+        button[type="submit"],
+        .filter-link,
+        .action-button,
+        .badge,
+        .rating,
+        .icon-button,
+        .sidebar-stat span,
+        .sidebar-section-title,
+        .inline-review-form label {
+            font-weight: 600;
+        }
+
+        .avatar,
+        .post-avatar,
+        .mini-avatar,
+        .profile-avatar {
+            font-weight: 700;
+        }
+
+        .meta,
+        .post-meta,
+        .page-subtitle,
+        .empty-state,
+        .review-text {
+            font-weight: 400;
+        }
+
+        .external-ratings span,
+        .suggestion-copy small,
+        .reaction-chip,
+        .topic-chip {
+            font-weight: 500;
+        }
+
         @media (max-width: 1080px) {
             .social-layout,
             .layout-grid {
@@ -902,11 +1607,21 @@
             }
 
             .composer-card,
+            .composer-grid,
             .post-header,
             .post-item,
             .profile-info,
             .item-hero {
                 grid-template-columns: 1fr;
+            }
+
+            .profile-info {
+                align-items: start;
+            }
+
+            .interaction-grid,
+            .recommendation-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .stat-grid {
@@ -947,6 +1662,10 @@
                 height: 220px !important;
                 width: 100% !important;
             }
+
+            .mobile-create {
+                display: inline-flex;
+            }
         }
     </style>
 </head>
@@ -958,12 +1677,27 @@
             </div>
 
             <nav class="sidebar-nav" aria-label="Main navigation">
-                <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Feed</a>
+                <section class="sidebar-profile-card">
+                    <div class="sidebar-profile-top">
+                        <span class="avatar">{{ request.user.username|first }}</span>
+                        <span>
+                            <span class="sidebar-name">{{ request.user.username }}</span>
+                            <span class="sidebar-handle">Your taste profile</span>
+                        </span>
+                    </div>
+                    <div class="sidebar-stats">
+                        <span class="sidebar-stat"><strong>{{ sidebar_review_count }}</strong><span>Reviews</span></span>
+                        <span class="sidebar-stat"><strong>{{ sidebar_followers_count }}</strong><span>Followers</span></span>
+                        <span class="sidebar-stat"><strong>{{ sidebar_following_count }}</strong><span>Following</span></span>
+                    </div>
+                </section>
+
+                <p class="sidebar-section-title">Navigation</p>
+                <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
                 <a href="{% url 'search' %}" class="sidebar-link {% if request.resolver_match.url_name == 'search' %}active{% endif %}">Search</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
                 <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile</a>
-                <a href="{% url 'new_review' %}" class="sidebar-link {% if request.resolver_match.url_name == 'new_review' %}active{% endif %}">Post Review</a>
                 <a href="{% url 'recommend' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommend' %}active{% endif %}">Recommend</a>
             </nav>
 
@@ -978,9 +1712,23 @@
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
+        <a class="mobile-create" href="#feed-composer">Post review</a>
+        <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
     </div>
     <script>
         (function () {
+            function showToast(message) {
+                var stack = document.querySelector(".toast-stack");
+                if (!stack) return;
+                var toast = document.createElement("div");
+                toast.className = "toast";
+                toast.textContent = message;
+                stack.appendChild(toast);
+                window.setTimeout(function () {
+                    toast.remove();
+                }, 2600);
+            }
+
             document.addEventListener("DOMContentLoaded", function () {
                 document.querySelectorAll(".feed-stack.is-loading").forEach(function (stack) {
                     window.setTimeout(function () {
@@ -1034,6 +1782,7 @@
                         return;
                     }
                     updateButton(button, await response.json());
+                    showToast("Saved your action");
                 } catch (error) {
                     window.location.reload();
                 } finally {

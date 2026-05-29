@@ -1,0 +1,27 @@
+{% extends "base_app.html" %}
+
+{% block title %}Saved Reviews | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="page-header">
+        <h1>Saved reviews</h1>
+        <p class="page-subtitle">Reviews you saved to revisit later.</p>
+    </section>
+    <section class="feed-stack">
+        {% for saved in saved_reviews %}
+            <article class="card social-review-card">
+                <header class="post-header">
+                    <span class="post-avatar">{{ saved.review.user.username|first }}</span>
+                    <div><strong>{{ saved.review.user.username }}</strong><div class="meta">Saved {{ saved.created_at|timesince }} ago</div></div>
+                    <span class="rating">{{ saved.review.rating }}/5</span>
+                </header>
+                <h2 class="item-title"><a href="{% url 'item_reviews' saved.review.item_id %}">{{ saved.review.item.title }}</a></h2>
+                <p class="review-text">{{ saved.review.review_text }}</p>
+            </article>
+        {% empty %}
+            <div class="card empty-panel"><h2>No saved reviews yet</h2><p>Save reviews from your feed to build this reading list.</p></div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

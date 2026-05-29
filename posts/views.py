@@ -1,17 +1,66 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 import json
 import os
 
-from .forms import RecommendationForm, ReviewForm, SignUpForm
-from .models import Friendship, Item, Recommendation, Review, ReviewLike, SavedItem
+from .forms import CollectionForm, CommentForm, ProfileForm, RecommendationForm, ReviewForm, SignUpForm
+from .models import (
+    Activity,
+    Collection,
+    CollectionItem,
+    Comment,
+    CommentLike,
+    Follow,
+    Friendship,
+    Item,
+    Notification,
+    Profile,
+    Recommendation,
+    Review,
+    ReviewLike,
+    SavedItem,
+    SavedReview,
+)
+
+
+def _followed_user_ids(user):
+    follow_ids = set(Follow.objects.filter(follower=user).values_list("following_id", flat=True))
+    friendship_ids = set(Friendship.objects.filter(from_user=user).values_list("to_user_id", flat=True))
+    return follow_ids | friendship_ids
+
+
+def _create_activity(user, activity_type, message="", review=None, target_user=None, collection=None):
+    return Activity.objects.create(
+        user=user,
+        activity_type=activity_type,
+        message=message,
+        review=review,
+        target_user=target_user,
+        collection=collection,
+    )
+
+
+def _notify(recipient, actor, notification_type, message, review=None, comment=None):
+    if recipient == actor:
+        return None
+    return Notification.objects.create(
+        recipient=recipient,
+        actor=actor,
+        notification_type=notification_type,
+        message=message,
+        review=review,
+        comment=comment,
+    )
 
 
 def landing(request):
@@ -467,9 +516,7 @@ def feed(request):
     friend_ids = []
 
     if request.user.is_authenticated:
-        friend_ids = Friendship.objects.filter(
-            from_user=request.user
-        ).values_list("to_user_id", flat=True)
+        friend_ids = _followed_user_ids(request.user)
 
     reviews = Review.objects.select_related("user", "item")
 
@@ -495,6 +542,7 @@ def feed(request):
     liked_review_ids = set()
     watchlist_item_ids = set()
     favorite_item_ids = set()
+    saved_review_ids = set()
     if request.user.is_authenticated:
         liked_review_ids = set(
             ReviewLike.objects.filter(
@@ -515,6 +563,21 @@ def feed(request):
                 item_id__in=page_reviews.values_list("item_id", flat=True),
             ).values_list("item_id", flat=True)
         )
+        saved_review_ids = set(
+            SavedReview.objects.filter(
+                user=request.user,
+                review_id__in=page_reviews.values_list("id", flat=True),
+            ).values_list("review_id", flat=True)
+        )
+    activities = Activity.objects.select_related("user", "review", "review__item", "target_user", "collection")
+    followed_activities = activities.filter(user_id__in=friend_ids) if friend_ids else Activity.objects.none()
+    popular_reviews = Review.objects.select_related("user", "item").annotate(
+        likes_total=Count("likes")
+    ).order_by("-likes_total", "-created_at")[:5]
+    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("username")[:5]
+    notifications_preview = Notification.objects.filter(
+        recipient=request.user
+    ).select_related("actor").order_by("-created_at")[:5]
 
     return render(
         request,
@@ -528,6 +591,13 @@ def feed(request):
             "liked_review_ids": liked_review_ids,
             "watchlist_item_ids": watchlist_item_ids,
             "favorite_item_ids": favorite_item_ids,
+            "saved_review_ids": saved_review_ids,
+            "review_form": ReviewForm(),
+            "activities": activities[:12],
+            "followed_activities": followed_activities[:6],
+            "popular_reviews": popular_reviews,
+            "suggested_users": suggested_users,
+            "notifications_preview": notifications_preview,
         },
     )
 
@@ -537,9 +607,7 @@ def discover(request):
     query = request.GET.get("q", "").strip()
     chip = request.GET.get("chip", "for-you")
     sort = request.GET.get("sort", "newest")
-    friend_ids = Friendship.objects.filter(
-        from_user=request.user
-    ).values_list("to_user_id", flat=True)
+    friend_ids = _followed_user_ids(request.user)
 
     trending_reviews = Review.objects.select_related("item", "user")
     friend_favorites = Review.objects.select_related("item", "user").filter(
@@ -591,6 +659,11 @@ def discover(request):
             "trending_reviews": trending_page.object_list,
             "friend_favorites": friends_page.object_list,
             "recent_reviews": recent_page.object_list,
+            "trending_users": User.objects.annotate(review_total=Count("review")).order_by("-review_total")[:6],
+            "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
+            "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
+            "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
+            "suggested_users": User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
@@ -602,9 +675,7 @@ def discover(request):
 def search(request):
     query = request.GET.get("q", "").strip()
     section = request.GET.get("section", "all")
-    friend_ids = Friendship.objects.filter(
-        from_user=request.user
-    ).values_list("to_user_id", flat=True)
+    friend_ids = _followed_user_ids(request.user)
 
     people = User.objects.none()
     reviews = Review.objects.none()
@@ -749,12 +820,19 @@ def new_review(request):
                     if changed:
                         item.save(update_fields=["image_url", "release_year", "creator_name", "external_source", "external_id"])
             _enrich_item_metadata(item)
-            Review.objects.create(
+            review = Review.objects.create(
                 user=request.user,
                 item=item,
                 rating=form.cleaned_data["rating"],
                 review_text=form.cleaned_data["review_text"],
             )
+            _create_activity(
+                request.user,
+                Activity.REVIEW_POSTED,
+                f"{request.user.username} reviewed {item.title}",
+                review=review,
+            )
+            messages.success(request, "Your review was posted.")
             return redirect("feed")
     else:
         form = ReviewForm()
@@ -782,12 +860,10 @@ def new_review(request):
 def friends(request):
     query = request.GET.get("q", "").strip()
     tab = request.GET.get("tab", "following")
-    friend_ids = Friendship.objects.filter(
-        from_user=request.user
-    ).values_list("to_user_id", flat=True)
-    follower_ids = Friendship.objects.filter(
-        to_user=request.user
-    ).values_list("from_user_id", flat=True)
+    friend_ids = _followed_user_ids(request.user)
+    follower_ids = set(Follow.objects.filter(following=request.user).values_list("follower_id", flat=True)) | set(
+        Friendship.objects.filter(to_user=request.user).values_list("from_user_id", flat=True)
+    )
     friends_list = User.objects.filter(id__in=friend_ids).order_by("username")
     followers_list = User.objects.filter(id__in=follower_ids).order_by("username")
     suggested_users = User.objects.exclude(
@@ -832,6 +908,20 @@ def add_friend(request, user_id):
     created = False
     if friend != request.user:
         _, created = Friendship.objects.get_or_create(from_user=request.user, to_user=friend)
+        Follow.objects.get_or_create(follower=request.user, following=friend)
+        if created:
+            _create_activity(
+                request.user,
+                Activity.USER_FOLLOWED,
+                f"{request.user.username} started following {friend.username}",
+                target_user=friend,
+            )
+            _notify(
+                friend,
+                request.user,
+                Notification.FOLLOW,
+                f"{request.user.username} followed you.",
+            )
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
             {
@@ -852,6 +942,7 @@ def remove_friend(request, user_id):
         from_user=request.user,
         to_user_id=user_id,
     ).delete()
+    Follow.objects.filter(follower=request.user, following_id=user_id).delete()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
             {
@@ -865,9 +956,7 @@ def remove_friend(request, user_id):
 
 @login_required
 def recommend(request):
-    friend_ids = Friendship.objects.filter(
-        from_user=request.user
-    ).values_list("to_user_id", flat=True)
+    friend_ids = _followed_user_ids(request.user)
     to_user_id = request.GET.get("to_user")
     item_id = request.GET.get("item")
 
@@ -878,6 +967,19 @@ def recommend(request):
             recommendation = form.save(commit=False)
             recommendation.from_user = request.user
             recommendation.save()
+            _create_activity(
+                request.user,
+                Activity.RECOMMENDED,
+                f"{request.user.username} recommended {recommendation.item.title}",
+                target_user=recommendation.to_user,
+            )
+            _notify(
+                recommendation.to_user,
+                request.user,
+                Notification.COMMENT,
+                f"{request.user.username} recommended {recommendation.item.title} to you.",
+            )
+            messages.success(request, "Recommendation sent.")
             return redirect("feed")
     else:
         form = RecommendationForm()
@@ -894,7 +996,17 @@ def recommend(request):
 
 @login_required
 def profile(request):
-    friend_count = Friendship.objects.filter(from_user=request.user).count()
+    profile_obj, _ = Profile.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated.")
+            return redirect("profile")
+    else:
+        form = ProfileForm(instance=profile_obj)
+
+    friend_count = Follow.objects.filter(follower=request.user).count() or Friendship.objects.filter(from_user=request.user).count()
     review_count = Review.objects.filter(user=request.user).count()
     recommendation_count = Recommendation.objects.filter(to_user=request.user).count()
     recent_reviews = Review.objects.filter(
@@ -905,7 +1017,8 @@ def profile(request):
     ).annotate(
         total=Count("id")
     ).order_by("-total")
-    followers_count = Friendship.objects.filter(to_user=request.user).count()
+    followers_count = Follow.objects.filter(following=request.user).count() or Friendship.objects.filter(to_user=request.user).count()
+    likes_received = ReviewLike.objects.filter(review__user=request.user).count()
     watchlist_items = SavedItem.objects.filter(
         user=request.user, list_type="watchlist"
     ).select_related("item").order_by("-created_at")
@@ -923,12 +1036,16 @@ def profile(request):
             "friend_count": friend_count,
             "followers_count": followers_count,
             "review_count": review_count,
+            "likes_received": likes_received,
             "recommendation_count": recommendation_count,
             "recent_reviews": recent_reviews,
             "top_types": top_types,
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
             "favorite_items": favorite_items,
+            "profile_form": form,
+            "collections": Collection.objects.filter(user=request.user)[:5],
+            "saved_reviews": SavedReview.objects.filter(user=request.user).select_related("review", "review__item")[:5],
         },
     )
 
@@ -940,6 +1057,10 @@ def item_reviews(request, item_id):
     item.refresh_from_db()
     reviews = Review.objects.filter(item=item).select_related("user").order_by("-created_at")
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
+    top_level_comments = Comment.objects.filter(
+        review__item=item,
+        parent__isnull=True,
+    ).select_related("user", "review").prefetch_related("replies", "likes")[:20]
     return render(
         request,
         "posts/item_reviews.html",
@@ -947,6 +1068,8 @@ def item_reviews(request, item_id):
             "item": item,
             "reviews": page_obj.object_list,
             "page_obj": page_obj,
+            "comment_form": CommentForm(),
+            "comments": top_level_comments,
         },
     )
 
@@ -961,6 +1084,20 @@ def toggle_like(request, review_id):
     if not created:
         like.delete()
     active = created
+    if created:
+        _create_activity(
+            request.user,
+            Activity.REVIEW_LIKED,
+            f"{request.user.username} liked a review of {review.item.title}",
+            review=review,
+        )
+        _notify(
+            review.user,
+            request.user,
+            Notification.LIKE,
+            f"{request.user.username} liked your review of {review.item.title}.",
+            review=review,
+        )
     count = ReviewLike.objects.filter(review=review).count()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
@@ -1008,3 +1145,191 @@ def toggle_saved_item(request, item_id, list_type):
         )
 
     return redirect(request.POST.get("next") or "feed")
+
+
+@login_required
+def toggle_saved_review(request, review_id):
+    if request.method != "POST":
+        return redirect("feed")
+    review = get_object_or_404(Review, id=review_id)
+    saved, created = SavedReview.objects.get_or_create(user=request.user, review=review)
+    if not created:
+        saved.delete()
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse(
+            {
+                "ok": True,
+                "active": created,
+                "label": "Saved" if created else "Save",
+            }
+        )
+    messages.success(request, "Review saved." if created else "Review removed from saved.")
+    return redirect(request.POST.get("next") or "feed")
+
+
+@login_required
+def add_comment(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    if request.method != "POST":
+        return redirect("item_reviews", item_id=review.item_id)
+    form = CommentForm(request.POST)
+    parent = None
+    parent_id = request.POST.get("parent")
+    if parent_id:
+        parent = get_object_or_404(Comment, id=parent_id, review=review)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        comment.review = review
+        comment.parent = parent
+        comment.save()
+        _create_activity(
+            request.user,
+            Activity.COMMENTED,
+            f"{request.user.username} commented on {review.item.title}",
+            review=review,
+        )
+        _notify(
+            parent.user if parent else review.user,
+            request.user,
+            Notification.REPLY if parent else Notification.COMMENT,
+            f"{request.user.username} replied to you." if parent else f"{request.user.username} commented on your review.",
+            review=review,
+            comment=comment,
+        )
+        messages.success(request, "Comment posted.")
+    return redirect("item_reviews", item_id=review.item_id)
+
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    item_id = comment.review.item_id
+    if request.method == "POST" and comment.user == request.user:
+        comment.delete()
+        messages.success(request, "Comment deleted.")
+    return redirect("item_reviews", item_id=item_id)
+
+
+@login_required
+def like_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
+    if not created:
+        like.delete()
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "active": created, "count": comment.likes.count()})
+    return redirect("item_reviews", item_id=comment.review.item_id)
+
+
+@login_required
+def followers(request, username=None):
+    viewed_user = get_object_or_404(User, username=username) if username else request.user
+    ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True)) | set(
+        Friendship.objects.filter(to_user=viewed_user).values_list("from_user_id", flat=True)
+    )
+    people = User.objects.filter(id__in=ids).order_by("username")
+    return render(request, "posts/follow_list.html", {"people": people, "viewed_user": viewed_user, "mode": "Followers"})
+
+
+@login_required
+def following(request, username=None):
+    viewed_user = get_object_or_404(User, username=username) if username else request.user
+    ids = set(Follow.objects.filter(follower=viewed_user).values_list("following_id", flat=True)) | set(
+        Friendship.objects.filter(from_user=viewed_user).values_list("to_user_id", flat=True)
+    )
+    people = User.objects.filter(id__in=ids).order_by("username")
+    return render(request, "posts/follow_list.html", {"people": people, "viewed_user": viewed_user, "mode": "Following"})
+
+
+@login_required
+def user_profile(request, username):
+    viewed_user = get_object_or_404(User, username=username)
+    Profile.objects.get_or_create(user=viewed_user)
+    is_following = Follow.objects.filter(follower=request.user, following=viewed_user).exists() or Friendship.objects.filter(
+        from_user=request.user, to_user=viewed_user
+    ).exists()
+    follower_ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True))
+    my_following_ids = _followed_user_ids(request.user)
+    mutual_count = len(follower_ids & my_following_ids)
+    reviews = Review.objects.filter(user=viewed_user).select_related("item").order_by("-created_at")[:10]
+    return render(
+        request,
+        "posts/user_profile.html",
+        {
+            "viewed_user": viewed_user,
+            "reviews": reviews,
+            "review_count": Review.objects.filter(user=viewed_user).count(),
+            "followers_count": Follow.objects.filter(following=viewed_user).count()
+            or Friendship.objects.filter(to_user=viewed_user).count(),
+            "following_count": Follow.objects.filter(follower=viewed_user).count()
+            or Friendship.objects.filter(from_user=viewed_user).count(),
+            "likes_received": ReviewLike.objects.filter(review__user=viewed_user).count(),
+            "is_following": is_following,
+            "mutual_count": mutual_count,
+        },
+    )
+
+
+@login_required
+def notifications(request):
+    rows = Notification.objects.filter(recipient=request.user).select_related("actor", "review").order_by("-created_at")
+    if request.method == "POST":
+        rows.update(is_read=True)
+        messages.success(request, "Notifications marked as read.")
+        return redirect("notifications")
+    page_obj = Paginator(rows, 20).get_page(request.GET.get("page"))
+    return render(request, "posts/notifications.html", {"notifications": page_obj.object_list, "page_obj": page_obj})
+
+
+@login_required
+def saved_reviews(request):
+    rows = SavedReview.objects.filter(user=request.user).select_related("review", "review__item", "review__user").order_by("-created_at")
+    return render(request, "posts/saved_reviews.html", {"saved_reviews": rows})
+
+
+class CollectionListView(ListView):
+    model = Collection
+    template_name = "posts/collections.html"
+    context_object_name = "collections"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Collection.objects.filter(user=self.request.user)
+
+
+class CollectionCreateView(CreateView):
+    model = Collection
+    form_class = CollectionForm
+    template_name = "posts/collection_form.html"
+    success_url = reverse_lazy("collections")
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        response = super().form_valid(form)
+        _create_activity(
+            self.request.user,
+            Activity.COLLECTION_CREATED,
+            f"{self.request.user.username} created {self.object.title}",
+            collection=self.object,
+        )
+        messages.success(self.request, "Collection created.")
+        return response
+
+
+class CollectionDetailView(DetailView):
+    model = Collection
+    template_name = "posts/collection_detail.html"
+    context_object_name = "collection"
+
+    def get_queryset(self):
+        return Collection.objects.filter(Q(user=self.request.user) | Q(is_public=True))
+
+
+@login_required
+def add_item_to_collection(request, collection_id, item_id):
+    collection = get_object_or_404(Collection, id=collection_id, user=request.user)
+    item = get_object_or_404(Item, id=item_id)
+    CollectionItem.objects.get_or_create(collection=collection, item=item)
+    messages.success(request, "Item added to collection.")
+    return redirect("collection_detail", pk=collection.id)

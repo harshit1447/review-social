@@ -1,0 +1,36 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ mode }} | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="page-header">
+        <h1>{{ mode }}</h1>
+        <p class="page-subtitle">{{ viewed_user.username }}'s social graph.</p>
+    </section>
+    <section class="people-grid">
+        {% for person in people %}
+            <article class="person-card">
+                <div class="person-card-top">
+                    <span class="avatar">{{ person.username|first }}</span>
+                    <div>
+                        <strong><a href="{% url 'user_profile' person.username %}">{{ person.username }}</a></strong>
+                        <div class="meta">Mutual followers will appear here as your network grows.</div>
+                    </div>
+                </div>
+                {% if person != user %}
+                    <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                        {% csrf_token %}
+                        <button type="submit" class="button" data-plain-button="1">Follow</button>
+                    </form>
+                {% endif %}
+            </article>
+        {% empty %}
+            <div class="card empty-panel">
+                <h2>No people here yet</h2>
+                <p>Follow users to build this list.</p>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

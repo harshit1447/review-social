@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Item, Recommendation, Review
+from .models import Collection, Comment, Item, Profile, Recommendation, Review
 
 
 class SignUpForm(UserCreationForm):
@@ -65,4 +65,39 @@ class RecommendationForm(forms.ModelForm):
         }
         help_texts = {
             "message": "Keep it short: 140 characters max.",
+        }
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = [
+            "profile_photo",
+            "cover_image",
+            "bio",
+            "location",
+            "website",
+            "favorite_categories",
+        ]
+        widgets = {
+            "bio": forms.Textarea(attrs={"rows": 4}),
+            "favorite_categories": forms.TextInput(attrs={"placeholder": "Movies, books, restaurants"}),
+        }
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["body"]
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 3, "placeholder": "Add to the discussion..."})
+        }
+
+
+class CollectionForm(forms.ModelForm):
+    class Meta:
+        model = Collection
+        fields = ["title", "description", "is_public"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
         }

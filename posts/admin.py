@@ -1,7 +1,33 @@
 from django.contrib import admin
-from .models import Friendship, Item, Recommendation, Review
+from .models import (
+    Activity,
+    Collection,
+    CollectionItem,
+    Comment,
+    CommentLike,
+    Follow,
+    Friendship,
+    Item,
+    Notification,
+    Profile,
+    Recommendation,
+    Review,
+    SavedReview,
+)
 
-admin.site.register(Item)
-admin.site.register(Review)
-admin.site.register(Friendship)
-admin.site.register(Recommendation)
+for model in [
+    Activity,
+    Collection,
+    CollectionItem,
+    Comment,
+    CommentLike,
+    Follow,
+    Friendship,
+    Item,
+    Notification,
+    Profile,
+    Recommendation,
+    Review,
+    SavedReview,
+]:
+    admin.site.register(model)

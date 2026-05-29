@@ -19,6 +19,30 @@ def _google_enabled_from_social_app() -> bool:
 
 
 def auth_options(request):
+    social_counts = {
+        "sidebar_review_count": 0,
+        "sidebar_followers_count": 0,
+        "sidebar_following_count": 0,
+        "unread_notification_count": 0,
+    }
+    if getattr(request, "user", None) and request.user.is_authenticated:
+        try:
+            from .models import Follow, Friendship, Notification, Review
+
+            social_counts = {
+                "sidebar_review_count": Review.objects.filter(user=request.user).count(),
+                "sidebar_followers_count": Follow.objects.filter(following=request.user).count()
+                or Friendship.objects.filter(to_user=request.user).count(),
+                "sidebar_following_count": Follow.objects.filter(follower=request.user).count()
+                or Friendship.objects.filter(from_user=request.user).count(),
+                "unread_notification_count": Notification.objects.filter(
+                    recipient=request.user,
+                    is_read=False,
+                ).count(),
+            }
+        except Exception:
+            pass
+
     env_configured = bool(
         os.environ.get("GOOGLE_CLIENT_ID")
         and os.environ.get("GOOGLE_CLIENT_SECRET")
@@ -31,4 +55,6 @@ def auth_options(request):
         "google_auth_enabled": env_configured
         or settings_configured
         or _google_enabled_from_social_app()
+        ,
+        **social_counts,
     }

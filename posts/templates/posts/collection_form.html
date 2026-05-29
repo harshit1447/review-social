@@ -1,0 +1,22 @@
+{% extends "base_app.html" %}
+
+{% block title %}Create Collection | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="page-header">
+        <h1>Create collection</h1>
+        <p class="page-subtitle">Build a shareable list for recommendations, watchlists, reading lists, or wishlists.</p>
+    </section>
+    <section class="card form-card">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit">Create collection</button>
+                <a class="button secondary" href="{% url 'collections' %}">Cancel</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

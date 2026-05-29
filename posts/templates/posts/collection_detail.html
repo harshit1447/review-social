@@ -1,0 +1,28 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ collection.title }} | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="page-header">
+        <h1>{{ collection.title }}</h1>
+        <p class="page-subtitle">{{ collection.description|default:"A Revue collection." }}</p>
+    </section>
+    <section class="feed-stack">
+        {% for row in collection.items.all %}
+            <article class="card social-review-card">
+                <div class="post-item">
+                    <a class="review-poster" href="{% url 'item_reviews' row.item_id %}"><img src="{% if row.item.image_url %}{{ row.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt=""></a>
+                    <div>
+                        <span class="badge">{{ row.item.get_item_type_display }}</span>
+                        <h2 class="item-title">{{ row.item.title }}</h2>
+                        {% if row.note %}<p class="review-text">{{ row.note }}</p>{% endif %}
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="card empty-panel"><h2>No items yet</h2><p>Add items from item detail pages as the collection tooling grows.</p></div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

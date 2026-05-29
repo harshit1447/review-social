@@ -8,7 +8,7 @@
             <div class="profile-cover"></div>
             <div class="profile-info">
                 <span class="profile-avatar">{{ user.username|first }}</span>
-                <div>
+                <div class="profile-copy">
                     <h1>{{ user.username }}</h1>
                     <p class="page-subtitle">Your Revue profile: reviews, recommendations, saved lists, and taste signals.</p>
                 </div>
@@ -33,6 +33,10 @@
                 <span class="stat-value">{{ recommendation_count }}</span>
                 <span class="meta">Recommendations</span>
             </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ likes_received }}</span>
+                <span class="meta">Likes received</span>
+            </div>
         </section>
 
         <div class="social-layout" style="margin-top: 22px;">
@@ -42,6 +46,29 @@
                         <a class="tab active" href="#reviews">Reviews</a>
                         <a class="tab" href="#recommendations">Recommendations</a>
                         <a class="tab" href="#saved">Saved</a>
+                        <a class="tab" href="#lists">Lists</a>
+                    </div>
+                </section>
+
+                <section class="card form-card">
+                    <h2 class="card-title">Edit profile</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ profile_form.as_p }}
+                        <div class="form-actions">
+                            <button type="submit">Save profile</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="card">
+                    <h2 class="card-title">Review activity</h2>
+                    <p class="meta">A lightweight activity graph for reviews, saves, and recommendations.</p>
+                    <div class="heatmap" aria-label="Review activity heatmap">
+                        <span class="heat-cell warm"></span><span class="heat-cell"></span><span class="heat-cell hot"></span><span class="heat-cell"></span><span class="heat-cell warm"></span><span class="heat-cell"></span><span class="heat-cell"></span>
+                        <span class="heat-cell hot"></span><span class="heat-cell warm"></span><span class="heat-cell"></span><span class="heat-cell"></span><span class="heat-cell hot"></span><span class="heat-cell"></span><span class="heat-cell warm"></span>
+                        <span class="heat-cell"></span><span class="heat-cell"></span><span class="heat-cell warm"></span><span class="heat-cell"></span><span class="heat-cell hot"></span><span class="heat-cell warm"></span><span class="heat-cell"></span>
+                        <span class="heat-cell"></span><span class="heat-cell hot"></span><span class="heat-cell"></span><span class="heat-cell warm"></span><span class="heat-cell"></span><span class="heat-cell"></span><span class="heat-cell hot"></span>
                     </div>
                 </section>
 
@@ -117,6 +144,38 @@
                                 <p class="meta">No favorites yet.</p>
                             {% endfor %}
                         </div>
+                    </div>
+                </section>
+
+                <section id="recommendations" class="card">
+                    <h2 class="card-title">Recommendations</h2>
+                    <div class="recommendation-grid" style="grid-template-columns: 1fr;">
+                        <article class="recommendation-card">
+                            <small>Because you liked</small>
+                            <strong>Character-first stories</strong>
+                            <p class="meta">Personalized suggestions will live here as the backend matures.</p>
+                        </article>
+                        <article class="recommendation-card">
+                            <small>Friends recommend</small>
+                            <strong>Weekly picks</strong>
+                            <p class="meta">Shows recommendations sent by people you follow.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="lists" class="card">
+                    <h2 class="card-title">Collections</h2>
+                    <div class="form-actions" style="margin-bottom:12px;">
+                        <a class="button" href="{% url 'collection_create' %}">Create collection</a>
+                    </div>
+                    <div class="rail-list">
+                        {% for collection in collections %}
+                            <a class="rail-item" href="{% url 'collection_detail' collection.id %}"><strong>{{ collection.title }}</strong><div class="meta">{{ collection.items.count }} item{{ collection.items.count|pluralize }}</div></a>
+                        {% empty %}
+                            <div class="rail-item"><strong>Top 10 Sci-Fi Movies</strong><div class="meta">Placeholder collection</div></div>
+                            <div class="rail-item"><strong>Best Books of 2025</strong><div class="meta">Reading list</div></div>
+                            <div class="rail-item"><strong>Must Visit Restaurants</strong><div class="meta">Wishlist</div></div>
+                        {% endfor %}
                     </div>
                 </section>
             </aside>

@@ -1,0 +1,27 @@
+{% extends "base_app.html" %}
+
+{% block title %}Collections | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="feed-hero">
+        <div>
+            <h1>Collections</h1>
+            <p>Create shareable lists like Top 10 Sci-Fi Movies, Books I Recommend, or Must Visit Restaurants.</p>
+        </div>
+        <a class="button" href="{% url 'collection_create' %}">New collection</a>
+    </section>
+    <section class="recommendation-grid">
+        {% for collection in collections %}
+            <article class="recommendation-card">
+                <small>{% if collection.is_public %}Public{% else %}Private{% endif %}</small>
+                <h2 class="card-title"><a href="{% url 'collection_detail' collection.id %}">{{ collection.title }}</a></h2>
+                <p class="meta">{{ collection.description|default:"No description yet." }}</p>
+                <strong>{{ collection.items.count }} item{{ collection.items.count|pluralize }}</strong>
+            </article>
+        {% empty %}
+            <div class="card empty-panel"><h2>No collections yet</h2><p>Start with a top 10 list, reading list, watchlist, or wishlist.</p></div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

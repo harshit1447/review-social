@@ -81,6 +81,13 @@
                         <span class="rating">{{ review.rating }}/5</span>
                     </div>
                     <p class="review-text">{{ review.review_text }}</p>
+                    <form method="post" action="{% url 'add_comment' review.id %}" class="form-card" style="box-shadow:none;">
+                        {% csrf_token %}
+                        {{ comment_form.body }}
+                        <div class="form-actions">
+                            <button type="submit">Comment</button>
+                        </div>
+                    </form>
                 </article>
             {% empty %}
                 <div class="card">
@@ -90,6 +97,44 @@
                     </div>
                 </div>
             {% endfor %}
+        </section>
+
+        <section class="card">
+            <h2 class="card-title">Discussion</h2>
+            <div class="recommendation-list">
+                {% for comment in comments %}
+                    <article class="recommendation">
+                        <p><strong>{{ comment.user.username }}</strong> on <strong>{{ comment.review.item.title }}</strong></p>
+                        <p>{{ comment.body }}</p>
+                        <div class="form-actions">
+                            <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
+                                {% csrf_token %}
+                                <button type="submit" class="button secondary" data-plain-button="1">Like {{ comment.likes.count }}</button>
+                            </form>
+                            {% if comment.user == user %}
+                                <form method="post" action="{% url 'delete_comment' comment.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button secondary">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        {% for reply in comment.replies.all %}
+                            <div class="recommendation" style="margin-left:24px;">
+                                <p><strong>{{ reply.user.username }}</strong></p>
+                                <p>{{ reply.body }}</p>
+                            </div>
+                        {% endfor %}
+                        <form method="post" action="{% url 'add_comment' comment.review_id %}" class="form-actions">
+                            {% csrf_token %}
+                            <input type="hidden" name="parent" value="{{ comment.id }}">
+                            <input type="text" name="body" placeholder="Reply..." required>
+                            <button type="submit" class="button secondary">Reply</button>
+                        </form>
+                    </article>
+                {% empty %}
+                    <p class="empty-state">No discussion yet. Start the first comment.</p>
+                {% endfor %}
+            </div>
         </section>
 
         {% if page_obj and page_obj.paginator.num_pages > 1 %}

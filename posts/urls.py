@@ -1,4 +1,5 @@
 from django.urls import path 
+from django.contrib.auth.decorators import login_required
 from . import views
 
 urlpatterns = [
@@ -10,11 +11,26 @@ urlpatterns = [
     path("friends/", views.friends, name="friends"),
     path("friends/add/<int:user_id>/", views.add_friend, name="add_friend"),
     path("friends/remove/<int:user_id>/", views.remove_friend, name="remove_friend"),
+    path("followers/", views.followers, name="followers"),
+    path("following/", views.following, name="following"),
+    path("users/<str:username>/", views.user_profile, name="user_profile"),
+    path("users/<str:username>/followers/", views.followers, name="user_followers"),
+    path("users/<str:username>/following/", views.following, name="user_following"),
     path("reviews/new/", views.new_review, name="new_review"),
     path("items/suggest/", views.suggest_items, name="suggest_items"),
     path("items/<int:item_id>/", views.item_reviews, name="item_reviews"),
     path("reviews/<int:review_id>/like/", views.toggle_like, name="toggle_like"),
+    path("reviews/<int:review_id>/save/", views.toggle_saved_review, name="toggle_saved_review"),
+    path("reviews/<int:review_id>/comments/", views.add_comment, name="add_comment"),
+    path("comments/<int:comment_id>/delete/", views.delete_comment, name="delete_comment"),
+    path("comments/<int:comment_id>/like/", views.like_comment, name="like_comment"),
     path("items/<int:item_id>/save/<str:list_type>/", views.toggle_saved_item, name="toggle_saved_item"),
     path("recommend/", views.recommend, name="recommend"),
     path("profile/", views.profile, name="profile"),
+    path("notifications/", views.notifications, name="notifications"),
+    path("saved-reviews/", views.saved_reviews, name="saved_reviews"),
+    path("collections/", login_required(views.CollectionListView.as_view()), name="collections"),
+    path("collections/new/", login_required(views.CollectionCreateView.as_view()), name="collection_create"),
+    path("collections/<int:pk>/", login_required(views.CollectionDetailView.as_view()), name="collection_detail"),
+    path("collections/<int:collection_id>/items/<int:item_id>/add/", views.add_item_to_collection, name="add_item_to_collection"),
 ]

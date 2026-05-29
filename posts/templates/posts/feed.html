@@ -1,23 +1,62 @@
 {% extends "base_app.html" %}
 
-{% block title %}Feed | Revue{% endblock %}
+{% block title %}Home Feed | Revue{% endblock %}
 
 {% block content %}
-    <div class="page">
-        <section class="page-header">
-            <h1>Feed</h1>
-            <p class="page-subtitle">Reviews, reactions, and recommendations from the Revue community.</p>
+    <div class="page feed-page">
+        <section class="feed-hero feed-hero-compact">
+            <div>
+                <h1>Home feed</h1>
+                <p>Reviews from people you follow, recent posts, and quick ways to discover what is worth your time.</p>
+            </div>
         </section>
 
-        <div class="social-layout">
+        <div class="social-layout feed-layout-tidy">
             <main class="social-center">
-                <section class="card composer-card">
-                    <span class="post-avatar">{{ user.username|first }}</span>
-                    <a class="composer-input" href="{% url 'new_review' %}">What did you watch, read, try, or discover?</a>
-                    <a class="button" href="{% url 'new_review' %}">Post</a>
+                <section id="feed-composer" class="card composer-panel tidy-composer-panel">
+                    <div class="composer-title-row">
+                        <div>
+                            <h2>What are you recommending today?</h2>
+                            <p class="meta">Pick a movie, series, or book from suggestions so reviews stay grouped correctly.</p>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'new_review' %}" class="inline-review-form">
+                        {% csrf_token %}
+                        <div class="composer-grid">
+                            <label for="{{ review_form.item_type.id_for_label }}">Type
+                                {{ review_form.item_type }}
+                            </label>
+                            <label for="{{ review_form.item_title.id_for_label }}">Title
+                                {{ review_form.item_title }}
+                            </label>
+                            <label for="{{ review_form.rating.id_for_label }}">Rating
+                                {{ review_form.rating }}
+                            </label>
+                        </div>
+
+                        {{ review_form.selected_item_key }}
+                        {{ review_form.selected_item_title }}
+                        {{ review_form.selected_item_year }}
+                        {{ review_form.selected_item_creator }}
+                        {{ review_form.selected_item_image_url }}
+                        {{ review_form.selected_item_external_source }}
+                        {{ review_form.selected_item_external_id }}
+
+                        <p id="item-suggestion-message" class="meta suggestion-message"></p>
+                        <div id="item-suggestions" class="item-suggestions" hidden></div>
+
+                        <label for="{{ review_form.review_text.id_for_label }}" class="review-label">Review
+                            {{ review_form.review_text }}
+                        </label>
+
+                        <div class="form-actions composer-actions">
+                            <button type="submit">Post review</button>
+                        </div>
+                    </form>
                 </section>
 
-                <section class="toolbar">
+                <section class="toolbar tidy-toolbar">
                     <form class="search-form" method="get">
                         {% if friends_only %}<input type="hidden" name="filter" value="friends">{% endif %}
                         <input type="hidden" name="sort" value="{{ sort }}">
@@ -27,15 +66,24 @@
                             <button type="submit">Search</button>
                         </div>
                     </form>
+
+                    <div class="filters feed-quick-filters" aria-label="Quick filters">
+                        <a class="filter-link" href="{% url 'search' %}?section=movies">Movies</a>
+                        <a class="filter-link" href="{% url 'search' %}?section=books">Books</a>
+                        <a class="filter-link" href="{% url 'discover' %}?chip=series">TV Shows</a>
+                        <a class="filter-link" href="{% url 'discover' %}?chip=podcasts">Podcasts</a>
+                        <a class="filter-link" href="{% url 'discover' %}?chip=experiences">Experiences</a>
+                    </div>
+
                     <div class="filters">
-                        <a class="filter-link {% if not friends_only %}active{% endif %}" href="{% url 'feed' %}{% if query %}?q={{ query|urlencode }}{% endif %}">Everyone</a>
+                        <a class="filter-link {% if not friends_only %}active{% endif %}" href="{% url 'feed' %}{% if query %}?q={{ query|urlencode }}{% endif %}">All</a>
                         <a class="filter-link {% if friends_only %}active{% endif %}" href="{% url 'feed' %}?filter=friends{% if query %}&q={{ query|urlencode }}{% endif %}">Friends</a>
-                        <a class="filter-link {% if sort == 'newest' %}active{% endif %}" href="{% url 'feed' %}?{% if friends_only %}filter=friends&{% endif %}{% if query %}q={{ query|urlencode }}&{% endif %}sort=newest">Newest</a>
+                        <a class="filter-link {% if sort == 'newest' %}active{% endif %}" href="{% url 'feed' %}?{% if friends_only %}filter=friends&{% endif %}{% if query %}q={{ query|urlencode }}&{% endif %}sort=newest">New</a>
                         <a class="filter-link {% if sort == 'top' %}active{% endif %}" href="{% url 'feed' %}?{% if friends_only %}filter=friends&{% endif %}{% if query %}q={{ query|urlencode }}&{% endif %}sort=top">Top</a>
                     </div>
                 </section>
 
-                <section class="feed-stack is-loading">
+                <section class="feed-stack is-loading tidy-feed-stack">
                     <div class="skeleton-feed" aria-hidden="true">
                         <article class="card skeleton-card">
                             <div class="skeleton-row">
@@ -50,7 +98,6 @@
                                 <div class="stack">
                                     <span class="skeleton-line long"></span>
                                     <span class="skeleton-line medium"></span>
-                                    <span class="skeleton-line long"></span>
                                     <span class="skeleton-line short"></span>
                                 </div>
                             </div>
@@ -58,94 +105,79 @@
                     </div>
 
                     {% for review in reviews %}
-                        <article class="card social-review-card review-card">
+                        <article class="card social-review-card review-card tidy-review-card">
                             <header class="post-header">
                                 <span class="post-avatar">{{ review.user.username|first }}</span>
                                 <div>
                                     <div class="post-name">{{ review.user.username }}</div>
-                                    <div class="post-meta">{{ review.created_at|timesince }} ago - reviewed {{ review.item.get_item_type_display|lower }}</div>
+                                    <div class="post-meta">{{ review.created_at|timesince }} ago · {{ review.item.get_item_type_display }}</div>
                                 </div>
-                                <span class="badge">{{ review.item.get_item_type_display }}</span>
+                                <span class="rating">{{ review.rating }}/5</span>
                             </header>
 
                             <div class="post-item">
                                 <a class="review-poster" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
                                     <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
                                 </a>
-                                <div>
+                                <div class="review-copy">
                                     <div class="pill-row">
-                                        <h2 class="item-title"><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h2>
-                                        <span class="rating">{{ review.rating }}/5</span>
+                                        <span class="badge">{{ review.item.get_item_type_display }}</span>
                                     </div>
+                                    <h2 class="item-title"><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h2>
                                     <p class="meta">
                                         {% if review.item.release_year %}{{ review.item.release_year }}{% endif %}
-                                        {% if review.item.creator_name %}{% if review.item.release_year %} - {% endif %}{{ review.item.creator_name }}{% endif %}
+                                        {% if review.item.creator_name %}{% if review.item.release_year %} · {% endif %}{{ review.item.creator_name }}{% endif %}
                                     </p>
                                     <p class="review-text">{{ review.review_text }}</p>
-                                    {% if review.item.imdb_rating or review.item.rotten_tomatoes_rating or review.item.book_rating %}
-                                        <div class="external-ratings">
+                                    <div class="review-meta-actions">
+                                        {% if review.item.imdb_rating or review.item.rotten_tomatoes_rating or review.item.book_rating %}
+                                            <div class="external-ratings">
                                             {% if review.item.imdb_rating %}<span>IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
-                                            {% if review.item.rotten_tomatoes_rating %}<span>Rotten Tomatoes {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
+                                            {% if review.item.rotten_tomatoes_rating %}<span>RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
                                             {% if review.item.book_rating %}<span>{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
+                                            </div>
+                                        {% endif %}
 
-                            <div class="feed-actions" aria-label="Review actions">
-                                <form method="post" action="{% url 'toggle_like' review.id %}" class="js-async-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="icon-button {% if review.id in liked_review_ids %}active liked{% endif %}" data-icon-button="1" data-like-action="1" aria-label="{% if review.id in liked_review_ids %}Unlike{% else %}Like{% endif %}" title="{% if review.id in liked_review_ids %}Unlike{% else %}Like{% endif %}">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.1 21.4 10.6 20C5.4 15.3 2 12.2 2 8.4 2 5.4 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.4 22 8.4c0 3.8-3.4 6.9-8.6 11.6l-1.3 1.4ZM7.4 5C5.5 5 4 6.5 4 8.4c0 2.9 2.8 5.5 7.9 10.1l.1.1.1-.1c5.1-4.6 7.9-7.2 7.9-10.1C20 6.5 18.5 5 16.6 5c-1.5 0-2.9.9-3.5 2.2h-2.2C10.3 5.9 8.9 5 7.4 5Z"/></svg>
-                                        <span class="sr-only">{% if review.id in liked_review_ids %}Unlike{% else %}Like{% endif %}</span>
-                                        <span>Like</span>
-                                        <span class="icon-count">{{ review.likes.count }}</span>
-                                    </button>
-                                </form>
-                                <button type="button" class="icon-button" title="Comments">Comment</button>
-                                <form method="post" action="{% url 'toggle_saved_item' review.item_id 'watchlist' %}" class="js-async-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="icon-button {% if review.item_id in watchlist_item_ids %}active{% endif %}" data-plain-button="1" data-icon-button="1" aria-label="{% if review.item_id in watchlist_item_ids %}Saved{% else %}Save{% endif %}" title="Save">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1 2v12.6l5-2.9 5 2.9V5H7Z"/></svg>
-                                        <span>Save</span>
-                                    </button>
-                                </form>
-                                <button type="button" class="icon-button" title="Share">Share</button>
+                                        <div class="feed-actions compact-actions" aria-label="Review actions">
+                                            <form method="post" action="{% url 'toggle_like' review.id %}" class="js-async-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                <button type="submit" class="icon-button {% if review.id in liked_review_ids %}active liked{% endif %}" data-icon-button="1" data-like-action="1" aria-label="Like">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
+                                                    <span class="icon-count">{{ review.likes.count }}</span>
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{% url 'toggle_saved_review' review.id %}" class="js-async-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                <button type="submit" class="icon-button {% if review.id in saved_review_ids %}active{% endif %}" data-icon-button="1" aria-label="Save">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
+                                                    <span class="sr-only">Save</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </article>
                     {% empty %}
                         <div class="card empty-panel">
                             <span class="empty-orb">R</span>
-                            <h2>No reviews here yet</h2>
-                            <p>Start the conversation with a review, or follow people whose taste you want in your feed.</p>
+                            <h2>No reviews yet</h2>
+                            <p>Use the composer above to post the first review, or find people to follow so your feed starts filling up.</p>
                             <div class="form-actions">
-                                <a class="button" href="{% url 'new_review' %}">Post a review</a>
+                                <a class="button" href="#feed-composer">Post a review</a>
                                 <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Find people</a>
                             </div>
                         </div>
                     {% endfor %}
                 </section>
-
-                {% if page_obj and page_obj.paginator.num_pages > 1 %}
-                    <section class="card">
-                        <div class="form-actions">
-                            {% if page_obj.has_previous %}
-                                <a class="button secondary" href="?{% if friends_only %}filter=friends&{% endif %}{% if query %}q={{ query|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
-                            {% endif %}
-                            <span class="meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                            {% if page_obj.has_next %}
-                                <a class="button secondary" href="?{% if friends_only %}filter=friends&{% endif %}{% if query %}q={{ query|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-                            {% endif %}
-                        </div>
-                    </section>
-                {% endif %}
             </main>
 
-            <aside class="right-rail">
+            <aside class="right-rail tidy-right-rail">
                 <section class="card">
-                    <h2 class="card-title">Trending reviews</h2>
+                    <h2 class="card-title">Trending</h2>
                     <div class="rail-list">
                         {% for review in reviews|slice:":4" %}
                             <a class="rail-item" href="{% url 'item_reviews' review.item_id %}">
@@ -161,28 +193,152 @@
                 <section class="card">
                     <h2 class="card-title">Suggested people</h2>
                     <div class="person-list">
-                        <div class="person-row">
-                            <div class="person-name"><span class="avatar">A</span><div><strong>Aman</strong><div class="meta">Movies - 12 mutual reviews</div></div></div>
-                            <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Follow</a>
-                        </div>
-                        <div class="person-row">
-                            <div class="person-name"><span class="avatar">P</span><div><strong>Priya</strong><div class="meta">Books - 8 mutual reviews</div></div></div>
-                            <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Follow</a>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="card">
-                    <h2 class="card-title">Popular categories</h2>
-                    <div class="filters">
-                        <a class="filter-link" href="{% url 'search' %}?section=movies">Movies</a>
-                        <a class="filter-link" href="{% url 'search' %}?section=books">Books</a>
-                        <a class="filter-link" href="{% url 'discover' %}?chip=trending">Shows</a>
-                        <a class="filter-link" href="{% url 'discover' %}?chip=for-you">Life</a>
-                        <a class="filter-link" href="{% url 'discover' %}?chip=for-you">Products</a>
+                        {% for suggested_user in suggested_users|slice:":3" %}
+                            <div class="person-row">
+                                <div class="person-name">
+                                    <span class="avatar">{{ suggested_user.username|first }}</span>
+                                    <div><strong>{{ suggested_user.username }}</strong><div class="meta">Follow for more reviews</div></div>
+                                </div>
+                                <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Follow</a>
+                            </div>
+                        {% empty %}
+                            <p class="empty-state">People suggestions will appear here.</p>
+                        {% endfor %}
                     </div>
                 </section>
             </aside>
         </div>
     </div>
+
+    <script>
+        (function () {
+            var titleInput = document.getElementById("id_item_title");
+            var typeInput = document.getElementById("id_item_type");
+            var keyInput = document.getElementById("id_selected_item_key");
+            var selectedTitleInput = document.getElementById("id_selected_item_title");
+            var selectedYearInput = document.getElementById("id_selected_item_year");
+            var selectedCreatorInput = document.getElementById("id_selected_item_creator");
+            var selectedImageInput = document.getElementById("id_selected_item_image_url");
+            var selectedSourceInput = document.getElementById("id_selected_item_external_source");
+            var selectedExternalIdInput = document.getElementById("id_selected_item_external_id");
+            var list = document.getElementById("item-suggestions");
+            var suggestionMessage = document.getElementById("item-suggestion-message");
+            var activeRequest = null;
+            var debounceTimer = null;
+
+            if (!titleInput || !typeInput || !keyInput || !selectedTitleInput || !list) return;
+
+            function clearSelection() {
+                keyInput.value = "";
+                selectedTitleInput.value = "";
+                if (selectedYearInput) selectedYearInput.value = "";
+                if (selectedCreatorInput) selectedCreatorInput.value = "";
+                if (selectedImageInput) selectedImageInput.value = "";
+                if (selectedSourceInput) selectedSourceInput.value = "";
+                if (selectedExternalIdInput) selectedExternalIdInput.value = "";
+            }
+
+            function hideList() {
+                list.hidden = true;
+                list.innerHTML = "";
+            }
+
+            function setMessage(text) {
+                if (!suggestionMessage) return;
+                suggestionMessage.style.display = text ? "block" : "none";
+                suggestionMessage.textContent = text || "";
+            }
+
+            function renderSuggestions(items) {
+                if (!items.length) {
+                    hideList();
+                    return;
+                }
+                setMessage("");
+                list.innerHTML = "";
+                items.forEach(function (item) {
+                    var button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "suggestion-button";
+
+                    var image = document.createElement("img");
+                    image.alt = "";
+                    image.src = item.image_url || "/static/posts/images/revue-layouts.png";
+                    button.appendChild(image);
+
+                    var creator = item.creator || (item.item_type === "book" ? "Unknown writer" : "Unknown director");
+                    var year = item.year || "Unknown year";
+                    var copy = document.createElement("span");
+                    var title = document.createElement("strong");
+                    var meta = document.createElement("small");
+                    copy.className = "suggestion-copy";
+                    title.textContent = item.title;
+                    meta.textContent = item.item_type + " · " + year + " · " + creator;
+                    copy.appendChild(title);
+                    copy.appendChild(meta);
+                    button.appendChild(copy);
+
+                    button.addEventListener("click", function () {
+                        titleInput.value = item.title;
+                        keyInput.value = item.key;
+                        selectedTitleInput.value = item.title;
+                        if (selectedYearInput) selectedYearInput.value = item.year || "";
+                        if (selectedCreatorInput) selectedCreatorInput.value = item.creator || "";
+                        if (selectedImageInput) selectedImageInput.value = item.image_url || "";
+                        if (selectedSourceInput) selectedSourceInput.value = item.external_source || "";
+                        if (selectedExternalIdInput) selectedExternalIdInput.value = item.external_id || "";
+                        hideList();
+                    });
+                    list.appendChild(button);
+                });
+                list.hidden = false;
+            }
+
+            async function fetchSuggestions() {
+                var q = titleInput.value.trim();
+                if (q.length < 2) {
+                    hideList();
+                    setMessage("");
+                    return;
+                }
+                if (activeRequest) activeRequest.abort();
+                activeRequest = new AbortController();
+                try {
+                    var params = new URLSearchParams({ q: q, item_type: typeInput.value });
+                    var response = await fetch("{% url 'suggest_items' %}?" + params.toString(), {
+                        signal: activeRequest.signal
+                    });
+                    if (!response.ok) {
+                        hideList();
+                        setMessage("Could not fetch suggestions right now.");
+                        return;
+                    }
+                    var data = await response.json();
+                    setMessage(data.error || "");
+                    renderSuggestions(data.results || []);
+                } catch (error) {
+                    if (error.name === "AbortError") return;
+                    hideList();
+                    setMessage("Could not fetch suggestions right now.");
+                }
+            }
+
+            function scheduleSuggestions() {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(fetchSuggestions, 250);
+            }
+
+            titleInput.addEventListener("input", function () {
+                clearSelection();
+                scheduleSuggestions();
+            });
+            typeInput.addEventListener("change", function () {
+                clearSelection();
+                scheduleSuggestions();
+            });
+            document.addEventListener("click", function (event) {
+                if (!list.contains(event.target) && event.target !== titleInput) hideList();
+            });
+        })();
+    </script>
 {% endblock %}
