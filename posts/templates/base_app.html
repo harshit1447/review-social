@@ -606,6 +606,209 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Final layout rules: fixed sidebar, scrollable content, compact pages. */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .app-shell-authenticated {
+            height: 100vh;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            height: 100vh;
+            min-height: 0;
+            overflow: hidden;
+            padding: 14px 12px;
+        }
+
+        .sidebar-header {
+            flex: 0 0 auto;
+            padding-bottom: 10px;
+        }
+
+        .sidebar-brand {
+            font-size: 2.15rem;
+            line-height: 0.92;
+        }
+
+        .sidebar-nav {
+            flex: 1 1 auto;
+            gap: 2px;
+            min-height: 0;
+            padding-top: 6px;
+        }
+
+        .sidebar-link,
+        .sidebar-logout {
+            font-size: 0.92rem;
+            min-height: 36px;
+            padding: 7px 11px;
+        }
+
+        .sidebar-footer {
+            flex: 0 0 auto;
+            margin-top: 8px;
+            padding-top: 10px;
+        }
+
+        .main-content {
+            height: 100vh;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        .page {
+            max-width: 860px;
+            padding: 22px 24px 40px;
+            transform: none !important;
+        }
+
+        .page-header {
+            max-width: 760px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header h1 {
+            font-size: clamp(1.9rem, 3vw, 2.75rem);
+        }
+
+        .toolbar,
+        .feed-stack,
+        .layout-grid,
+        .profile-grid,
+        .form-card,
+        .two-column,
+        .item-hero {
+            max-width: 760px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .layout-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .layout-grid > aside,
+        .layout-grid > section {
+            min-width: 0;
+        }
+
+        .profile-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-bottom: 14px;
+        }
+
+        .stat-card {
+            min-height: 74px;
+            padding: 14px 16px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: 850;
+            margin-right: 6px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            padding: 15px 16px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            margin: 0 0 10px;
+        }
+
+        .toolbar {
+            padding: 15px;
+        }
+
+        .search-row {
+            align-items: center;
+        }
+
+        .search-row input {
+            flex: 1 1 auto;
+            max-width: none;
+        }
+
+        .recommendation,
+        .person-row {
+            padding: 10px 0;
+        }
+
+        .person-row {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .person-name {
+            align-items: center;
+            display: flex;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .avatar {
+            align-items: center;
+            background: rgba(168, 100, 50, 0.12);
+            border-radius: 50%;
+            color: #8b4d23;
+            display: inline-flex;
+            font-weight: 850;
+            height: 34px;
+            justify-content: center;
+            width: 34px;
+        }
+
+        @media (max-height: 620px) {
+            .sidebar-brand {
+                font-size: 1.8rem;
+            }
+
+            .sidebar-link,
+            .sidebar-logout {
+                min-height: 32px;
+                padding-bottom: 5px;
+                padding-top: 5px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            html,
+            body {
+                overflow: auto;
+            }
+
+            .app-shell-authenticated,
+            .main-content,
+            .sidebar {
+                height: auto;
+                overflow: visible;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
