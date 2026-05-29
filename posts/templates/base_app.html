@@ -387,6 +387,225 @@
                 width: min(180px, 50vw);
             }
         }
+
+        /* Revue app polish: keep all authenticated pages compact and uniform. */
+        body {
+            background:
+                radial-gradient(circle at 88% 0%, rgba(168, 100, 50, 0.1), transparent 28%),
+                linear-gradient(135deg, #faf4eb 0%, #f0dfca 100%);
+        }
+
+        .app-shell-authenticated {
+            grid-template-columns: 212px minmax(0, 1fr);
+        }
+
+        .sidebar {
+            background: rgba(255, 253, 250, 0.92);
+            gap: 10px;
+            padding: 18px 12px;
+        }
+
+        .sidebar-header {
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 4px;
+            padding: 0 6px 14px;
+        }
+
+        .sidebar-brand {
+            color: #111;
+            display: block;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2.7rem;
+            font-style: italic;
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            padding: 0;
+        }
+
+        .sidebar-brand span {
+            display: block;
+            transform: skewX(-8deg);
+        }
+
+        .sidebar-link,
+        .sidebar-logout {
+            border-radius: 8px;
+            font-size: 0.96rem;
+            font-weight: 760;
+            min-height: 40px;
+            padding: 8px 12px;
+        }
+
+        .main-content {
+            width: 100%;
+        }
+
+        .page {
+            margin: 0 auto;
+            max-width: 940px;
+            padding: 24px 28px 44px;
+        }
+
+        .page-header {
+            margin-bottom: 16px;
+        }
+
+        .page-header h1 {
+            font-size: clamp(2rem, 3.2vw, 3.15rem);
+            letter-spacing: 0;
+        }
+
+        .page-subtitle {
+            font-size: 0.98rem;
+            margin: 0;
+        }
+
+        .toolbar,
+        .card {
+            background: rgba(255, 253, 250, 0.9);
+            border-color: #e5d7c8;
+            border-radius: 8px;
+            box-shadow: 0 12px 32px rgba(88, 55, 28, 0.045);
+            padding: 16px;
+        }
+
+        .toolbar {
+            margin: 0 auto 16px;
+            max-width: 760px;
+        }
+
+        .search-row input {
+            max-width: 520px;
+        }
+
+        .filter-link,
+        .button,
+        button[type="submit"] {
+            font-size: 0.92rem;
+            min-height: 36px;
+            padding: 7px 12px;
+        }
+
+        .feed-stack {
+            gap: 14px;
+            max-width: 760px;
+        }
+
+        .review-card {
+            gap: 14px;
+            grid-template-columns: 92px minmax(0, 1fr);
+            padding: 14px;
+        }
+
+        .review-poster {
+            height: 136px;
+            width: 92px;
+        }
+
+        .review-body {
+            gap: 8px;
+        }
+
+        .review-header,
+        .review-topline {
+            gap: 10px;
+        }
+
+        .item-title {
+            font-size: 1.12rem;
+        }
+
+        .meta {
+            font-size: 0.86rem;
+        }
+
+        .review-text {
+            font-size: 0.95rem;
+            line-height: 1.48;
+        }
+
+        .rating {
+            background: rgba(168, 100, 50, 0.09);
+            border-radius: 999px;
+            color: #7c5614;
+            font-size: 0.9rem;
+            padding: 4px 8px;
+        }
+
+        .external-ratings span {
+            font-size: 0.76rem;
+            padding: 4px 8px;
+        }
+
+        .icon-button {
+            height: 34px;
+            min-width: 34px;
+            padding: 0 9px;
+        }
+
+        .icon-button svg {
+            height: 16px;
+            width: 16px;
+        }
+
+        .icon-count {
+            font-size: 0.78rem;
+        }
+
+        .item-hero {
+            grid-template-columns: minmax(0, 1fr) 170px;
+            margin: 0 auto 20px;
+            max-width: 820px;
+        }
+
+        .item-hero-poster {
+            width: 170px;
+        }
+
+        .form-card,
+        .two-column,
+        .layout-grid {
+            max-width: 760px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (min-width: 1280px) {
+            .page {
+                transform: translateX(-24px);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .app-shell-authenticated {
+                grid-template-columns: 1fr;
+            }
+
+            .page {
+                padding: 18px 14px 34px;
+            }
+
+            .sidebar-brand {
+                font-size: 2.2rem;
+            }
+
+            .sidebar-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .review-card {
+                grid-template-columns: 76px minmax(0, 1fr);
+            }
+
+            .review-poster {
+                height: 112px;
+                width: 76px;
+            }
+
+            .item-hero {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
