@@ -1,20 +1,20 @@
 {% extends "base_app.html" %}
 
-{% block title %}Friends | Review Social{% endblock %}
+{% block title %}Friends | Revue{% endblock %}
 
 {% block content %}
     <div class="page">
         <section class="page-header">
             <h1>Friends</h1>
-            <p class="page-subtitle">Find people, manage your friend list, and see what friends recommend to you</p>
+            <p class="page-subtitle">Find people, follow taste you trust, and keep recommendations moving.</p>
         </section>
 
-        <section class="toolbar card">
+        <section class="toolbar">
             <form class="search-form" method="get">
                 <input type="hidden" name="tab" value="{{ active_tab }}">
-                <label for="friends-search">Search friends</label>
+                <label for="friends-search">Search people</label>
                 <div class="search-row">
-                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search people, recommendations, titles">
+                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search by username, recommendation, or title">
                     <button type="submit">Search</button>
                 </div>
             </form>
@@ -25,95 +25,116 @@
             </div>
         </section>
 
-        <div class="layout-grid">
-            <section class="stack">
-                <div class="card">
+        <div class="social-layout">
+            <main class="social-center">
+                <section class="card">
                     <h2 class="card-title">Friend recommendations</h2>
-                    {% for recommendation in recommendations %}
-                        <div class="recommendation">
-                            <p>
-                                <strong>{{ recommendation.from_user.username }}</strong>
-                                recommended
-                                <strong>{{ recommendation.item.title }}</strong>
-                            </p>
-                            {% if recommendation.message %}
-                                <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
-                            {% endif %}
-                        </div>
-                    {% empty %}
-                        <p class="empty-state">No recommendations from friends yet.</p>
-                    {% endfor %}
-                </div>
-
-                <div class="card">
-                    {% if active_tab == "followers" %}
-                        <h2 class="card-title">People following you</h2>
-                        {% for follower in followers %}
-                            <div class="person-row">
-                                <div class="person-name">
-                                    <span class="avatar">{{ follower.username|first }}</span>
-                                    <strong>{{ follower.username }}</strong>
-                                </div>
-                                <form method="post" action="{% url 'add_friend' follower.id %}" class="js-async-form">
-                                    {% csrf_token %}
-                                    <button type="submit" class="button" data-plain-button="1">Follow back</button>
-                                </form>
-                            </div>
+                    <div class="recommendation-list">
+                        {% for recommendation in recommendations %}
+                            <article class="recommendation">
+                                <p><strong>{{ recommendation.from_user.username }}</strong> recommended <strong>{{ recommendation.item.title }}</strong></p>
+                                {% if recommendation.message %}
+                                    <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
+                                {% endif %}
+                            </article>
                         {% empty %}
-                            <p class="empty-state">No followers yet.</p>
+                            <p class="empty-state">No recommendations from friends yet. Follow a few people or send one first.</p>
                         {% endfor %}
-                    {% elif active_tab == "suggestions" %}
-                        <h2 class="card-title">People you may know</h2>
-                        {% for person in suggested_users %}
+                    </div>
+                </section>
+
+                <section>
+                    <div class="people-grid">
+                        {% if active_tab == "followers" %}
+                            {% for person in followers %}
+                                <article class="person-card">
+                                    <div class="person-card-top">
+                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <div>
+                                            <strong>{{ person.username }}</strong>
+                                            <div class="meta">Follows your reviews</div>
+                                        </div>
+                                    </div>
+                                    <p class="meta">Mutual taste will appear as you both review more titles.</p>
+                                    <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button" data-plain-button="1">Follow back</button>
+                                    </form>
+                                </article>
+                            {% empty %}
+                                <div class="card"><p class="empty-state">No followers yet.</p></div>
+                            {% endfor %}
+                        {% elif active_tab == "suggestions" %}
+                            {% for person in suggested_users %}
+                                <article class="person-card">
+                                    <div class="person-card-top">
+                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <div>
+                                            <strong>{{ person.username }}</strong>
+                                            <div class="meta">Suggested for you</div>
+                                        </div>
+                                    </div>
+                                    <p class="meta">Follow to see their reviews, lists, and recommendations in your feed.</p>
+                                    <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button" data-plain-button="1">Follow</button>
+                                    </form>
+                                </article>
+                            {% empty %}
+                                <div class="card"><p class="empty-state">No more suggestions match this search.</p></div>
+                            {% endfor %}
+                        {% else %}
+                            {% for person in friends %}
+                                <article class="person-card">
+                                    <div class="person-card-top">
+                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <div>
+                                            <strong>{{ person.username }}</strong>
+                                            <div class="meta">Following</div>
+                                        </div>
+                                    </div>
+                                    <p class="meta">You will see this person in feed filters and recommendation flows.</p>
+                                    <form method="post" action="{% url 'remove_friend' person.id %}" class="js-async-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button secondary" data-plain-button="1">Unfollow</button>
+                                    </form>
+                                </article>
+                            {% empty %}
+                                <div class="card"><p class="empty-state">You are not following anyone yet. Try suggestions.</p></div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </section>
+            </main>
+
+            <aside class="right-rail">
+                <section class="card">
+                    <h2 class="card-title">People to discover</h2>
+                    <div class="person-list">
+                        {% for person in suggested_users|slice:":5" %}
                             <div class="person-row">
                                 <div class="person-name">
                                     <span class="avatar">{{ person.username|first }}</span>
-                                    <strong>{{ person.username }}</strong>
+                                    <div>
+                                        <strong>{{ person.username }}</strong>
+                                        <div class="meta">Potential follow</div>
+                                    </div>
                                 </div>
                                 <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                                     {% csrf_token %}
-                                    <button type="submit" class="button" data-plain-button="1">Follow</button>
+                                    <button type="submit" class="button secondary" data-plain-button="1">Add</button>
                                 </form>
                             </div>
                         {% empty %}
-                            <p class="empty-state">No more suggestions match this search.</p>
+                            <p class="empty-state">No people to show yet.</p>
                         {% endfor %}
-                    {% else %}
-                        <h2 class="card-title">People you follow</h2>
-                        {% for friend in friends %}
-                            <div class="person-row">
-                                <div class="person-name">
-                                    <span class="avatar">{{ friend.username|first }}</span>
-                                    <strong>{{ friend.username }}</strong>
-                                </div>
-                                <form method="post" action="{% url 'remove_friend' friend.id %}" class="js-async-form">
-                                    {% csrf_token %}
-                                    <button type="submit" class="button secondary" data-plain-button="1">Unfollow</button>
-                                </form>
-                            </div>
-                        {% empty %}
-                            <p class="empty-state">You are not following anyone yet.</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            </section>
-
-            <aside class="card">
-                <h2 class="card-title">Find people</h2>
-                {% for person in suggested_users %}
-                    <div class="person-row">
-                        <div class="person-name">
-                            <span class="avatar">{{ person.username|first }}</span>
-                            <strong>{{ person.username }}</strong>
-                        </div>
-                        <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
-                            {% csrf_token %}
-                            <button type="submit" class="button" data-plain-button="1">Add friend</button>
-                        </form>
                     </div>
-                {% empty %}
-                    <p class="empty-state">No more people match this search.</p>
-                {% endfor %}
+                </section>
+
+                <section class="card">
+                    <h2 class="card-title">How it works</h2>
+                    <p class="meta">Following someone makes their reviews easier to find and lets them receive your recommendations.</p>
+                </section>
             </aside>
         </div>
     </div>
