@@ -168,6 +168,21 @@
             margin-top: 2px;
         }
 
+        .sidebar-profile-button {
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-top: 4px;
+            transition: color 0.18s ease;
+        }
+
+        .sidebar-profile-button:hover {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
         .sidebar-stats {
             display: grid;
             gap: 8px;
@@ -1174,6 +1189,9 @@
             align-items: stretch !important;
             display: grid !important;
             grid-template-columns: 1fr !important;
+            justify-self: stretch !important;
+            max-width: none !important;
+            width: 100% !important;
         }
 
         .social-review-card .post-header {
@@ -1214,12 +1232,12 @@
 
         /* Tidy feed pass */
         .feed-page {
-            max-width: 1080px;
+            max-width: 1240px;
         }
 
         .feed-layout-tidy {
-            grid-template-columns: minmax(0, 1fr) 280px;
-            gap: 22px;
+            grid-template-columns: minmax(0, 1fr) 270px;
+            gap: 34px;
         }
 
         .feed-layout-tidy .social-center {
@@ -1383,10 +1401,14 @@
 
         .tidy-feed-stack {
             gap: 24px;
+            width: 100%;
         }
 
         .tidy-review-card {
             gap: 12px;
+            justify-self: stretch;
+            max-width: none !important;
+            width: 100% !important;
         }
 
         .tidy-review-card .post-header {
@@ -1682,13 +1704,8 @@
                         <span class="avatar">{{ request.user.username|first }}</span>
                         <span>
                             <span class="sidebar-name">{{ request.user.username }}</span>
-                            <span class="sidebar-handle">Your taste profile</span>
+                            <a class="sidebar-profile-button" href="{% url 'profile' %}">View profile</a>
                         </span>
-                    </div>
-                    <div class="sidebar-stats">
-                        <span class="sidebar-stat"><strong>{{ sidebar_review_count }}</strong><span>Reviews</span></span>
-                        <span class="sidebar-stat"><strong>{{ sidebar_followers_count }}</strong><span>Followers</span></span>
-                        <span class="sidebar-stat"><strong>{{ sidebar_following_count }}</strong><span>Following</span></span>
                     </div>
                 </section>
 
@@ -1697,7 +1714,6 @@
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
                 <a href="{% url 'search' %}" class="sidebar-link {% if request.resolver_match.url_name == 'search' %}active{% endif %}">Search</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
-                <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile</a>
                 <a href="{% url 'recommend' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommend' %}active{% endif %}">Recommend</a>
             </nav>
 
