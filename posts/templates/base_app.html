@@ -6,13 +6,394 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Review Social{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=revue-ui-2">
+    <style>
+        :root {
+            --bg: #f6efe5;
+            --surface-solid: #fffdfa;
+            --text: #151515;
+            --muted: #70675d;
+            --line: #e4d8ca;
+            --accent: #a86432;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .app-shell-authenticated {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: rgba(255, 253, 250, 0.86);
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 100vh;
+            padding: 22px 14px;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-brand {
+            color: var(--text);
+            display: inline-flex;
+            font-family: "Brush Script MT", "Segoe Script", "Snell Roundhand", cursive;
+            font-size: 3rem;
+            line-height: 1;
+            padding: 6px 10px 16px;
+        }
+
+        .sidebar-brand img {
+            display: none;
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 4px;
+        }
+
+        .sidebar-link,
+        .sidebar-logout {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            color: #4b423a;
+            display: flex;
+            font: inherit;
+            font-weight: 760;
+            min-height: 46px;
+            padding: 10px 14px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .sidebar-link.active,
+        .sidebar-link:hover,
+        .sidebar-logout:hover {
+            background: rgba(168, 100, 50, 0.1);
+            color: #8b4d23;
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--line);
+            margin-top: auto;
+            padding-top: 14px;
+        }
+
+        .main-content {
+            min-width: 0;
+        }
+
+        .page {
+            margin: 0 auto;
+            max-width: 1160px;
+            padding: 26px 24px 48px;
+        }
+
+        .page-header {
+            margin-bottom: 18px;
+        }
+
+        .page-header h1 {
+            font-size: clamp(2.1rem, 4vw, 4rem);
+            line-height: 1;
+            margin: 0 0 10px;
+        }
+
+        .page-subtitle,
+        .meta {
+            color: var(--muted);
+        }
+
+        .toolbar,
+        .card {
+            background: var(--surface-solid);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .toolbar {
+            display: grid;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        input,
+        select,
+        textarea,
+        button {
+            font: inherit;
+        }
+
+        .search-row input,
+        .form-card input,
+        .form-card select,
+        .form-card textarea {
+            border: 1px solid #d9d3cb;
+            border-radius: 8px;
+            min-height: 42px;
+            padding: 9px 11px;
+            width: 100%;
+        }
+
+        .button,
+        button[type="submit"],
+        .filter-link {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            display: inline-flex;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 40px;
+            padding: 8px 14px;
+        }
+
+        .button:not(.secondary),
+        .filter-link.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .filters,
+        .form-actions,
+        .feed-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feed-stack {
+            display: grid;
+            gap: 16px;
+            margin: 0 auto;
+            max-width: 860px;
+        }
+
+        .review-card {
+            align-items: start;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 116px minmax(0, 1fr);
+        }
+
+        .review-poster {
+            border-radius: 8px;
+            display: block;
+            height: 166px;
+            overflow: hidden;
+            width: 116px;
+        }
+
+        .review-poster img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .review-body,
+        .item-review-card {
+            display: grid;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .review-header,
+        .review-topline {
+            align-items: flex-start;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .item-title {
+            font-size: 1.28rem;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .review-text {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .rating {
+            color: #7c5614;
+            flex: 0 0 auto;
+            font-weight: 850;
+        }
+
+        .external-ratings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .external-ratings span {
+            background: rgba(168, 100, 50, 0.1);
+            border: 1px solid rgba(168, 100, 50, 0.18);
+            border-radius: 999px;
+            color: #7c5614;
+            font-size: 0.82rem;
+            font-weight: 800;
+            padding: 5px 9px;
+        }
+
+        .icon-button {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            display: inline-flex;
+            gap: 5px;
+            height: 38px;
+            justify-content: center;
+            min-width: 38px;
+            padding: 0 10px;
+        }
+
+        .icon-button.active {
+            background: rgba(168, 100, 50, 0.16);
+            border-color: rgba(168, 100, 50, 0.38);
+            color: #a45f28;
+        }
+
+        .icon-button svg {
+            fill: currentColor;
+            height: 18px;
+            width: 18px;
+        }
+
+        .icon-count {
+            font-size: 0.82rem;
+            font-weight: 850;
+        }
+
+        .sr-only {
+            clip: rect(0, 0, 0, 0);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            position: absolute;
+            width: 1px;
+        }
+
+        .item-hero {
+            align-items: start;
+            display: grid;
+            gap: 28px;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            margin-bottom: 24px;
+        }
+
+        .item-hero-copy h1 {
+            font-size: clamp(2rem, 4vw, 4.2rem);
+            line-height: 1;
+            margin: 8px 0 14px;
+        }
+
+        .item-hero-poster {
+            border-radius: 8px;
+            justify-self: end;
+            overflow: hidden;
+            width: 220px;
+        }
+
+        .item-hero-poster img {
+            aspect-ratio: 2 / 3;
+            display: block;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .item-facts {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin: 20px 0 0;
+        }
+
+        .item-facts dt {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .item-facts dd {
+            margin: 0;
+        }
+
+        @media (max-width: 760px) {
+            .app-shell-authenticated {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                min-height: 0;
+                position: static;
+            }
+
+            .review-card {
+                grid-template-columns: 82px minmax(0, 1fr);
+            }
+
+            .review-poster {
+                height: 122px;
+                width: 82px;
+            }
+
+            .item-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .item-hero-poster {
+                justify-self: start;
+                order: -1;
+                width: min(180px, 50vw);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell app-shell-authenticated">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a class="sidebar-brand logo-image-link app-wordmark-link" href="{% url 'feed' %}">
-                    <img src="{% static 'posts/images/revue-wordmark-clean.png' %}" alt="Revue">
                     <span>Revue</span>
                 </a>
             </div>
