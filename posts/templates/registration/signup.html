@@ -43,10 +43,16 @@
             align-items: center;
         }
 
-        .wordmark img {
-            display: block;
-            height: clamp(70px, 10vh, 118px);
-            width: auto;
+        .wordmark {
+            color: #111;
+            display: inline-block;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(3.2rem, 7vw, 5.2rem);
+            font-style: italic;
+            font-weight: 500;
+            letter-spacing: -0.05em;
+            line-height: 0.9;
+            transform: skewX(-8deg);
         }
 
         .top-actions {
@@ -249,9 +255,7 @@
 <body>
     <main class="page">
         <nav class="topbar" aria-label="Primary">
-            <a class="wordmark" href="{% url 'landing' %}">
-                <img src="{% static 'posts/images/revue-wordmark-clean.png' %}" alt="Revue">
-            </a>
+            <a class="wordmark" href="{% url 'landing' %}">Revue</a>
             <div class="top-actions">
                 <a href="{% url 'account_login' %}">Log in</a>
                 <a href="{% url 'signup' %}">Sign up</a>
