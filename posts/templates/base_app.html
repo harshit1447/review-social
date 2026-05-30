@@ -106,6 +106,28 @@
             width: 100%;
         }
 
+        .profile-photo-view-button {
+            appearance: none;
+            border: 0;
+            cursor: zoom-in;
+            font: inherit;
+            padding: 0;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .profile-photo-view-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .profile-photo-view-button:focus-visible {
+            outline: 3px solid rgba(179, 106, 50, 0.32);
+            outline-offset: 3px;
+        }
+
+        .profile-avatar.profile-photo-view-button {
+            border: 5px solid var(--surface-solid);
+        }
+
         .sidebar-nav {
             display: grid;
             gap: 4px;
@@ -910,6 +932,69 @@
 
         .profile-photo-actions form {
             margin: 0;
+        }
+
+        .profile-photo-lightbox {
+            align-items: center;
+            background: rgba(23, 21, 19, 0.62);
+            display: none;
+            inset: 0;
+            justify-content: center;
+            padding: 28px;
+            position: fixed;
+            z-index: 140;
+        }
+
+        .profile-photo-lightbox.open {
+            display: flex;
+        }
+
+        .profile-photo-lightbox-panel {
+            align-items: center;
+            background: var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 28px;
+            box-shadow: 0 34px 90px rgba(20, 14, 10, 0.34);
+            display: grid;
+            gap: 14px;
+            justify-items: center;
+            max-width: min(420px, 92vw);
+            padding: 18px;
+            position: relative;
+        }
+
+        .profile-photo-lightbox-image {
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: block;
+            max-width: min(340px, 74vw);
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .profile-photo-lightbox-title {
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 650;
+            margin: 0;
+            text-align: center;
+        }
+
+        .profile-photo-lightbox-close {
+            align-items: center;
+            background: rgba(255, 253, 249, 0.9);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            display: inline-flex;
+            height: 34px;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            width: 34px;
         }
 
         .danger-text {
@@ -1739,6 +1824,13 @@
             position: relative;
         }
 
+        .composer-title-field {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            position: relative;
+        }
+
         .inline-review-form {
             position: relative;
         }
@@ -1765,6 +1857,14 @@
             z-index: 15;
         }
 
+        .composer-title-field .item-suggestions {
+            left: 0;
+            margin-top: 0;
+            position: absolute;
+            top: calc(100% + 8px);
+            width: 100%;
+        }
+
         .item-suggestions::-webkit-scrollbar {
             width: 8px;
         }
@@ -1789,9 +1889,9 @@
             border-radius: 12px;
             color: var(--text);
             cursor: pointer;
-            display: grid;
+            display: flex;
             gap: 12px;
-            grid-template-columns: 56px minmax(0, 1fr);
+            justify-content: flex-start;
             min-height: 72px;
             padding: 8px;
             text-align: left;
@@ -1808,16 +1908,21 @@
             aspect-ratio: 2 / 3;
             border-radius: 8px;
             background: #eee3d8;
+            flex: 0 0 48px;
             height: 56px;
             object-fit: cover;
             width: 56px;
         }
 
         .suggestion-copy {
-            display: grid;
+            align-items: flex-start;
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
             gap: 4px;
             justify-content: center;
             min-width: 0;
+            text-align: left;
         }
 
         .suggestion-copy strong,
@@ -2272,14 +2377,29 @@
         }
 
         .item-detail-page {
-            max-width: 1020px;
+            max-width: 1240px;
+        }
+
+        .item-detail-layout {
+            gap: 28px;
+            grid-template-columns: minmax(0, 1fr) 280px;
+        }
+
+        .item-detail-main {
+            gap: 18px;
         }
 
         .item-detail-page .item-hero {
+            align-items: stretch;
             border-radius: 18px;
             gap: 20px;
             grid-template-columns: minmax(0, 1fr) 210px;
             padding: 18px;
+        }
+
+        .item-detail-page .item-hero-copy {
+            display: flex;
+            flex-direction: column;
         }
 
         .item-detail-page .item-hero-copy h1 {
@@ -2310,15 +2430,21 @@
         }
 
         .item-detail-page .item-facts {
+            align-items: start;
             gap: 10px;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             margin: 14px 0 12px;
         }
 
-        .item-detail-page .item-ratings-fact {
-            border-top: 0;
+        .item-detail-page .item-facts > div {
+            align-self: start;
+            border-top: 1px solid rgba(126, 67, 30, 0.18);
             min-width: 0;
-            padding-top: 0;
+            padding-top: 8px;
+        }
+
+        .item-detail-page .item-ratings-fact {
+            min-width: 0;
         }
 
         .item-detail-page .item-facts dt {
@@ -2329,10 +2455,13 @@
         .item-detail-page .item-facts dd {
             color: #342d27;
             font-size: 0.9rem;
+            margin-top: 6px;
         }
 
         .item-detail-page .item-facts .external-ratings {
+            align-items: flex-start;
             gap: 7px;
+            justify-content: flex-start;
             margin-top: 0;
         }
 
@@ -2343,15 +2472,16 @@
 
         .item-hero-actions-row {
             align-items: center;
-            display: flex;
-            gap: 14px;
-            justify-content: space-between;
-            margin-top: 10px;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-top: auto;
+            padding-top: 14px;
         }
 
         .item-hero-actions-row .form-actions {
-            flex: 0 0 auto;
             gap: 8px;
+            grid-column: 1 / span 2;
         }
 
         .item-hero-actions-row .external-ratings {
@@ -2362,9 +2492,9 @@
 
         .item-action-buttons {
             border-top: 0;
-            flex: 1 1 auto;
-            justify-content: flex-end;
-            margin-left: auto;
+            grid-column: 4;
+            justify-content: flex-start;
+            margin-left: 0;
             padding-top: 0;
         }
 
@@ -2391,8 +2521,8 @@
         }
 
         .item-reviews-heading {
-            margin: 30px auto 12px;
-            max-width: 880px;
+            margin: 20px 0 0;
+            max-width: none;
         }
 
         .item-reviews-heading h2 {
@@ -2401,15 +2531,11 @@
             margin: 0;
         }
 
-        .item-reviews-heading .page-subtitle {
-            margin-top: 6px;
-        }
-
         .item-review-stack {
             display: grid;
             gap: 18px;
-            margin: 0 auto;
-            max-width: 880px;
+            margin: 0;
+            max-width: none;
         }
 
         .item-review-card {
@@ -2468,9 +2594,10 @@
 
         .discussion-card {
             border-radius: 18px;
-            margin: 22px auto 0;
-            max-width: 880px;
+            margin: 0;
+            max-width: none;
             padding: 16px 18px 18px;
+            width: 100%;
         }
 
         .discussion-list {
@@ -2531,26 +2658,29 @@
         .comment-icon-button {
             align-items: center;
             background: transparent;
-            border: 0;
+            border: 1px solid rgba(126, 67, 30, 0.18);
+            border-radius: 999px;
             color: #8a8178;
             cursor: pointer;
             display: inline-flex;
             font-size: 0.82rem;
-            gap: 2px;
-            height: 20px;
+            gap: 4px;
+            height: 28px;
             justify-content: center;
-            min-width: 20px;
-            padding: 0 2px;
-            transition: color 0.16s ease, transform 0.16s ease;
+            min-width: 30px;
+            padding: 0 8px;
+            transition: border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
         }
 
         .comment-icon-button:hover {
+            border-color: rgba(126, 67, 30, 0.34);
             color: #4c4640;
             transform: translateY(-1px);
         }
 
         .comment-icon-button.active {
             color: #3d3935;
+            background: transparent;
         }
 
         .comment-icon-button.active .comment-heart {
@@ -2564,12 +2694,12 @@
 
         .comment-icon-button svg {
             fill: none;
-            height: 14px;
+            height: 13px;
             stroke: currentColor;
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-width: 2;
-            width: 14px;
+            width: 13px;
         }
 
         .comment-icon-button.danger:hover {
@@ -3042,6 +3172,15 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .item-hero-actions-row {
+                grid-template-columns: 1fr;
+            }
+
+            .item-hero-actions-row .form-actions,
+            .item-action-buttons {
+                grid-column: 1;
+            }
+
             .interaction-grid,
             .recommendation-grid,
             .profile-edit-grid {
@@ -3111,13 +3250,15 @@
             <nav class="sidebar-nav" aria-label="Main navigation">
                 <section class="sidebar-profile-card">
                     <div class="sidebar-profile-top">
-                        <a class="avatar profile-link" href="{% url 'profile' %}" aria-label="{{ request.user.get_full_name|default:request.user.username }} profile">
-                            {% if request.user.profile.profile_photo %}
+                        {% if request.user.profile.profile_photo %}
+                            <button class="avatar profile-photo-view-button" type="button" data-profile-photo-src="{{ request.user.profile.profile_photo.url }}" data-profile-photo-name="{{ request.user.get_full_name|default:request.user.username }}" aria-label="View {{ request.user.get_full_name|default:request.user.username }} profile photo">
                                 <img src="{{ request.user.profile.profile_photo.url }}" alt="">
-                            {% else %}
+                            </button>
+                        {% else %}
+                            <a class="avatar profile-link" href="{% url 'profile' %}" aria-label="{{ request.user.get_full_name|default:request.user.username }} profile">
                                 {{ request.user.get_full_name|default:request.user.username|first }}
-                            {% endif %}
-                        </a>
+                            </a>
+                        {% endif %}
                         <span>
                             <a class="sidebar-name profile-link" href="{% url 'profile' %}">{{ request.user.get_full_name|default:request.user.username }}</a>
                             <a class="sidebar-profile-button" href="{% url 'profile' %}">View profile</a>
@@ -3187,6 +3328,13 @@
         </aside>
         <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
     </div>
+    <div class="profile-photo-lightbox" id="profile-photo-lightbox" aria-hidden="true">
+        <div class="profile-photo-lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="profile-photo-lightbox-title">
+            <button class="profile-photo-lightbox-close" type="button" aria-label="Close profile photo">x</button>
+            <img class="profile-photo-lightbox-image" src="" alt="">
+            <p class="profile-photo-lightbox-title" id="profile-photo-lightbox-title"></p>
+        </div>
+    </div>
     <script>
         (function () {
             function showToast(message) {
@@ -3215,6 +3363,26 @@
             var recommendItemTitle = document.getElementById("recommend-item-title");
             var recommendSearch = document.getElementById("recommend-friend-search");
             var recommendClose = document.getElementById("recommend-close");
+            var profilePhotoLightbox = document.getElementById("profile-photo-lightbox");
+            var profilePhotoLightboxImage = profilePhotoLightbox ? profilePhotoLightbox.querySelector(".profile-photo-lightbox-image") : null;
+            var profilePhotoLightboxTitle = profilePhotoLightbox ? profilePhotoLightbox.querySelector(".profile-photo-lightbox-title") : null;
+            var profilePhotoLightboxClose = profilePhotoLightbox ? profilePhotoLightbox.querySelector(".profile-photo-lightbox-close") : null;
+
+            function openProfilePhotoLightbox(src, name) {
+                if (!profilePhotoLightbox || !profilePhotoLightboxImage || !src) return;
+                profilePhotoLightboxImage.src = src;
+                profilePhotoLightboxImage.alt = name ? name + " profile photo" : "Profile photo";
+                if (profilePhotoLightboxTitle) profilePhotoLightboxTitle.textContent = name || "Profile photo";
+                profilePhotoLightbox.classList.add("open");
+                profilePhotoLightbox.setAttribute("aria-hidden", "false");
+            }
+
+            function closeProfilePhotoLightbox() {
+                if (!profilePhotoLightbox || !profilePhotoLightboxImage) return;
+                profilePhotoLightbox.classList.remove("open");
+                profilePhotoLightbox.setAttribute("aria-hidden", "true");
+                profilePhotoLightboxImage.src = "";
+            }
 
             function openRecommendPanel(itemId, itemTitle) {
                 if (!recommendPanel || !recommendItemId) return;
@@ -3241,6 +3409,24 @@
                 }
                 if (event.target === recommendClose) {
                     closeRecommendPanel();
+                }
+            });
+
+            document.addEventListener("click", function (event) {
+                var trigger = event.target.closest("[data-profile-photo-src]");
+                if (trigger) {
+                    event.preventDefault();
+                    openProfilePhotoLightbox(trigger.getAttribute("data-profile-photo-src"), trigger.getAttribute("data-profile-photo-name"));
+                    return;
+                }
+                if (event.target === profilePhotoLightbox || event.target === profilePhotoLightboxClose) {
+                    closeProfilePhotoLightbox();
+                }
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    closeProfilePhotoLightbox();
                 }
             });
 
@@ -3287,7 +3473,7 @@
                     button.setAttribute("aria-label", data.active ? "Unlike comment" : "Like comment");
                     button.setAttribute("title", data.active ? "Unlike comment" : "Like comment");
                     var heart = button.querySelector(".comment-heart");
-                    if (heart) heart.textContent = data.active ? "♥" : "♡";
+                    if (heart) heart.textContent = data.active ? "\u2665" : "\u2661";
                     var commentCount = button.querySelector(".comment-action-count");
                     if (commentCount && typeof data.count !== "undefined") commentCount.textContent = data.count;
                     return;

@@ -41,9 +41,13 @@
                             <label for="{{ review_form.item_type.id_for_label }}">Type
                                 {{ review_form.item_type }}
                             </label>
-                            <label for="{{ review_form.item_title.id_for_label }}"><span id="item-title-label">Title</span>
-                                {{ review_form.item_title }}
-                            </label>
+                            <div class="composer-title-field">
+                                <label for="{{ review_form.item_title.id_for_label }}"><span id="item-title-label">Title</span>
+                                    {{ review_form.item_title }}
+                                </label>
+                                <p id="item-suggestion-message" class="meta suggestion-message"></p>
+                                <div id="item-suggestions" class="item-suggestions" hidden></div>
+                            </div>
                             <label for="{{ review_form.podcast_url.id_for_label }}" class="podcast-link-field" hidden>Podcast link
                                 {{ review_form.podcast_url }}
                             </label>
@@ -59,9 +63,6 @@
                         {{ review_form.selected_item_image_url }}
                         {{ review_form.selected_item_external_source }}
                         {{ review_form.selected_item_external_id }}
-
-                        <p id="item-suggestion-message" class="meta suggestion-message"></p>
-                        <div id="item-suggestions" class="item-suggestions" hidden></div>
 
                         <label for="{{ review_form.review_text.id_for_label }}" class="review-label">Review
                             {{ review_form.review_text }}
@@ -326,6 +327,9 @@
                     var image = document.createElement("img");
                     image.alt = "";
                     image.src = item.image_url || "/static/posts/images/revue-layouts.png";
+                    image.onerror = function () {
+                        image.src = "/static/posts/images/revue-layouts.png";
+                    };
                     button.appendChild(image);
 
                     var creator = item.creator || (item.item_type === "book" ? "Unknown writer" : "Unknown director");

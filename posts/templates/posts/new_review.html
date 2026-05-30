@@ -138,6 +138,9 @@
                     var image = document.createElement("img");
                     image.alt = "";
                     image.src = item.image_url || "/static/posts/images/revue-layouts.png";
+                    image.onerror = function () {
+                        image.src = "/static/posts/images/revue-layouts.png";
+                    };
                     button.appendChild(image);
 
                     var creator = item.creator || (item.item_type === "book" ? "Unknown writer" : "Unknown director");

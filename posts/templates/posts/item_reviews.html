@@ -4,6 +4,8 @@
 
 {% block content %}
     <div class="page item-detail-page">
+        <div class="social-layout item-detail-layout">
+            <main class="social-center item-detail-main">
         <section class="item-hero card">
             <div class="item-hero-copy">
                 <p class="meta">{{ item.get_item_type_display }}{% if item.release_year %} &middot; {{ item.release_year }}{% endif %}</p>
@@ -90,7 +92,6 @@
 
         <section class="page-header compact-header item-reviews-heading">
             <h2>Reviews</h2>
-            <p class="page-subtitle">What people are saying about {{ item.title }}</p>
         </section>
 
         <section class="item-review-stack">
@@ -168,7 +169,7 @@
                                 <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
                                     {% csrf_token %}
                                     <button type="submit" class="comment-icon-button comment-like-button {% if user in comment.likes.all %}active{% endif %}" data-comment-like-button="1" aria-label="Like comment">
-                                        <span class="comment-heart" aria-hidden="true">♡</span>
+                                        <span class="comment-heart" aria-hidden="true">{% if user in comment.likes.all %}♥{% else %}♡{% endif %}</span>
                                         <span class="comment-action-count">{{ comment.likes.count }}</span>
                                     </button>
                                 </form>
@@ -220,5 +221,49 @@
                 </div>
             </section>
         {% endif %}
+            </main>
+
+            <aside class="right-rail tidy-right-rail item-detail-rail">
+                <section class="card">
+                    <h2 class="card-title">Trending</h2>
+                    <div class="rail-list">
+                        {% for review in popular_reviews %}
+                            <a class="rail-item" href="{% url 'item_reviews' review.item_id %}">
+                                <strong>{{ review.item.title }}</strong>
+                                <div class="meta">{{ review.rating }}/5 by {{ review.user.get_full_name|default:review.user.username }}</div>
+                            </a>
+                        {% empty %}
+                            <p class="empty-state">Trending appears when reviews arrive.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="card-title">Suggested people</h2>
+                    <div class="person-list">
+                        {% for suggested_user in suggested_users %}
+                            <div class="person-row">
+                                <div class="person-name">
+                                    <a class="avatar profile-link" href="{% url 'user_profile' suggested_user.username %}" aria-label="{{ suggested_user.get_full_name|default:suggested_user.username }} profile">
+                                        {% if suggested_user.profile.profile_photo %}
+                                            <img src="{{ suggested_user.profile.profile_photo.url }}" alt="">
+                                        {% else %}
+                                            {{ suggested_user.get_full_name|default:suggested_user.username|first }}
+                                        {% endif %}
+                                    </a>
+                                    <div>
+                                        <strong><a class="profile-link" href="{% url 'user_profile' suggested_user.username %}">{{ suggested_user.get_full_name|default:suggested_user.username }}</a></strong>
+                                        <div class="meta">Follow for more reviews</div>
+                                    </div>
+                                </div>
+                                <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Follow</a>
+                            </div>
+                        {% empty %}
+                            <p class="empty-state">People suggestions will appear here.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </aside>
+        </div>
     </div>
 {% endblock %}

@@ -15,13 +15,15 @@
             </div>
             <div class="profile-info">
                 <span class="profile-avatar-wrap">
-                    <span class="profile-avatar">
-                        {% if user.profile.profile_photo %}
+                    {% if user.profile.profile_photo %}
+                        <button class="profile-avatar profile-photo-view-button" type="button" data-profile-photo-src="{{ user.profile.profile_photo.url }}" data-profile-photo-name="{{ user.get_full_name|default:user.username }}" aria-label="View {{ user.get_full_name|default:user.username }} profile photo">
                             <img src="{{ user.profile.profile_photo.url }}" alt="">
-                        {% else %}
+                        </button>
+                    {% else %}
+                        <span class="profile-avatar">
                             {{ user.get_full_name|default:user.username|first }}
-                        {% endif %}
-                    </span>
+                        </span>
+                    {% endif %}
                     <button class="image-edit-trigger avatar-edit-trigger js-avatar-edit" type="button" title="Change profile photo" aria-label="Change profile photo">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M12 20h9" />

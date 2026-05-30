@@ -1356,6 +1356,20 @@ def item_reviews(request, item_id):
     reviews = Review.objects.filter(item=item).select_related("user").order_by("-created_at")
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
     item_state = _item_action_state(request.user, item)
+    friend_ids = _followed_user_ids(request.user)
+    popular_reviews = (
+        Review.objects.exclude(item=item)
+        .select_related("item", "user")
+        .annotate(
+            likes_total=Count(
+                "item__saved_entries",
+                filter=Q(item__saved_entries__list_type="favorites"),
+                distinct=True,
+            )
+        )
+        .order_by("-likes_total", "-created_at")[:4]
+    )
+    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:3]
     top_level_comments = Comment.objects.filter(
         review__item=item,
         parent__isnull=True,
@@ -1373,6 +1387,8 @@ def item_reviews(request, item_id):
             "liked_item_active": item_state["like_active"],
             "saved_item_active": item_state["save_active"],
             "recommended_item_active": item_state["recommended_active"],
+            "popular_reviews": popular_reviews,
+            "suggested_users": suggested_users,
         },
     )
 
