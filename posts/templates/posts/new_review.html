@@ -17,8 +17,9 @@
                     {{ form.item_type }}
                 </div>
                 <div class="field">
-                    <label for="{{ form.item_title.id_for_label }}">Title</label>
+                    <label for="{{ form.item_title.id_for_label }}"><span id="item-title-label">Title</span></label>
                     {{ form.item_title }}
+                    <span class="podcast-link-field" hidden>{{ form.podcast_url }}</span>
                     {{ form.selected_item_key }}
                     {{ form.selected_item_title }}
                     {{ form.selected_item_year }}
@@ -55,6 +56,8 @@
         (function () {
             var titleInput = document.getElementById("id_item_title");
             var typeInput = document.getElementById("id_item_type");
+            var podcastUrlInput = document.getElementById("id_podcast_url");
+            var titleLabel = document.getElementById("item-title-label");
             var keyInput = document.getElementById("id_selected_item_key");
             var selectedTitleInput = document.getElementById("id_selected_item_title");
             var selectedYearInput = document.getElementById("id_selected_item_year");
@@ -64,6 +67,8 @@
             var selectedExternalIdInput = document.getElementById("id_selected_item_external_id");
             var list = document.getElementById("item-suggestions");
             var suggestionMessage = document.getElementById("item-suggestion-message");
+            var reviewForm = titleInput.closest("form");
+            var defaultTitlePlaceholder = titleInput.getAttribute("placeholder") || "";
             var activeRequest = null;
             var debounceTimer = null;
 
@@ -93,6 +98,29 @@
                 }
                 suggestionMessage.style.display = "block";
                 suggestionMessage.textContent = text;
+            }
+
+            function updateTypeMode() {
+                var type = typeInput.value;
+                if (podcastUrlInput) {
+                    podcastUrlInput.required = false;
+                    if (type === "podcast") podcastUrlInput.value = titleInput.value.trim();
+                }
+                if (type === "podcast") {
+                    hideList();
+                    if (titleLabel) titleLabel.textContent = "Podcast link";
+                    titleInput.setAttribute("placeholder", "Paste YouTube or Spotify link here");
+                    setMessage("Paste a YouTube or Spotify link here. Revue will fetch the episode title and thumbnail when you post.");
+                } else if (type === "experience") {
+                    hideList();
+                    if (titleLabel) titleLabel.textContent = "Title";
+                    titleInput.setAttribute("placeholder", defaultTitlePlaceholder);
+                    setMessage("Experience posting is a simple note for now.");
+                } else {
+                    if (titleLabel) titleLabel.textContent = "Title";
+                    titleInput.setAttribute("placeholder", defaultTitlePlaceholder);
+                    setMessage("");
+                }
             }
 
             function renderSuggestions(items) {
@@ -145,6 +173,11 @@
 
             async function fetchSuggestions() {
                 var q = titleInput.value.trim();
+                if (typeInput.value === "podcast" || typeInput.value === "experience") {
+                    hideList();
+                    updateTypeMode();
+                    return;
+                }
                 if (q.length < 2) {
                     hideList();
                     setMessage("");
@@ -188,12 +221,22 @@
 
             titleInput.addEventListener("input", function () {
                 clearSelection();
+                if (typeInput.value === "podcast" && podcastUrlInput) podcastUrlInput.value = titleInput.value.trim();
                 scheduleSuggestions();
             });
             typeInput.addEventListener("change", function () {
                 clearSelection();
+                updateTypeMode();
                 scheduleSuggestions();
             });
+            updateTypeMode();
+            if (reviewForm) {
+                reviewForm.addEventListener("submit", function () {
+                    if (typeInput.value === "podcast" && podcastUrlInput) {
+                        podcastUrlInput.value = titleInput.value.trim();
+                    }
+                });
+            }
             document.addEventListener("click", function (event) {
                 if (!list.contains(event.target) && event.target !== titleInput) {
                     hideList();

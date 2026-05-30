@@ -3,10 +3,10 @@
 {% block title %}{{ item.title }} | Review Social{% endblock %}
 
 {% block content %}
-    <div class="page">
+    <div class="page item-detail-page">
         <section class="item-hero card">
             <div class="item-hero-copy">
-                <p class="meta">{{ item.get_item_type_display }}{% if item.release_year %} · {{ item.release_year }}{% endif %}</p>
+                <p class="meta">{{ item.get_item_type_display }}{% if item.release_year %} &middot; {{ item.release_year }}{% endif %}</p>
                 <h1>{{ item.title }}</h1>
                 {% if item.description %}
                     <p class="item-synopsis">{{ item.description }}</p>
@@ -27,37 +27,60 @@
                             <dd>{{ item.cast_names }}</dd>
                         </div>
                     {% endif %}
-                    {% if item.producer_name %}
-                        <div>
-                            <dt>Producer</dt>
-                            <dd>{{ item.producer_name }}</dd>
-                        </div>
-                    {% endif %}
                     {% if item.release_year %}
                         <div>
                             <dt>Year</dt>
                             <dd>{{ item.release_year }}</dd>
                         </div>
                     {% endif %}
+                    {% if item.imdb_rating or item.rotten_tomatoes_rating or item.book_rating %}
+                        <div class="item-ratings-fact">
+                            <dt>Ratings</dt>
+                            <dd>
+                                <div class="external-ratings">
+                                    {% if item.imdb_rating %}
+                                        <span>IMDb {{ item.imdb_rating }}/10</span>
+                                    {% endif %}
+                                    {% if item.rotten_tomatoes_rating %}
+                                        <span>Rotten Tomatoes {{ item.rotten_tomatoes_rating }}</span>
+                                    {% endif %}
+                                    {% if item.book_rating %}
+                                        <span>{{ item.book_rating_source|default:"Google Books" }} {{ item.book_rating }}/5</span>
+                                    {% endif %}
+                                </div>
+                            </dd>
+                        </div>
+                    {% endif %}
                 </dl>
 
-                {% if item.imdb_rating or item.rotten_tomatoes_rating or item.book_rating %}
-                    <div class="external-ratings">
-                        {% if item.imdb_rating %}
-                            <span>IMDb {{ item.imdb_rating }}/10</span>
-                        {% endif %}
-                        {% if item.rotten_tomatoes_rating %}
-                            <span>Rotten Tomatoes {{ item.rotten_tomatoes_rating }}</span>
-                        {% endif %}
-                        {% if item.book_rating %}
-                            <span>{{ item.book_rating_source|default:"Google Books" }} {{ item.book_rating }}/5</span>
-                        {% endif %}
+                <div class="item-hero-actions-row">
+                    <div class="form-actions">
+                        <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
+                        <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
                     </div>
-                {% endif %}
-
-                <div class="form-actions">
-                    <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
-                    <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+                    <div class="feed-actions compact-actions item-action-buttons" aria-label="Item actions">
+                        <form method="post" action="{% url 'toggle_saved_item' item.id 'favorites' %}" class="js-async-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="label_context" value="like">
+                            <button type="submit" class="icon-button {% if liked_item_active %}active liked{% endif %}" data-icon-button="1" data-like-action="1" aria-label="Like" title="Like">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
+                                <span class="sr-only">Like</span>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'toggle_saved_item' item.id item_save_list_type %}" class="js-async-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="icon-button {% if saved_item_active %}active{% endif %}" data-icon-button="1" aria-label="Save" title="Save">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
+                                <span class="sr-only">Save</span>
+                            </button>
+                        </form>
+                        <button type="button" class="icon-button recommend-button js-open-recommend" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}" aria-label="Recommend" title="Recommend">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
+                            <span>Recommend</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="item-hero-poster">
@@ -65,23 +88,42 @@
             </div>
         </section>
 
-        <section class="page-header compact-header">
+        <section class="page-header compact-header item-reviews-heading">
             <h2>Reviews</h2>
             <p class="page-subtitle">What people are saying about {{ item.title }}</p>
         </section>
 
-        <section class="stack feed-stack">
+        <section class="item-review-stack">
             {% for review in reviews %}
                 <article class="card item-review-card">
-                    <div class="review-topline">
+                    <header class="item-review-header">
+                        <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
+                            {% if review.user.profile.profile_photo %}
+                                <img src="{{ review.user.profile.profile_photo.url }}" alt="">
+                            {% else %}
+                                {{ review.user.get_full_name|default:review.user.username|first }}
+                            {% endif %}
+                        </a>
                         <div>
-                            <p><strong>{{ review.user.username }}</strong></p>
-                            <p class="meta">{{ review.created_at|date:"M j, Y" }}</p>
+                            <div class="post-name-line">
+                                <a class="post-name profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a>
+                                {% if review.user_id == user.id %}
+                                    <span class="inline-owner-actions">
+                                        <a class="owner-action" href="{% url 'edit_review' review.id %}?next={{ request.get_full_path|urlencode }}">Edit</a>
+                                        <form method="post" action="{% url 'delete_review' review.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button class="owner-action danger" type="submit" onclick="return confirm('Delete this review?');">Delete</button>
+                                        </form>
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="post-meta">{{ review.created_at|date:"M j, Y" }}</div>
                         </div>
                         <span class="rating">{{ review.rating }}/5</span>
-                    </div>
+                    </header>
                     <p class="review-text">{{ review.review_text }}</p>
-                    <form method="post" action="{% url 'add_comment' review.id %}" class="form-card" style="box-shadow:none;">
+                    <form method="post" action="{% url 'add_comment' review.id %}" class="inline-comment-form">
                         {% csrf_token %}
                         {{ comment_form.body }}
                         <div class="form-actions">
@@ -99,14 +141,29 @@
             {% endfor %}
         </section>
 
-        <section class="card">
-            <h2 class="card-title">Discussion</h2>
-            <div class="recommendation-list">
+        <section class="card discussion-card">
+            <div class="section-heading">
+                <h2>Discussion</h2>
+                <span class="rank-label">{{ comments|length }} thread{{ comments|length|pluralize }}</span>
+            </div>
+            <div class="discussion-list">
                 {% for comment in comments %}
-                    <article class="recommendation">
-                        <p><strong>{{ comment.user.username }}</strong> on <strong>{{ comment.review.item.title }}</strong></p>
-                        <p>{{ comment.body }}</p>
-                        <div class="form-actions">
+                    <article class="comment-card">
+                        <header class="comment-header">
+                            <a class="mini-avatar profile-link" href="{% url 'user_profile' comment.user.username %}" aria-label="{{ comment.user.get_full_name|default:comment.user.username }} profile">
+                                {% if comment.user.profile.profile_photo %}
+                                    <img src="{{ comment.user.profile.profile_photo.url }}" alt="">
+                                {% else %}
+                                    {{ comment.user.get_full_name|default:comment.user.username|first }}
+                                {% endif %}
+                            </a>
+                            <div>
+                                <strong><a class="profile-link" href="{% url 'user_profile' comment.user.username %}">{{ comment.user.get_full_name|default:comment.user.username }}</a></strong>
+                                <p class="meta">on {{ comment.review.item.title }}</p>
+                            </div>
+                        </header>
+                        <p class="comment-body">{{ comment.body }}</p>
+                        <div class="comment-actions">
                             <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
                                 {% csrf_token %}
                                 <button type="submit" class="button secondary" data-plain-button="1">Like {{ comment.likes.count }}</button>
@@ -119,12 +176,12 @@
                             {% endif %}
                         </div>
                         {% for reply in comment.replies.all %}
-                            <div class="recommendation" style="margin-left:24px;">
-                                <p><strong>{{ reply.user.username }}</strong></p>
+                            <div class="reply-card">
+                                <strong><a class="profile-link" href="{% url 'user_profile' reply.user.username %}">{{ reply.user.get_full_name|default:reply.user.username }}</a></strong>
                                 <p>{{ reply.body }}</p>
                             </div>
                         {% endfor %}
-                        <form method="post" action="{% url 'add_comment' comment.review_id %}" class="form-actions">
+                        <form method="post" action="{% url 'add_comment' comment.review_id %}" class="reply-form">
                             {% csrf_token %}
                             <input type="hidden" name="parent" value="{{ comment.id }}">
                             <input type="text" name="body" placeholder="Reply..." required>

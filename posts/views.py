@@ -8,12 +8,12 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
-from urllib.parse import quote, urlencode
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 import json
 import os
 
-from .forms import CollectionForm, CommentForm, ProfileForm, RecommendationForm, ReviewForm, SignUpForm
+from .forms import CollectionForm, CommentForm, ProfileForm, RecommendationForm, ReviewEditForm, ReviewForm, SignUpForm
 from .models import (
     Activity,
     Collection,
@@ -37,6 +37,10 @@ def _followed_user_ids(user):
     follow_ids = set(Follow.objects.filter(follower=user).values_list("following_id", flat=True))
     friendship_ids = set(Friendship.objects.filter(from_user=user).values_list("to_user_id", flat=True))
     return follow_ids | friendship_ids
+
+
+def _display_name(user):
+    return user.get_full_name() or user.username
 
 
 def _create_activity(user, activity_type, message="", review=None, target_user=None, collection=None):
@@ -79,6 +83,65 @@ def _json_get(url: str, timeout: int = 4):
     )
     with urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def _youtube_video_id(url: str) -> str:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().replace("www.", "")
+    if host == "youtu.be":
+        return parsed.path.strip("/").split("/")[0]
+    if host.endswith("youtube.com"):
+        if parsed.path == "/watch":
+            return (parse_qs(parsed.query).get("v") or [""])[0]
+        parts = [part for part in parsed.path.split("/") if part]
+        if parts and parts[0] in {"shorts", "embed", "live"} and len(parts) > 1:
+            return parts[1]
+    return ""
+
+
+def _podcast_metadata_from_url(url: str):
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().replace("www.", "")
+    if "youtube.com" in host or host == "youtu.be":
+        video_id = _youtube_video_id(url)
+        title = ""
+        thumbnail_url = ""
+        try:
+            payload = _json_get(f"https://www.youtube.com/oembed?{urlencode({'url': url, 'format': 'json'})}")
+            title = payload.get("title", "")
+            thumbnail_url = payload.get("thumbnail_url", "")
+        except Exception:
+            title = ""
+            thumbnail_url = ""
+        if video_id:
+            return {
+                "title": title,
+                "external_source": "youtube",
+                "external_id": url,
+                "image_url": thumbnail_url or f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+            }
+    if "spotify.com" in host:
+        title = ""
+        image_url = ""
+        try:
+            payload = _json_get(f"https://open.spotify.com/oembed?{urlencode({'url': url})}")
+            title = payload.get("title", "")
+            image_url = payload.get("thumbnail_url", "")
+        except Exception:
+            title = ""
+            image_url = ""
+        return {
+            "title": title,
+            "external_source": "spotify",
+            "external_id": url,
+            "image_url": image_url,
+        }
+    return {
+        "title": "",
+        "external_source": "podcast",
+        "external_id": url,
+        "image_url": "",
+    }
 
 
 def _first_claim_value(claims, prop):
@@ -453,8 +516,10 @@ def _enrich_item_metadata(item: Item):
 def suggest_items(request):
     query = request.GET.get("q", "").strip()
     item_type = request.GET.get("item_type", "").strip().lower()
+    if item_type in {"podcast", "experience"}:
+        return JsonResponse({"results": [], "error": ""})
     if item_type not in {"movie", "series", "book"}:
-        return JsonResponse({"results": [], "error": "Please choose movie, series, or book."})
+        return JsonResponse({"results": [], "error": "Please choose movie, series, book, podcast, or experience."})
     if len(query) < 2:
         return JsonResponse({"results": [], "error": ""})
 
@@ -513,6 +578,9 @@ def feed(request):
     friends_only = request.GET.get("filter") == "friends"
     query = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "newest")
+    type_filter = request.GET.get("type", "").strip().lower()
+    if type_filter not in {"movie", "book", "series", "podcast", "experience"}:
+        type_filter = ""
     friend_ids = []
 
     if request.user.is_authenticated:
@@ -523,12 +591,16 @@ def feed(request):
     if friends_only and request.user.is_authenticated:
         reviews = reviews.filter(user_id__in=friend_ids)
 
+    if type_filter:
+        reviews = reviews.filter(item__item_type=type_filter)
+
     if query:
         reviews = reviews.filter(
             Q(item__title__icontains=query)
             | Q(item__item_type__icontains=query)
             | Q(review_text__icontains=query)
             | Q(user__username__icontains=query)
+            | Q(user__first_name__icontains=query)
         )
 
     reviews = reviews.annotate(likes_total=Count("likes"))
@@ -541,6 +613,7 @@ def feed(request):
     page_reviews = page_obj.object_list
     liked_review_ids = set()
     watchlist_item_ids = set()
+    readlist_item_ids = set()
     favorite_item_ids = set()
     saved_review_ids = set()
     if request.user.is_authenticated:
@@ -553,6 +626,13 @@ def feed(request):
             SavedItem.objects.filter(
                 user=request.user,
                 list_type="watchlist",
+                item_id__in=page_reviews.values_list("item_id", flat=True),
+            ).values_list("item_id", flat=True)
+        )
+        readlist_item_ids = set(
+            SavedItem.objects.filter(
+                user=request.user,
+                list_type="readlist",
                 item_id__in=page_reviews.values_list("item_id", flat=True),
             ).values_list("item_id", flat=True)
         )
@@ -574,7 +654,7 @@ def feed(request):
     popular_reviews = Review.objects.select_related("user", "item").annotate(
         likes_total=Count("likes")
     ).order_by("-likes_total", "-created_at")[:5]
-    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("username")[:5]
+    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:5]
     notifications_preview = Notification.objects.filter(
         recipient=request.user
     ).select_related("actor").order_by("-created_at")[:5]
@@ -588,8 +668,10 @@ def feed(request):
             "friends_only": friends_only,
             "query": query,
             "sort": sort,
+            "type_filter": type_filter,
             "liked_review_ids": liked_review_ids,
             "watchlist_item_ids": watchlist_item_ids,
+            "readlist_item_ids": readlist_item_ids,
             "favorite_item_ids": favorite_item_ids,
             "saved_review_ids": saved_review_ids,
             "review_form": ReviewForm(),
@@ -621,6 +703,7 @@ def discover(request):
             | Q(item__item_type__icontains=query)
             | Q(review_text__icontains=query)
             | Q(user__username__icontains=query)
+            | Q(user__first_name__icontains=query)
         )
         trending_reviews = trending_reviews.filter(filter_query)
         friend_favorites = friend_favorites.filter(filter_query)
@@ -663,7 +746,7 @@ def discover(request):
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
-            "suggested_users": User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("username")[:6],
+            "suggested_users": User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
@@ -683,11 +766,14 @@ def search(request):
     lists = Recommendation.objects.none()
 
     if query:
-        people = User.objects.filter(username__icontains=query).exclude(id=request.user.id).order_by("username")
+        people = User.objects.filter(
+            Q(username__icontains=query) | Q(first_name__icontains=query)
+        ).exclude(id=request.user.id).order_by("first_name", "username")
         reviews = Review.objects.select_related("item", "user").filter(
             Q(item__title__icontains=query)
             | Q(review_text__icontains=query)
             | Q(user__username__icontains=query)
+            | Q(user__first_name__icontains=query)
         ).order_by("-created_at")[:10]
         items = Item.objects.filter(
             Q(title__icontains=query) | Q(item_type__icontains=query)
@@ -745,7 +831,7 @@ def search(request):
 
 def signup(request):
     if request.method == "POST":
-        form = SignUpForm(request.POST)
+        form = SignUpForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             login(request, user)
@@ -769,8 +855,64 @@ def new_review(request):
             selected_image = form.cleaned_data.get("selected_item_image_url", "").strip()
             selected_external_source = form.cleaned_data.get("selected_item_external_source", "").strip()
             selected_external_id = form.cleaned_data.get("selected_item_external_id", "").strip()
+            podcast_url = form.cleaned_data.get("podcast_url", "").strip()
 
-            if selected_key.startswith("item:"):
+            if item_type == "podcast":
+                metadata = _podcast_metadata_from_url(podcast_url)
+                podcast_title = (metadata.get("title") or selected_title or podcast_url).strip()[:255]
+                item = Item.objects.filter(
+                    external_source=metadata["external_source"],
+                    external_id=metadata["external_id"],
+                ).first()
+                if not item:
+                    item = Item.objects.filter(title__iexact=podcast_title, item_type="podcast").first()
+                if not item:
+                    item = Item.objects.create(
+                        title=podcast_title,
+                        item_type="podcast",
+                        image_url=metadata["image_url"],
+                        release_year="",
+                        creator_name="",
+                        cast_names="",
+                        producer_name="",
+                        description="",
+                        imdb_rating="",
+                        rotten_tomatoes_rating="",
+                        book_rating="",
+                        book_rating_source="",
+                        external_source=metadata["external_source"],
+                        external_id=metadata["external_id"],
+                    )
+                else:
+                    changed = False
+                    if podcast_title and item.title == podcast_url:
+                        item.title = podcast_title
+                        changed = True
+                    if metadata["image_url"] and not item.image_url:
+                        item.image_url = metadata["image_url"]
+                        changed = True
+                    if changed:
+                        item.save(update_fields=["title", "image_url"])
+            elif item_type == "experience":
+                item = Item.objects.filter(title__iexact=selected_title, item_type="experience").first()
+                if not item:
+                    item = Item.objects.create(
+                        title=selected_title,
+                        item_type="experience",
+                        image_url="",
+                        release_year="",
+                        creator_name="",
+                        cast_names="",
+                        producer_name="",
+                        description="",
+                        imdb_rating="",
+                        rotten_tomatoes_rating="",
+                        book_rating="",
+                        book_rating_source="",
+                        external_source="",
+                        external_id="",
+                    )
+            elif selected_key.startswith("item:"):
                 item_id = int(selected_key.split(":", 1)[1])
                 item = get_object_or_404(Item, id=item_id)
             else:
@@ -819,7 +961,8 @@ def new_review(request):
                         changed = True
                     if changed:
                         item.save(update_fields=["image_url", "release_year", "creator_name", "external_source", "external_id"])
-            _enrich_item_metadata(item)
+            if item.item_type in {"movie", "series", "book"}:
+                _enrich_item_metadata(item)
             review = Review.objects.create(
                 user=request.user,
                 item=item,
@@ -829,7 +972,7 @@ def new_review(request):
             _create_activity(
                 request.user,
                 Activity.REVIEW_POSTED,
-                f"{request.user.username} reviewed {item.title}",
+                f"{_display_name(request.user)} reviewed {item.title}",
                 review=review,
             )
             messages.success(request, "Your review was posted.")
@@ -857,6 +1000,44 @@ def new_review(request):
 
 
 @login_required
+def edit_review(request, review_id):
+    review = get_object_or_404(
+        Review.objects.select_related("item"),
+        id=review_id,
+        user=request.user,
+    )
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("feed")
+    if request.method == "POST":
+        form = ReviewEditForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Review updated.")
+            return redirect(next_url)
+    else:
+        form = ReviewEditForm(instance=review)
+
+    return render(
+        request,
+        "posts/edit_review.html",
+        {
+            "form": form,
+            "review": review,
+            "next_url": next_url,
+        },
+    )
+
+
+@login_required
+def delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id, user=request.user)
+    if request.method == "POST":
+        review.delete()
+        messages.success(request, "Review deleted.")
+        return redirect(request.POST.get("next") or "feed")
+    return redirect("feed")
+
+
+@login_required
 def friends(request):
     query = request.GET.get("q", "").strip()
     tab = request.GET.get("tab", "following")
@@ -864,24 +1045,26 @@ def friends(request):
     follower_ids = set(Follow.objects.filter(following=request.user).values_list("follower_id", flat=True)) | set(
         Friendship.objects.filter(to_user=request.user).values_list("from_user_id", flat=True)
     )
-    friends_list = User.objects.filter(id__in=friend_ids).order_by("username")
-    followers_list = User.objects.filter(id__in=follower_ids).order_by("username")
+    friends_list = User.objects.filter(id__in=friend_ids).order_by("first_name", "username")
+    followers_list = User.objects.filter(id__in=follower_ids).order_by("first_name", "username")
     suggested_users = User.objects.exclude(
         id=request.user.id
     ).exclude(
         id__in=friend_ids
-    ).order_by("username")
+    ).order_by("first_name", "username")
     recommendations = Recommendation.objects.filter(
         to_user=request.user,
         from_user_id__in=friend_ids,
     ).select_related("from_user", "item").order_by("-created_at")
 
     if query:
-        friends_list = friends_list.filter(username__icontains=query)
-        followers_list = followers_list.filter(username__icontains=query)
-        suggested_users = suggested_users.filter(username__icontains=query)
+        people_query = Q(username__icontains=query) | Q(first_name__icontains=query)
+        friends_list = friends_list.filter(people_query)
+        followers_list = followers_list.filter(people_query)
+        suggested_users = suggested_users.filter(people_query)
         recommendations = recommendations.filter(
             Q(from_user__username__icontains=query)
+            | Q(from_user__first_name__icontains=query)
             | Q(item__title__icontains=query)
             | Q(message__icontains=query)
         )
@@ -913,14 +1096,14 @@ def add_friend(request, user_id):
             _create_activity(
                 request.user,
                 Activity.USER_FOLLOWED,
-                f"{request.user.username} started following {friend.username}",
+                f"{_display_name(request.user)} started following {_display_name(friend)}",
                 target_user=friend,
             )
             _notify(
                 friend,
                 request.user,
                 Notification.FOLLOW,
-                f"{request.user.username} followed you.",
+                f"{_display_name(request.user)} followed you.",
             )
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
@@ -961,6 +1144,44 @@ def recommend(request):
     item_id = request.GET.get("item")
 
     if request.method == "POST":
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            item = get_object_or_404(Item, id=request.POST.get("item"))
+            selected_friend_ids = [
+                int(value) for value in request.POST.getlist("to_user") if value.isdigit()
+            ]
+            allowed_friend_ids = set(selected_friend_ids) & set(friend_ids)
+            recipients = list(User.objects.filter(id__in=allowed_friend_ids))
+            if not recipients:
+                return JsonResponse(
+                    {"ok": False, "error": "Choose at least one friend."},
+                    status=400,
+                )
+            message = (request.POST.get("message") or "").strip()[:140]
+            for recipient in recipients:
+                recommendation = Recommendation.objects.create(
+                    from_user=request.user,
+                    to_user=recipient,
+                    item=item,
+                    message=message,
+                )
+                _create_activity(
+                    request.user,
+                    Activity.RECOMMENDED,
+                    f"{_display_name(request.user)} recommended {recommendation.item.title}",
+                    target_user=recommendation.to_user,
+                )
+                _notify(
+                    recipient,
+                    request.user,
+                    Notification.COMMENT,
+                    f"{_display_name(request.user)} recommended {recommendation.item.title} to you.",
+                )
+            return JsonResponse(
+                {
+                    "ok": True,
+                    "message": f"Recommendation sent to {len(recipients)} friend{'s' if len(recipients) != 1 else ''}.",
+                }
+            )
         form = RecommendationForm(request.POST)
         form.fields["to_user"].queryset = User.objects.filter(id__in=friend_ids)
         if form.is_valid():
@@ -970,14 +1191,14 @@ def recommend(request):
             _create_activity(
                 request.user,
                 Activity.RECOMMENDED,
-                f"{request.user.username} recommended {recommendation.item.title}",
+                f"{_display_name(request.user)} recommended {recommendation.item.title}",
                 target_user=recommendation.to_user,
             )
             _notify(
                 recommendation.to_user,
                 request.user,
                 Notification.COMMENT,
-                f"{request.user.username} recommended {recommendation.item.title} to you.",
+                f"{_display_name(request.user)} recommended {recommendation.item.title} to you.",
             )
             messages.success(request, "Recommendation sent.")
             return redirect("feed")
@@ -985,7 +1206,7 @@ def recommend(request):
         form = RecommendationForm()
         form.fields["to_user"].queryset = User.objects.filter(
             id__in=friend_ids
-        ).order_by("username")
+        ).order_by("first_name", "username")
         if to_user_id:
             form.initial["to_user"] = to_user_id
         if item_id:
@@ -998,7 +1219,7 @@ def recommend(request):
 def profile(request):
     profile_obj, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == "POST":
-        form = ProfileForm(request.POST, instance=profile_obj)
+        form = ProfileForm(request.POST, request.FILES, instance=profile_obj)
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated.")
@@ -1057,6 +1278,17 @@ def item_reviews(request, item_id):
     item.refresh_from_db()
     reviews = Review.objects.filter(item=item).select_related("user").order_by("-created_at")
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
+    item_save_list_type = "readlist" if item.item_type == "book" else "watchlist"
+    liked_item_active = SavedItem.objects.filter(
+        user=request.user,
+        item=item,
+        list_type="favorites",
+    ).exists()
+    saved_item_active = SavedItem.objects.filter(
+        user=request.user,
+        item=item,
+        list_type=item_save_list_type,
+    ).exists()
     top_level_comments = Comment.objects.filter(
         review__item=item,
         parent__isnull=True,
@@ -1070,6 +1302,9 @@ def item_reviews(request, item_id):
             "page_obj": page_obj,
             "comment_form": CommentForm(),
             "comments": top_level_comments,
+            "item_save_list_type": item_save_list_type,
+            "liked_item_active": liked_item_active,
+            "saved_item_active": saved_item_active,
         },
     )
 
@@ -1088,14 +1323,14 @@ def toggle_like(request, review_id):
         _create_activity(
             request.user,
             Activity.REVIEW_LIKED,
-            f"{request.user.username} liked a review of {review.item.title}",
+            f"{_display_name(request.user)} liked a review of {review.item.title}",
             review=review,
         )
         _notify(
             review.user,
             request.user,
             Notification.LIKE,
-            f"{request.user.username} liked your review of {review.item.title}.",
+            f"{_display_name(request.user)} liked your review of {review.item.title}.",
             review=review,
         )
     count = ReviewLike.objects.filter(review=review).count()
@@ -1130,10 +1365,11 @@ def toggle_saved_item(request, item_id, list_type):
         saved.delete()
     active = created
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        favorites_labels = ("Liked", "Like") if request.POST.get("label_context") == "like" else ("Saved to Favorites", "Favorite")
         list_labels = {
             "watchlist": ("Saved to Watchlist", "Watchlist"),
             "readlist": ("Saved to Readlist", "Readlist"),
-            "favorites": ("Saved to Favorites", "Favorite"),
+            "favorites": favorites_labels,
         }
         on_label, off_label = list_labels[list_type]
         return JsonResponse(
@@ -1186,14 +1422,14 @@ def add_comment(request, review_id):
         _create_activity(
             request.user,
             Activity.COMMENTED,
-            f"{request.user.username} commented on {review.item.title}",
+            f"{_display_name(request.user)} commented on {review.item.title}",
             review=review,
         )
         _notify(
             parent.user if parent else review.user,
             request.user,
             Notification.REPLY if parent else Notification.COMMENT,
-            f"{request.user.username} replied to you." if parent else f"{request.user.username} commented on your review.",
+            f"{_display_name(request.user)} replied to you." if parent else f"{_display_name(request.user)} commented on your review.",
             review=review,
             comment=comment,
         )
@@ -1228,7 +1464,7 @@ def followers(request, username=None):
     ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True)) | set(
         Friendship.objects.filter(to_user=viewed_user).values_list("from_user_id", flat=True)
     )
-    people = User.objects.filter(id__in=ids).order_by("username")
+    people = User.objects.filter(id__in=ids).order_by("first_name", "username")
     return render(request, "posts/follow_list.html", {"people": people, "viewed_user": viewed_user, "mode": "Followers"})
 
 
@@ -1238,7 +1474,7 @@ def following(request, username=None):
     ids = set(Follow.objects.filter(follower=viewed_user).values_list("following_id", flat=True)) | set(
         Friendship.objects.filter(from_user=viewed_user).values_list("to_user_id", flat=True)
     )
-    people = User.objects.filter(id__in=ids).order_by("username")
+    people = User.objects.filter(id__in=ids).order_by("first_name", "username")
     return render(request, "posts/follow_list.html", {"people": people, "viewed_user": viewed_user, "mode": "Following"})
 
 
@@ -1279,7 +1515,24 @@ def notifications(request):
         messages.success(request, "Notifications marked as read.")
         return redirect("notifications")
     page_obj = Paginator(rows, 20).get_page(request.GET.get("page"))
-    return render(request, "posts/notifications.html", {"notifications": page_obj.object_list, "page_obj": page_obj})
+    friend_ids = _followed_user_ids(request.user)
+    friend_activity = Activity.objects.filter(
+        user_id__in=friend_ids,
+        activity_type__in=[
+            Activity.REVIEW_POSTED,
+            Activity.REVIEW_LIKED,
+            Activity.RECOMMENDED,
+        ],
+    ).select_related("user", "review", "review__item", "target_user").order_by("-created_at")[:20]
+    return render(
+        request,
+        "posts/notifications.html",
+        {
+            "notifications": page_obj.object_list,
+            "page_obj": page_obj,
+            "friend_activity": friend_activity,
+        },
+    )
 
 
 @login_required
@@ -1310,7 +1563,7 @@ class CollectionCreateView(CreateView):
         _create_activity(
             self.request.user,
             Activity.COLLECTION_CREATED,
-            f"{self.request.user.username} created {self.object.title}",
+            f"{_display_name(self.request.user)} created {self.object.title}",
             collection=self.object,
         )
         messages.success(self.request, "Collection created.")

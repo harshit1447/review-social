@@ -9,6 +9,8 @@ class Item(models.Model):
         ("movie", "Movie"),
         ("book", "Book"),
         ("series", "Series"),
+        ("podcast", "Podcast"),
+        ("experience", "Experience"),
     ]
 
     title = models.CharField(max_length=255)
@@ -162,8 +164,8 @@ class SavedItem(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    profile_photo = models.URLField(blank=True)
-    cover_image = models.URLField(blank=True)
+    profile_photo = models.FileField(upload_to="profiles/photos/", blank=True)
+    cover_image = models.FileField(upload_to="profiles/covers/", blank=True)
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=120, blank=True)
     website = models.URLField(blank=True)

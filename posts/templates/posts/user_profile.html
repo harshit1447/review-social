@@ -1,21 +1,22 @@
 {% extends "base_app.html" %}
 
-{% block title %}{{ viewed_user.username }} | Revue{% endblock %}
+{% block title %}{{ viewed_user.get_full_name|default:viewed_user.username }} | Revue{% endblock %}
 
 {% block content %}
 <div class="page">
     <section class="card profile-hero">
-        <div class="profile-cover" {% if viewed_user.profile.cover_image %}style="background-image:url('{{ viewed_user.profile.cover_image }}'); background-size:cover;"{% endif %}></div>
+        <div class="profile-cover" {% if viewed_user.profile.cover_image %}style="background-image:url('{{ viewed_user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}></div>
         <div class="profile-info">
             <span class="profile-avatar">
                 {% if viewed_user.profile.profile_photo %}
-                    <img src="{{ viewed_user.profile.profile_photo }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                    <img src="{{ viewed_user.profile.profile_photo.url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 {% else %}
-                    {{ viewed_user.username|first }}
+                    {{ viewed_user.get_full_name|default:viewed_user.username|first }}
                 {% endif %}
             </span>
             <div class="profile-copy">
-                <h1>{{ viewed_user.username }}</h1>
+                <h1>{{ viewed_user.get_full_name|default:viewed_user.username }}</h1>
+                <p class="meta">@{{ viewed_user.username }}</p>
                 {% if viewed_user.profile.bio %}<p class="page-subtitle">{{ viewed_user.profile.bio }}</p>{% endif %}
                 <p class="meta">
                     {% if viewed_user.profile.location %}{{ viewed_user.profile.location }}{% endif %}
@@ -44,8 +45,14 @@
         {% for review in reviews %}
             <article class="card social-review-card">
                 <header class="post-header">
-                    <span class="post-avatar">{{ viewed_user.username|first }}</span>
-                    <div><strong>{{ viewed_user.username }}</strong><div class="meta">{{ review.created_at|timesince }} ago</div></div>
+                    <a class="post-avatar profile-link" href="{% url 'user_profile' viewed_user.username %}" aria-label="{{ viewed_user.get_full_name|default:viewed_user.username }} profile">
+                        {% if viewed_user.profile.profile_photo %}
+                            <img src="{{ viewed_user.profile.profile_photo.url }}" alt="">
+                        {% else %}
+                            {{ viewed_user.get_full_name|default:viewed_user.username|first }}
+                        {% endif %}
+                    </a>
+                    <div><strong><a class="profile-link" href="{% url 'user_profile' viewed_user.username %}">{{ viewed_user.get_full_name|default:viewed_user.username }}</a></strong><div class="meta">{{ review.created_at|timesince }} ago</div></div>
                     <span class="rating">{{ review.rating }}/5</span>
                 </header>
                 <div class="post-item">

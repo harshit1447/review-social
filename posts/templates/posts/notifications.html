@@ -6,26 +6,62 @@
 <div class="page">
     <section class="page-header">
         <h1>Notifications</h1>
-        <p class="page-subtitle">Follows, likes, comments, and replies.</p>
+        <p class="page-subtitle">Recommendations, likes, reviews, and replies from your circle.</p>
     </section>
-    <section class="card">
+    <section class="card notification-actions">
         <form method="post" class="form-actions">
             {% csrf_token %}
             <button type="submit">Mark all read</button>
         </form>
     </section>
-    <section class="feed-stack">
-        {% for notification in notifications %}
-            <article class="card activity-card">
-                <span class="mini-avatar">{{ notification.actor.username|first }}</span>
-                <div>
-                    <strong>{{ notification.message }}</strong>
-                    <p class="meta">{{ notification.created_at|timesince }} ago{% if not notification.is_read %} - unread{% endif %}</p>
-                </div>
-            </article>
-        {% empty %}
-            <div class="card empty-panel"><h2>No notifications</h2><p>Your social updates will appear here.</p></div>
-        {% endfor %}
-    </section>
+    <div class="notification-grid">
+        <section class="feed-stack">
+            <h2 class="section-kicker">For you</h2>
+            {% for notification in notifications %}
+                <article class="card activity-card notification-card {% if not notification.is_read %}unread{% endif %}">
+                    <a class="mini-avatar profile-link" href="{% url 'user_profile' notification.actor.username %}" aria-label="{{ notification.actor.get_full_name|default:notification.actor.username }} profile">
+                        {% if notification.actor.profile.profile_photo %}
+                            <img src="{{ notification.actor.profile.profile_photo.url }}" alt="">
+                        {% else %}
+                            {{ notification.actor.get_full_name|default:notification.actor.username|first }}
+                        {% endif %}
+                    </a>
+                    <div>
+                        <strong>{{ notification.message }}</strong>
+                        <p class="meta">{{ notification.created_at|timesince }} ago{% if not notification.is_read %} - unread{% endif %}</p>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="card empty-panel"><h2>No notifications</h2><p>Likes, comments, and direct recommendations will appear here.</p></div>
+            {% endfor %}
+        </section>
+
+        <section class="feed-stack">
+            <h2 class="section-kicker">Friend activity</h2>
+            {% for activity in friend_activity %}
+                <article class="card activity-card notification-card">
+                    <a class="mini-avatar profile-link" href="{% url 'user_profile' activity.user.username %}" aria-label="{{ activity.user.get_full_name|default:activity.user.username }} profile">
+                        {% if activity.user.profile.profile_photo %}
+                            <img src="{{ activity.user.profile.profile_photo.url }}" alt="">
+                        {% else %}
+                            {{ activity.user.get_full_name|default:activity.user.username|first }}
+                        {% endif %}
+                    </a>
+                    <div>
+                        <strong>{{ activity.message }}</strong>
+                        <p class="meta">
+                            {{ activity.created_at|timesince }} ago
+                            {% if activity.review %} &middot; {{ activity.review.item.get_item_type_display }}{% endif %}
+                        </p>
+                        {% if activity.review %}
+                            <a class="inline-link" href="{% url 'item_reviews' activity.review.item_id %}">View review</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% empty %}
+                <div class="card empty-panel"><h2>No friend activity yet</h2><p>Follow people to see what they like, recommend, and review.</p></div>
+            {% endfor %}
+        </section>
+    </div>
 </div>
 {% endblock %}

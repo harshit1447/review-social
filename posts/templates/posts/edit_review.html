@@ -1,0 +1,33 @@
+{% extends "base_app.html" %}
+
+{% block title %}Edit review | Revue{% endblock %}
+
+{% block content %}
+    <div class="page narrow-page">
+        <section class="page-header compact-header">
+            <h1>Edit review</h1>
+            <p class="page-subtitle">{{ review.item.title }}</p>
+        </section>
+
+        <section class="card form-card">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <div class="field">
+                    <label for="{{ form.rating.id_for_label }}">Rating</label>
+                    {{ form.rating }}
+                    {{ form.rating.errors }}
+                </div>
+                <div class="field">
+                    <label for="{{ form.review_text.id_for_label }}">Review</label>
+                    {{ form.review_text }}
+                    {{ form.review_text.errors }}
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Save changes</button>
+                    <a class="button secondary" href="{{ next_url }}">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}

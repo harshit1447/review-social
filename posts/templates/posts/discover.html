@@ -31,18 +31,32 @@
 
     <div class="social-layout">
         <main class="social-center">
-            <section class="card">
+            <section class="card discover-trending-card">
                 <h2 class="card-title">Trending Reviews</h2>
-                <div class="feed-stack">
+                <div class="discover-review-list">
                     {% for review in trending_reviews %}
-                        <article class="social-review-card">
-                            <header class="post-header">
-                                <span class="post-avatar">{{ review.user.username|first }}</span>
-                                <div><strong>{{ review.user.username }}</strong><div class="meta">{{ review.created_at|timesince }} ago</div></div>
-                                <span class="rating">{{ review.rating }}/5</span>
-                            </header>
-                            <h3 class="item-title"><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h3>
-                            <p class="review-text">{{ review.review_text|truncatechars:180 }}</p>
+                        <article class="discover-review-row">
+                            <a class="discover-review-poster" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                                <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                            </a>
+                            <div class="discover-review-copy">
+                                <header class="discover-review-header">
+                                    <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
+                                        {% if review.user.profile.profile_photo %}
+                                            <img src="{{ review.user.profile.profile_photo.url }}" alt="">
+                                        {% else %}
+                                            {{ review.user.get_full_name|default:review.user.username|first }}
+                                        {% endif %}
+                                    </a>
+                                    <div>
+                                        <strong><a class="profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></strong>
+                                        <div class="meta">{{ review.created_at|timesince }} ago</div>
+                                    </div>
+                                </header>
+                                <h3 class="item-title"><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h3>
+                                <p class="review-text">{{ review.review_text|truncatechars:180 }}</p>
+                            </div>
+                            <span class="rating">{{ review.rating }}/5</span>
                         </article>
                     {% empty %}
                         <p class="empty-state">No trending reviews yet.</p>
@@ -81,7 +95,7 @@
                 <h2 class="card-title">Trending Users</h2>
                 {% for person in trending_users %}
                     <div class="person-row">
-                        <div class="person-name"><span class="avatar">{{ person.username|first }}</span><strong>{{ person.username }}</strong></div>
+                        <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
                         <a class="button secondary" href="{% url 'user_profile' person.username %}">View</a>
                     </div>
                 {% empty %}
@@ -92,7 +106,7 @@
                 <h2 class="card-title">People You May Know</h2>
                 {% for person in suggested_users %}
                     <div class="person-row">
-                        <div class="person-name"><span class="avatar">{{ person.username|first }}</span><strong>{{ person.username }}</strong></div>
+                        <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
                         <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                             {% csrf_token %}
                             <button type="submit" class="button secondary" data-plain-button="1">Follow</button>

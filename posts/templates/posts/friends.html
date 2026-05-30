@@ -14,7 +14,7 @@
                 <input type="hidden" name="tab" value="{{ active_tab }}">
                 <label for="friends-search">Search people</label>
                 <div class="search-row">
-                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search by username, recommendation, or title">
+                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search by name, username, recommendation, or title">
                     <button type="submit">Search</button>
                 </div>
             </form>
@@ -32,7 +32,7 @@
                     <div class="recommendation-list">
                         {% for recommendation in recommendations %}
                             <article class="recommendation">
-                                <p><strong>{{ recommendation.from_user.username }}</strong> recommended <strong>{{ recommendation.item.title }}</strong></p>
+                                <p><strong><a class="profile-link" href="{% url 'user_profile' recommendation.from_user.username %}">{{ recommendation.from_user.get_full_name|default:recommendation.from_user.username }}</a></strong> recommended <strong>{{ recommendation.item.title }}</strong></p>
                                 {% if recommendation.message %}
                                     <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
                                 {% endif %}
@@ -49,9 +49,9 @@
                             {% for person in followers %}
                                 <article class="person-card">
                                     <div class="person-card-top">
-                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                         <div>
-                                            <strong>{{ person.username }}</strong>
+                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                             <div class="meta">Follows your reviews</div>
                                         </div>
                                     </div>
@@ -68,9 +68,9 @@
                             {% for person in suggested_users %}
                                 <article class="person-card">
                                     <div class="person-card-top">
-                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                         <div>
-                                            <strong>{{ person.username }}</strong>
+                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                             <div class="meta">Suggested for you</div>
                                         </div>
                                     </div>
@@ -87,9 +87,9 @@
                             {% for person in friends %}
                                 <article class="person-card">
                                     <div class="person-card-top">
-                                        <span class="avatar">{{ person.username|first }}</span>
+                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                         <div>
-                                            <strong>{{ person.username }}</strong>
+                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                             <div class="meta">Following</div>
                                         </div>
                                     </div>
@@ -114,9 +114,9 @@
                         {% for person in suggested_users|slice:":5" %}
                             <div class="person-row">
                                 <div class="person-name">
-                                    <span class="avatar">{{ person.username|first }}</span>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div>
-                                        <strong>{{ person.username }}</strong>
+                                        <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                         <div class="meta">Potential follow</div>
                                     </div>
                                 </div>

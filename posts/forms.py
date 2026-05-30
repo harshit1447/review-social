@@ -6,16 +6,53 @@ from .models import Collection, Comment, Item, Profile, Recommendation, Review
 
 
 class SignUpForm(UserCreationForm):
+    first_name = forms.CharField(label="Name", max_length=150)
+    profile_photo = forms.FileField(
+        label="Profile photo",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
+    )
+    cover_image = forms.FileField(
+        label="Background photo",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
+    )
+
     class Meta:
         model = User
-        fields = ["username", "password1", "password2"]
+        fields = ["first_name", "username", "password1", "password2"]
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data["first_name"].strip()
+        if commit:
+            user.save()
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile_photo = self.cleaned_data.get("profile_photo")
+            cover_image = self.cleaned_data.get("cover_image")
+            if profile_photo:
+                profile.profile_photo = profile_photo
+            if cover_image:
+                profile.cover_image = cover_image
+            if profile_photo or cover_image:
+                profile.save()
+        return user
 
 
 class ReviewForm(forms.Form):
     item_title = forms.CharField(max_length=255)
     item_type = forms.ChoiceField(choices=Item.TYPE_CHOICES)
-    selected_item_key = forms.CharField(widget=forms.HiddenInput())
-    selected_item_title = forms.CharField(widget=forms.HiddenInput())
+    podcast_url = forms.URLField(
+        required=False,
+        label="Podcast link",
+        widget=forms.URLInput(
+            attrs={
+                "placeholder": "Paste a YouTube or Spotify link",
+            }
+        ),
+    )
+    selected_item_key = forms.CharField(widget=forms.HiddenInput(), required=False)
+    selected_item_title = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_year = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_creator = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_image_url = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -29,6 +66,33 @@ class ReviewForm(forms.Form):
         selected_item_key = (cleaned_data.get("selected_item_key") or "").strip()
         selected_item_title = (cleaned_data.get("selected_item_title") or "").strip()
         typed_title = (cleaned_data.get("item_title") or "").strip()
+        item_type = cleaned_data.get("item_type")
+        podcast_url = (cleaned_data.get("podcast_url") or "").strip()
+
+        if item_type == "podcast":
+            podcast_url = podcast_url or typed_title
+            parsed_host = ""
+            if podcast_url:
+                from urllib.parse import urlparse
+
+                parsed_host = urlparse(podcast_url).netloc.lower().replace("www.", "")
+            if not podcast_url:
+                raise forms.ValidationError("Please paste a YouTube or Spotify link for podcasts.")
+            if not (
+                parsed_host == "youtu.be"
+                or parsed_host.endswith("youtube.com")
+                or parsed_host.endswith("spotify.com")
+            ):
+                raise forms.ValidationError("Podcast reviews need a YouTube or Spotify link.")
+            cleaned_data["podcast_url"] = podcast_url
+            cleaned_data["selected_item_title"] = typed_title
+            cleaned_data["selected_item_key"] = "podcast:manual"
+            return cleaned_data
+
+        if item_type == "experience":
+            cleaned_data["selected_item_title"] = typed_title
+            cleaned_data["selected_item_key"] = "experience:manual"
+            return cleaned_data
 
         if not selected_item_key or not selected_item_title:
             raise forms.ValidationError("Please choose an item from the suggestions.")
@@ -43,11 +107,22 @@ class ReviewForm(forms.Form):
             "openlibrary:",
             "omdb:",
             "wikidata:",
+            "podcast:",
+            "experience:",
         )
         if not selected_item_key.startswith(valid_prefixes):
             raise forms.ValidationError("Invalid item selection. Please pick again.")
 
         return cleaned_data
+
+
+class ReviewEditForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["rating", "review_text"]
+        widgets = {
+            "review_text": forms.Textarea(attrs={"rows": 4}),
+        }
 
 
 class RecommendationForm(forms.ModelForm):
@@ -69,9 +144,14 @@ class RecommendationForm(forms.ModelForm):
 
 
 class ProfileForm(forms.ModelForm):
+    first_name = forms.CharField(label="Name", max_length=150)
+    username = forms.CharField(label="Username", max_length=150)
+
     class Meta:
         model = Profile
         fields = [
+            "first_name",
+            "username",
             "profile_photo",
             "cover_image",
             "bio",
@@ -80,9 +160,34 @@ class ProfileForm(forms.ModelForm):
             "favorite_categories",
         ]
         widgets = {
+            "profile_photo": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+            "cover_image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
             "bio": forms.Textarea(attrs={"rows": 4}),
             "favorite_categories": forms.TextInput(attrs={"placeholder": "Movies, books, restaurants"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user_id:
+            self.fields["first_name"].initial = self.instance.user.first_name
+            self.fields["username"].initial = self.instance.user.username
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        user = self.instance.user
+        if User.objects.exclude(id=user.id).filter(username__iexact=username).exists():
+            raise forms.ValidationError("This username is already taken.")
+        return username
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        user.first_name = self.cleaned_data["first_name"].strip()
+        user.username = self.cleaned_data["username"].strip()
+        if commit:
+            user.save(update_fields=["first_name", "username"])
+            profile.save()
+        return profile
 
 
 class CommentForm(forms.ModelForm):

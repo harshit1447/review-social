@@ -57,7 +57,7 @@
                     <h2 class="card-title">Reviews</h2>
                     {% for review in reviews %}
                         <div class="recommendation">
-                            <p><strong>{{ review.user.username }}</strong> reviewed <strong><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></strong></p>
+                            <p><strong><a class="profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></strong> reviewed <strong><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></strong></p>
                             <p class="meta">{{ review.review_text|truncatechars:140 }}</p>
                         </div>
                     {% empty %}
@@ -83,8 +83,9 @@
                     {% for person in people %}
                         <div class="person-row">
                             <div class="person-name">
-                                <span class="avatar">{{ person.username|first }}</span>
-                                <strong>{{ person.username }}</strong>
+                                <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                                <span class="meta">@{{ person.username }}</span>
                             </div>
                             <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                                 {% csrf_token %}
@@ -111,7 +112,7 @@
                     <h2 class="card-title">Lists & recommendations</h2>
                     {% for row in lists %}
                         <div class="recommendation">
-                            <p><strong>{{ row.from_user.username }}</strong> recommended <strong>{{ row.item.title }}</strong></p>
+                            <p><strong><a class="profile-link" href="{% url 'user_profile' row.from_user.username %}">{{ row.from_user.get_full_name|default:row.from_user.username }}</a></strong> recommended <strong>{{ row.item.title }}</strong></p>
                             {% if row.message %}
                                 <p class="meta">{{ row.message|truncatechars:120 }}</p>
                             {% endif %}

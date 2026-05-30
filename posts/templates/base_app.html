@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Revue{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=revue-social-1">
+    <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=linkedin-font-1">
     <style>
         :root {
             --bg: #f6efe6;
@@ -92,6 +92,16 @@
             width: 42px;
         }
 
+        .avatar img,
+        .post-avatar img,
+        .profile-avatar img,
+        .mini-avatar img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
         .sidebar-nav {
             display: grid;
             gap: 4px;
@@ -135,6 +145,24 @@
             width: 4px;
         }
 
+        .sidebar-link.has-badge {
+            justify-content: space-between;
+        }
+
+        .nav-badge {
+            align-items: center;
+            background: var(--accent);
+            border-radius: 999px;
+            color: #fff;
+            display: inline-flex;
+            font-size: 0.72rem;
+            font-weight: 700;
+            height: 20px;
+            justify-content: center;
+            min-width: 20px;
+            padding: 0 6px;
+        }
+
         .sidebar-footer {
             margin-top: 0;
             padding-top: 0;
@@ -144,6 +172,8 @@
             background: linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,253,249,0.9));
             border: 1px solid rgba(126, 67, 30, 0.14);
             border-radius: 22px;
+            align-self: start;
+            min-height: 0;
             padding: 14px;
         }
 
@@ -173,7 +203,8 @@
             display: inline-flex;
             font-size: 0.82rem;
             font-weight: 600;
-            margin-top: 4px;
+            line-height: 1.1;
+            margin-top: 3px;
             transition: color 0.18s ease;
         }
 
@@ -422,9 +453,33 @@
             font-weight: 950;
         }
 
+        .profile-link:hover {
+            color: var(--accent-dark);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .avatar.profile-link:hover,
+        .post-avatar.profile-link:hover,
+        .mini-avatar.profile-link:hover {
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .post-name-line {
+            align-items: baseline;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            line-height: 1.1;
+        }
+
         .post-meta {
             color: var(--muted);
-            font-size: 0.9rem;
+            font-size: 0.78rem;
+            line-height: 1.15;
+            margin-top: 2px;
         }
 
         .badge,
@@ -469,6 +524,15 @@
             margin: 0 0 6px;
         }
 
+        .item-type-inline {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 400;
+            letter-spacing: 0;
+            margin-left: 6px;
+            white-space: nowrap;
+        }
+
         .item-title a:hover {
             color: var(--accent-dark);
         }
@@ -478,6 +542,10 @@
             font-size: 1.02rem;
             line-height: 1.6;
             margin: 12px 0 0;
+        }
+
+        .podcast-link-field[hidden] {
+            display: none !important;
         }
 
         .external-ratings {
@@ -605,17 +673,18 @@
             background:
                 radial-gradient(circle at 76% 20%, rgba(255, 255, 255, 0.55), transparent 24%),
                 linear-gradient(135deg, #332920 0%, #b36a32 100%);
-            height: 150px;
+            height: 126px;
+            position: relative;
         }
 
         .profile-info {
             align-items: center;
             display: grid;
-            gap: 18px;
+            gap: 16px;
             grid-template-columns: auto minmax(0, 1fr) auto;
-            padding: 0 24px 24px;
-            transform: translateY(-34px);
-            margin-bottom: -34px;
+            margin-bottom: 0;
+            padding: 18px 22px 22px;
+            transform: none;
         }
 
         .profile-avatar {
@@ -625,12 +694,95 @@
             border-radius: 50%;
             color: #fff;
             display: inline-flex;
-            font-size: 2.2rem;
+            font-size: 1.85rem;
             font-weight: 950;
-            height: 96px;
+            height: 84px;
             justify-content: center;
+            overflow: hidden;
             text-transform: uppercase;
-            width: 96px;
+            width: 84px;
+        }
+
+        .profile-avatar-wrap {
+            display: inline-flex;
+            position: relative;
+            width: max-content;
+        }
+
+        .image-edit-trigger {
+            align-items: center;
+            background: var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.18);
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(33, 24, 16, 0.18);
+            color: var(--text);
+            cursor: pointer;
+            display: inline-flex;
+            height: 34px;
+            justify-content: center;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            width: 34px;
+            z-index: 3;
+        }
+
+        .image-edit-trigger:hover {
+            border-color: rgba(179, 106, 50, 0.42);
+            box-shadow: 0 14px 30px rgba(33, 24, 16, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .image-edit-trigger svg {
+            fill: none;
+            height: 16px;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2.2;
+            width: 16px;
+        }
+
+        .avatar-edit-trigger {
+            bottom: 2px;
+            left: 2px;
+            position: absolute;
+        }
+
+        .cover-edit-trigger {
+            bottom: 16px;
+            position: absolute;
+            right: 18px;
+        }
+
+        .profile-file-fields {
+            height: 1px;
+            left: -9999px;
+            overflow: hidden;
+            position: absolute;
+            top: auto;
+            width: 1px;
+        }
+
+        .profile-edit-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-edit-field {
+            display: grid;
+            gap: 7px;
+        }
+
+        .profile-edit-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .profile-edit-field .errorlist {
+            color: #9f3c22;
+            font-size: 0.86rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
 
         .stat-grid {
@@ -1015,6 +1167,46 @@
             grid-template-columns: 36px minmax(0, 1fr);
         }
 
+        .notification-grid {
+            align-items: start;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+            margin-top: 18px;
+        }
+
+        .notification-actions {
+            padding: 14px 16px;
+        }
+
+        .notification-card {
+            border-radius: 18px;
+            box-shadow: 0 14px 42px rgba(77, 49, 27, 0.07);
+            padding: 15px;
+        }
+
+        .notification-card.unread {
+            border-color: rgba(179, 106, 50, 0.28);
+            box-shadow: 0 18px 46px rgba(179, 106, 50, 0.12);
+        }
+
+        .section-kicker {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin: 0 0 -4px;
+            text-transform: uppercase;
+        }
+
+        .inline-link {
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 0.84rem;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
         .mini-avatar {
             align-items: center;
             background: #171513;
@@ -1034,22 +1226,6 @@
             letter-spacing: -0.06em;
             line-height: 1;
         }
-
-        .heatmap {
-            display: grid;
-            gap: 5px;
-            grid-template-columns: repeat(14, 1fr);
-            margin-top: 12px;
-        }
-
-        .heat-cell {
-            aspect-ratio: 1;
-            background: rgba(179, 106, 50, 0.1);
-            border-radius: 4px;
-        }
-
-        .heat-cell.hot { background: rgba(179, 106, 50, 0.72); }
-        .heat-cell.warm { background: rgba(179, 106, 50, 0.34); }
 
         .mobile-create {
             align-items: center;
@@ -1074,6 +1250,104 @@
             position: fixed;
             right: 20px;
             z-index: 30;
+        }
+
+        .recommend-panel {
+            background: var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 24px;
+            bottom: 22px;
+            box-shadow: 0 28px 90px rgba(23, 21, 19, 0.22);
+            display: none;
+            max-height: min(620px, calc(100vh - 44px));
+            overflow: hidden;
+            position: fixed;
+            right: 22px;
+            width: min(390px, calc(100vw - 28px));
+            z-index: 45;
+        }
+
+        .recommend-panel.open {
+            display: block;
+        }
+
+        .recommend-panel header {
+            align-items: start;
+            border-bottom: 1px solid rgba(126, 67, 30, 0.12);
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            padding: 16px 18px 12px;
+        }
+
+        .recommend-panel h2 {
+            font-size: 1rem;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .recommend-panel .meta {
+            font-size: 0.78rem;
+            margin: 4px 0 0;
+        }
+
+        .recommend-close {
+            align-items: center;
+            background: rgba(179, 106, 50, 0.09);
+            border: 1px solid rgba(126, 67, 30, 0.12);
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            height: 32px;
+            justify-content: center;
+            width: 32px;
+        }
+
+        .recommend-form {
+            display: grid;
+            gap: 12px;
+            padding: 14px 18px 18px;
+        }
+
+        .recommend-form input[type="search"],
+        .recommend-form textarea {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 14px;
+            min-height: 42px;
+            padding: 10px 12px;
+            width: 100%;
+        }
+
+        .recommend-friend-list {
+            display: grid;
+            gap: 8px;
+            max-height: 230px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .recommend-friend {
+            align-items: center;
+            border: 1px solid rgba(126, 67, 30, 0.12);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            gap: 10px;
+            padding: 9px 10px;
+        }
+
+        .recommend-friend:hover {
+            background: var(--accent-soft);
+        }
+
+        .recommend-friend input {
+            accent-color: var(--accent);
+        }
+
+        .recommend-friend .avatar {
+            height: 32px;
+            width: 32px;
         }
 
         .toast {
@@ -1114,9 +1388,9 @@
         }
 
         .profile-info h1 {
-            font-size: clamp(2rem, 3.8vw, 3.25rem);
+            font-size: clamp(1.65rem, 2.7vw, 2.25rem);
             font-weight: 950;
-            letter-spacing: -0.055em;
+            letter-spacing: -0.035em;
             line-height: 1;
             margin: 0;
             max-width: 100%;
@@ -1396,7 +1670,18 @@
 
         .feed-quick-filters {
             border-bottom: 1px solid rgba(126, 67, 30, 0.1);
+            flex-wrap: nowrap;
+            gap: 8px;
+            overflow-x: auto;
             padding-bottom: 10px;
+        }
+
+        .feed-quick-filters .filter-link {
+            flex: 0 0 auto;
+            font-size: 0.9rem;
+            min-height: 36px;
+            padding: 7px 13px;
+            white-space: nowrap;
         }
 
         .tidy-feed-stack {
@@ -1425,6 +1710,11 @@
             font-size: 0.9rem;
         }
 
+        .tidy-review-card .post-meta {
+            font-size: 0.78rem;
+            line-height: 1.25;
+        }
+
         .tidy-review-card .post-item {
             align-items: stretch !important;
             grid-template-columns: 88px minmax(0, 1fr) !important;
@@ -1441,13 +1731,13 @@
         .tidy-review-card .item-title {
             font-size: 1rem;
             letter-spacing: -0.025em;
-            margin-top: 5px;
+            margin: 4px 0 2px;
         }
 
         .tidy-review-card .review-text {
             font-size: 0.9rem;
             line-height: 1.42;
-            margin-top: 7px;
+            margin: 6px 0 0;
         }
 
         .tidy-review-card .rating,
@@ -1463,16 +1753,28 @@
             min-width: 0;
         }
 
+        .review-copy > .meta {
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .review-copy .pill-row {
+            margin-bottom: 2px;
+        }
+
         .review-meta-actions {
             align-items: center;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            justify-content: space-between;
             margin-top: auto;
             padding-top: 10px;
+            width: 100%;
         }
 
         .review-meta-actions .external-ratings {
+            flex: 1 1 auto;
             margin-top: 0;
         }
 
@@ -1485,6 +1787,8 @@
             align-items: center;
             display: flex !important;
             gap: 8px;
+            justify-content: flex-end;
+            margin-left: auto;
             padding-top: 0;
             border-top: 0;
         }
@@ -1587,9 +1891,466 @@
             font-weight: 500;
         }
 
+        .profile-hero {
+            border-radius: 18px;
+        }
+
+        .profile-hero .page-subtitle {
+            font-size: 0.95rem;
+            margin-top: 6px;
+        }
+
+        .profile-info .button {
+            min-height: 38px;
+            padding: 8px 14px;
+        }
+
+        .stat-grid {
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            line-height: 1.05;
+        }
+
+        .tabs {
+            gap: 18px;
+        }
+
+        .tab {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .item-detail-page {
+            max-width: 1020px;
+        }
+
+        .item-detail-page .item-hero {
+            border-radius: 18px;
+            gap: 20px;
+            grid-template-columns: minmax(0, 1fr) 210px;
+            padding: 18px;
+        }
+
+        .item-detail-page .item-hero-copy h1 {
+            font-size: clamp(1.55rem, 2.6vw, 2.35rem);
+            letter-spacing: -0.035em;
+            line-height: 1.08;
+            margin: 4px 0 10px;
+        }
+
+        .item-detail-page .item-synopsis {
+            font-size: 0.92rem;
+            line-height: 1.48;
+            margin: 0;
+        }
+
+        .item-detail-page .item-hero-poster {
+            border-radius: 14px;
+            align-self: stretch;
+            height: 100%;
+            max-width: 210px;
+            min-height: 100%;
+            width: 210px;
+        }
+
+        .item-detail-page .item-hero-poster img {
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-detail-page .item-facts {
+            gap: 10px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin: 14px 0 12px;
+        }
+
+        .item-detail-page .item-ratings-fact {
+            min-width: 0;
+        }
+
+        .item-detail-page .item-facts dt {
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .item-detail-page .item-facts dd {
+            color: #342d27;
+            font-size: 0.9rem;
+        }
+
+        .item-detail-page .item-facts .external-ratings {
+            gap: 7px;
+            margin-top: 0;
+        }
+
+        .item-detail-page .item-facts .external-ratings span {
+            font-size: 0.8rem;
+            padding: 5px 9px;
+        }
+
+        .item-hero-actions-row {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .item-hero-actions-row .form-actions {
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+
+        .item-hero-actions-row .external-ratings {
+            flex: 1 1 auto;
+            justify-content: flex-end;
+            margin-top: 0;
+        }
+
+        .item-action-buttons {
+            border-top: 0;
+            flex: 1 1 auto;
+            justify-content: flex-end;
+            margin-left: auto;
+            padding-top: 0;
+        }
+
+        .item-action-buttons .icon-button {
+            min-height: 38px;
+            min-width: 42px;
+        }
+
+        .item-action-buttons .recommend-button {
+            padding-inline: 13px;
+        }
+
+        .recommend-button {
+            white-space: nowrap;
+        }
+
+        .recommend-button svg {
+            transform: translateX(1px);
+        }
+
+        .item-hero-actions-row .button {
+            min-height: 38px;
+            padding: 8px 14px;
+        }
+
+        .item-reviews-heading {
+            margin: 30px auto 12px;
+            max-width: 880px;
+        }
+
+        .item-reviews-heading h2 {
+            font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .item-reviews-heading .page-subtitle {
+            margin-top: 6px;
+        }
+
+        .item-review-stack {
+            display: grid;
+            gap: 18px;
+            margin: 0 auto;
+            max-width: 880px;
+        }
+
+        .item-review-card {
+            border-radius: 18px;
+            display: grid;
+            gap: 12px;
+            margin: 0 auto;
+            max-width: none;
+            padding: 16px;
+            width: 100%;
+        }
+
+        .item-review-header {
+            align-items: center;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 36px minmax(0, 1fr) auto;
+        }
+
+        .item-review-header .post-avatar {
+            height: 34px;
+            width: 34px;
+        }
+
+        .item-review-card .review-text {
+            margin: 4px 0;
+        }
+
+        .inline-comment-form {
+            background: rgba(255, 255, 255, 0.36);
+            border: 1px solid rgba(126, 67, 30, 0.12);
+            border-radius: 14px;
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+        }
+
+        .inline-comment-form textarea {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 12px;
+            min-height: 58px;
+            padding: 10px 12px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        .inline-comment-form .form-actions {
+            justify-content: flex-start;
+        }
+
+        .inline-comment-form button {
+            min-height: 34px;
+            padding: 7px 13px;
+        }
+
+        .discussion-card {
+            border-radius: 18px;
+            margin: 22px auto 0;
+            max-width: 880px;
+            padding: 16px 18px 18px;
+        }
+
+        .discussion-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .comment-card {
+            background: rgba(255, 255, 255, 0.52);
+            border: 1px solid rgba(126, 67, 30, 0.1);
+            border-radius: 16px;
+            display: grid;
+            gap: 9px;
+            padding: 14px 16px;
+        }
+
+        .comment-header {
+            align-items: start;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 34px minmax(0, 1fr);
+        }
+
+        .comment-header .mini-avatar {
+            height: 32px;
+            text-transform: uppercase;
+            width: 32px;
+        }
+
+        .comment-header p {
+            margin: 2px 0 0;
+        }
+
+        .comment-body {
+            color: #2d2823;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            margin: 4px 0 0 44px;
+        }
+
+        .comment-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-left: 44px;
+        }
+
+        .comment-actions .button,
+        .reply-form .button {
+            min-height: 34px;
+            padding: 7px 12px;
+        }
+
+        .reply-card {
+            border-left: 3px solid rgba(179, 106, 50, 0.28);
+            margin-left: 44px;
+            padding: 8px 0 8px 12px;
+        }
+
+        .reply-card p {
+            margin: 4px 0 0;
+        }
+
+        .reply-form {
+            align-items: center;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(0, 1fr) auto;
+            margin-left: 44px;
+        }
+
+        .reply-form input {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 999px;
+            min-height: 36px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+
+        .review-owner-actions {
+            align-items: center;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: -4px;
+        }
+
+        .inline-owner-actions {
+            align-items: baseline;
+            display: inline-flex;
+            gap: 8px;
+        }
+
+        .inline-owner-actions form {
+            display: inline;
+        }
+
+        .owner-action,
+        button.owner-action,
+        .inline-owner-actions button.owner-action,
+        .inline-owner-actions button.owner-action.danger {
+            background: transparent;
+            border: 0;
+            color: var(--muted);
+            cursor: pointer;
+            display: inline;
+            font-size: 0.78rem;
+            font-weight: 400;
+            min-height: 0;
+            padding: 0;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transform: none;
+        }
+
+        .owner-action:hover,
+        button.owner-action:hover,
+        .inline-owner-actions button.owner-action:hover {
+            background: transparent;
+            box-shadow: none;
+            color: var(--accent-dark);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transform: none;
+        }
+
+        .owner-action.danger:hover {
+            color: #9f2f2f;
+        }
+
+        .narrow-page {
+            max-width: 680px;
+        }
+
+        .discover-trending-card {
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .discover-review-list {
+            display: grid;
+            gap: 0;
+        }
+
+        .discover-review-row {
+            align-items: start;
+            border-top: 1px solid rgba(126, 67, 30, 0.1);
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 72px minmax(0, 1fr) auto;
+            padding: 16px 0;
+        }
+
+        .discover-review-row:first-child {
+            border-top: 0;
+            padding-top: 4px;
+        }
+
+        .discover-review-row:last-child {
+            padding-bottom: 0;
+        }
+
+        .discover-review-poster {
+            background: linear-gradient(145deg, rgba(179, 106, 50, 0.12), rgba(23, 21, 19, 0.08));
+            border-radius: 12px;
+            display: block;
+            height: 104px;
+            overflow: hidden;
+            width: 72px;
+        }
+
+        .discover-review-poster img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .discover-review-copy {
+            min-width: 0;
+        }
+
+        .discover-review-header {
+            align-items: center;
+            display: grid;
+            gap: 9px;
+            grid-template-columns: 32px minmax(0, 1fr);
+            margin-bottom: 8px;
+        }
+
+        .discover-review-header .post-avatar {
+            height: 32px;
+            width: 32px;
+        }
+
+        .discover-review-header strong {
+            display: block;
+            line-height: 1.15;
+        }
+
+        .discover-review-row .item-title {
+            font-size: 1rem;
+            line-height: 1.18;
+            margin: 0 0 8px;
+        }
+
+        .discover-review-row .review-text {
+            font-size: 0.9rem;
+            line-height: 1.42;
+            margin: 0;
+        }
+
+        .discover-review-row .rating {
+            margin-top: 8px;
+            white-space: nowrap;
+        }
+
         @media (max-width: 1080px) {
             .social-layout,
-            .layout-grid {
+            .layout-grid,
+            .notification-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -1641,8 +2402,13 @@
                 align-items: start;
             }
 
+            .item-detail-page .item-facts {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .interaction-grid,
-            .recommendation-grid {
+            .recommendation-grid,
+            .profile-edit-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
@@ -1685,6 +2451,14 @@
                 width: 100% !important;
             }
 
+            .item-detail-page .item-facts {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-edit-grid {
+                grid-template-columns: 1fr;
+            }
+
             .mobile-create {
                 display: inline-flex;
             }
@@ -1701,9 +2475,15 @@
             <nav class="sidebar-nav" aria-label="Main navigation">
                 <section class="sidebar-profile-card">
                     <div class="sidebar-profile-top">
-                        <span class="avatar">{{ request.user.username|first }}</span>
+                        <a class="avatar profile-link" href="{% url 'profile' %}" aria-label="{{ request.user.get_full_name|default:request.user.username }} profile">
+                            {% if request.user.profile.profile_photo %}
+                                <img src="{{ request.user.profile.profile_photo.url }}" alt="">
+                            {% else %}
+                                {{ request.user.get_full_name|default:request.user.username|first }}
+                            {% endif %}
+                        </a>
                         <span>
-                            <span class="sidebar-name">{{ request.user.username }}</span>
+                            <a class="sidebar-name profile-link" href="{% url 'profile' %}">{{ request.user.get_full_name|default:request.user.username }}</a>
                             <a class="sidebar-profile-button" href="{% url 'profile' %}">View profile</a>
                         </span>
                     </div>
@@ -1712,9 +2492,13 @@
                 <p class="sidebar-section-title">Navigation</p>
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
-                <a href="{% url 'search' %}" class="sidebar-link {% if request.resolver_match.url_name == 'search' %}active{% endif %}">Search</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
-                <a href="{% url 'recommend' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommend' %}active{% endif %}">Recommend</a>
+                <a href="{% url 'notifications' %}" class="sidebar-link has-badge {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <span>Notifications</span>
+                    {% if unread_notification_count %}
+                        <span class="nav-badge">{{ unread_notification_count }}</span>
+                    {% endif %}
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1729,6 +2513,42 @@
             {% block content %}{% endblock %}
         </main>
         <a class="mobile-create" href="#feed-composer">Post review</a>
+        <aside class="recommend-panel" id="recommend-panel" aria-label="Recommend to friends" aria-hidden="true">
+            <header>
+                <div>
+                    <h2>Recommend this</h2>
+                    <p class="meta" id="recommend-item-title">Choose friends and add a short note.</p>
+                </div>
+                <button type="button" class="recommend-close" id="recommend-close" aria-label="Close">x</button>
+            </header>
+            <form method="post" action="{% url 'recommend' %}" class="recommend-form" id="recommend-form">
+                {% csrf_token %}
+                <input type="hidden" name="item" id="recommend-item-id">
+                <input type="search" id="recommend-friend-search" placeholder="Search friends">
+                <div class="recommend-friend-list" id="recommend-friend-list">
+                    {% for friend in recommend_friends %}
+                        <label class="recommend-friend" data-friend-name="{{ friend.get_full_name|default:friend.username|lower }} {{ friend.username|lower }}">
+                            <input type="checkbox" name="to_user" value="{{ friend.id }}">
+                            <a class="avatar profile-link" href="{% url 'user_profile' friend.username %}">
+                                {% if friend.profile.profile_photo %}
+                                    <img src="{{ friend.profile.profile_photo.url }}" alt="">
+                                {% else %}
+                                    {{ friend.get_full_name|default:friend.username|first }}
+                                {% endif %}
+                            </a>
+                            <span>
+                                <strong><a class="profile-link" href="{% url 'user_profile' friend.username %}">{{ friend.get_full_name|default:friend.username }}</a></strong>
+                                <span class="meta">@{{ friend.username }}</span>
+                            </span>
+                        </label>
+                    {% empty %}
+                        <p class="empty-state">Follow someone first, then you can recommend things to them.</p>
+                    {% endfor %}
+                </div>
+                <textarea name="message" maxlength="140" rows="3" placeholder="Add a short message, optional"></textarea>
+                <button type="submit">Send recommendation</button>
+            </form>
+        </aside>
         <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
     </div>
     <script>
@@ -1752,6 +2572,76 @@
                     }, 220);
                 });
             });
+
+            var recommendPanel = document.getElementById("recommend-panel");
+            var recommendForm = document.getElementById("recommend-form");
+            var recommendItemId = document.getElementById("recommend-item-id");
+            var recommendItemTitle = document.getElementById("recommend-item-title");
+            var recommendSearch = document.getElementById("recommend-friend-search");
+            var recommendClose = document.getElementById("recommend-close");
+
+            function openRecommendPanel(itemId, itemTitle) {
+                if (!recommendPanel || !recommendItemId) return;
+                recommendItemId.value = itemId;
+                if (recommendItemTitle) recommendItemTitle.textContent = itemTitle || "Choose friends and add a short note.";
+                recommendPanel.classList.add("open");
+                recommendPanel.setAttribute("aria-hidden", "false");
+                if (recommendSearch) recommendSearch.focus();
+            }
+
+            function closeRecommendPanel() {
+                if (!recommendPanel) return;
+                recommendPanel.classList.remove("open");
+                recommendPanel.setAttribute("aria-hidden", "true");
+                if (recommendForm) recommendForm.reset();
+            }
+
+            document.addEventListener("click", function (event) {
+                var trigger = event.target.closest(".js-open-recommend");
+                if (trigger) {
+                    event.preventDefault();
+                    openRecommendPanel(trigger.getAttribute("data-item-id"), trigger.getAttribute("data-item-title"));
+                    return;
+                }
+                if (event.target === recommendClose) {
+                    closeRecommendPanel();
+                }
+            });
+
+            if (recommendSearch) {
+                recommendSearch.addEventListener("input", function () {
+                    var query = recommendSearch.value.trim().toLowerCase();
+                    document.querySelectorAll(".recommend-friend").forEach(function (row) {
+                        row.hidden = query && !(row.getAttribute("data-friend-name") || "").includes(query);
+                    });
+                });
+            }
+
+            if (recommendForm) {
+                recommendForm.addEventListener("submit", async function (event) {
+                    event.preventDefault();
+                    var button = recommendForm.querySelector("button[type='submit']");
+                    if (button) button.disabled = true;
+                    try {
+                        var response = await fetch(recommendForm.action, {
+                            method: "POST",
+                            body: new FormData(recommendForm),
+                            headers: { "X-Requested-With": "XMLHttpRequest" }
+                        });
+                        var data = await response.json();
+                        if (!response.ok || !data.ok) {
+                            showToast(data.error || "Choose a friend first");
+                            return;
+                        }
+                        closeRecommendPanel();
+                        showToast(data.message || "Recommendation sent");
+                    } catch (error) {
+                        showToast("Could not send recommendation");
+                    } finally {
+                        if (button) button.disabled = false;
+                    }
+                });
+            }
 
             function updateButton(button, data) {
                 if (!button || !data) return;
