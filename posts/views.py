@@ -43,6 +43,33 @@ def _display_name(user):
     return user.get_full_name() or user.username
 
 
+def _save_list_type_for_item(item):
+    return "readlist" if item.item_type == "book" else "watchlist"
+
+
+def _item_action_state(user, item):
+    if not user.is_authenticated:
+        return {
+            "like_active": False,
+            "save_active": False,
+            "recommended_active": False,
+            "save_list_type": _save_list_type_for_item(item),
+        }
+    save_list_type = _save_list_type_for_item(item)
+    saved_rows = set(
+        SavedItem.objects.filter(user=user, item=item).values_list("list_type", flat=True)
+    )
+    return {
+        "like_active": "favorites" in saved_rows,
+        "save_active": save_list_type in saved_rows,
+        "recommended_active": Recommendation.objects.filter(
+            from_user=user,
+            item=item,
+        ).exists(),
+        "save_list_type": save_list_type,
+    }
+
+
 def _create_activity(user, activity_type, message="", review=None, target_user=None, collection=None):
     return Activity.objects.create(
         user=user,
@@ -574,7 +601,10 @@ def suggest_items(request):
 
 
 @login_required
-def feed(request):
+def feed(request, review_form=None):
+    if request.method == "POST" and review_form is None:
+        return new_review(request, render_feed_on_error=True)
+
     friends_only = request.GET.get("filter") == "friends"
     query = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "newest")
@@ -603,7 +633,13 @@ def feed(request):
             | Q(user__first_name__icontains=query)
         )
 
-    reviews = reviews.annotate(likes_total=Count("likes"))
+    reviews = reviews.annotate(
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        )
+    )
     if sort == "top":
         reviews = reviews.order_by("-likes_total", "-rating", "-created_at")
     else:
@@ -611,17 +647,12 @@ def feed(request):
     paginator = Paginator(reviews, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
     page_reviews = page_obj.object_list
-    liked_review_ids = set()
     watchlist_item_ids = set()
     readlist_item_ids = set()
     favorite_item_ids = set()
     saved_review_ids = set()
+    recommended_item_ids = set()
     if request.user.is_authenticated:
-        liked_review_ids = set(
-            ReviewLike.objects.filter(
-                user=request.user, review_id__in=page_reviews.values_list("id", flat=True)
-            ).values_list("review_id", flat=True)
-        )
         watchlist_item_ids = set(
             SavedItem.objects.filter(
                 user=request.user,
@@ -649,10 +680,20 @@ def feed(request):
                 review_id__in=page_reviews.values_list("id", flat=True),
             ).values_list("review_id", flat=True)
         )
+        recommended_item_ids = set(
+            Recommendation.objects.filter(
+                from_user=request.user,
+                item_id__in=page_reviews.values_list("item_id", flat=True),
+            ).values_list("item_id", flat=True)
+        )
     activities = Activity.objects.select_related("user", "review", "review__item", "target_user", "collection")
     followed_activities = activities.filter(user_id__in=friend_ids) if friend_ids else Activity.objects.none()
     popular_reviews = Review.objects.select_related("user", "item").annotate(
-        likes_total=Count("likes")
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        )
     ).order_by("-likes_total", "-created_at")[:5]
     suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:5]
     notifications_preview = Notification.objects.filter(
@@ -669,12 +710,12 @@ def feed(request):
             "query": query,
             "sort": sort,
             "type_filter": type_filter,
-            "liked_review_ids": liked_review_ids,
             "watchlist_item_ids": watchlist_item_ids,
             "readlist_item_ids": readlist_item_ids,
             "favorite_item_ids": favorite_item_ids,
             "saved_review_ids": saved_review_ids,
-            "review_form": ReviewForm(),
+            "recommended_item_ids": recommended_item_ids,
+            "review_form": review_form or ReviewForm(),
             "activities": activities[:12],
             "followed_activities": followed_activities[:6],
             "popular_reviews": popular_reviews,
@@ -716,9 +757,27 @@ def discover(request):
         trending_reviews = trending_reviews.none()
         friend_favorites = friend_favorites.none()
 
-    trending_reviews = trending_reviews.annotate(likes_total=Count("likes"))
-    friend_favorites = friend_favorites.annotate(likes_total=Count("likes"))
-    recent_reviews = recent_reviews.annotate(likes_total=Count("likes"))
+    trending_reviews = trending_reviews.annotate(
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        )
+    )
+    friend_favorites = friend_favorites.annotate(
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        )
+    )
+    recent_reviews = recent_reviews.annotate(
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        )
+    )
     if sort == "top":
         trending_reviews = trending_reviews.order_by("-likes_total", "-rating", "-created_at")
         friend_favorites = friend_favorites.order_by("-likes_total", "-rating", "-created_at")
@@ -843,7 +902,7 @@ def signup(request):
 
 
 @login_required
-def new_review(request):
+def new_review(request, render_feed_on_error=False):
     if request.method == "POST":
         form = ReviewForm(request.POST)
         if form.is_valid():
@@ -977,6 +1036,8 @@ def new_review(request):
             )
             messages.success(request, "Your review was posted.")
             return redirect("feed")
+        if render_feed_on_error:
+            return feed(request, review_form=form)
     else:
         form = ReviewForm()
         item_id = request.GET.get("item")
@@ -1179,6 +1240,10 @@ def recommend(request):
             return JsonResponse(
                 {
                     "ok": True,
+                    "item_id": item.id,
+                    "action": "recommend",
+                    "active": True,
+                    "recommended_active": True,
                     "message": f"Recommendation sent to {len(recipients)} friend{'s' if len(recipients) != 1 else ''}.",
                 }
             )
@@ -1239,7 +1304,10 @@ def profile(request):
         total=Count("id")
     ).order_by("-total")
     followers_count = Follow.objects.filter(following=request.user).count() or Friendship.objects.filter(to_user=request.user).count()
-    likes_received = ReviewLike.objects.filter(review__user=request.user).count()
+    likes_received = SavedItem.objects.filter(
+        list_type="favorites",
+        item__reviews__user=request.user,
+    ).distinct().count()
     watchlist_items = SavedItem.objects.filter(
         user=request.user, list_type="watchlist"
     ).select_related("item").order_by("-created_at")
@@ -1272,23 +1340,27 @@ def profile(request):
 
 
 @login_required
+def delete_profile_photo(request):
+    if request.method != "POST":
+        return redirect("profile")
+
+    profile_obj, _ = Profile.objects.get_or_create(user=request.user)
+    if profile_obj.profile_photo:
+        profile_obj.profile_photo.delete(save=False)
+        profile_obj.profile_photo = ""
+        profile_obj.save(update_fields=["profile_photo", "updated_at"])
+        messages.success(request, "Profile photo removed.")
+    return redirect("profile")
+
+
+@login_required
 def item_reviews(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     _enrich_item_metadata(item)
     item.refresh_from_db()
     reviews = Review.objects.filter(item=item).select_related("user").order_by("-created_at")
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
-    item_save_list_type = "readlist" if item.item_type == "book" else "watchlist"
-    liked_item_active = SavedItem.objects.filter(
-        user=request.user,
-        item=item,
-        list_type="favorites",
-    ).exists()
-    saved_item_active = SavedItem.objects.filter(
-        user=request.user,
-        item=item,
-        list_type=item_save_list_type,
-    ).exists()
+    item_state = _item_action_state(request.user, item)
     top_level_comments = Comment.objects.filter(
         review__item=item,
         parent__isnull=True,
@@ -1302,9 +1374,10 @@ def item_reviews(request, item_id):
             "page_obj": page_obj,
             "comment_form": CommentForm(),
             "comments": top_level_comments,
-            "item_save_list_type": item_save_list_type,
-            "liked_item_active": liked_item_active,
-            "saved_item_active": saved_item_active,
+            "item_save_list_type": item_state["save_list_type"],
+            "liked_item_active": item_state["like_active"],
+            "saved_item_active": item_state["save_active"],
+            "recommended_item_active": item_state["recommended_active"],
         },
     )
 
@@ -1315,10 +1388,15 @@ def toggle_like(request, review_id):
         return redirect("feed")
 
     review = get_object_or_404(Review, id=review_id)
-    like, created = ReviewLike.objects.get_or_create(user=request.user, review=review)
+    like, created = SavedItem.objects.get_or_create(
+        user=request.user,
+        item=review.item,
+        list_type="favorites",
+    )
     if not created:
         like.delete()
-    active = created
+    item_state = _item_action_state(request.user, review.item)
+    active = item_state["like_active"]
     if created:
         _create_activity(
             request.user,
@@ -1333,12 +1411,18 @@ def toggle_like(request, review_id):
             f"{_display_name(request.user)} liked your review of {review.item.title}.",
             review=review,
         )
-    count = ReviewLike.objects.filter(review=review).count()
+    count = SavedItem.objects.filter(item=review.item, list_type="favorites").count()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
             {
                 "ok": True,
+                "item_id": review.item_id,
+                "action": "like",
                 "active": active,
+                "like_active": item_state["like_active"],
+                "save_active": item_state["save_active"],
+                "recommended_active": item_state["recommended_active"],
+                "save_list_type": item_state["save_list_type"],
                 "label": "Unlike" if active else "Like",
                 "count": count,
             }
@@ -1363,7 +1447,8 @@ def toggle_saved_item(request, item_id, list_type):
     )
     if not created:
         saved.delete()
-    active = created
+    item_state = _item_action_state(request.user, item)
+    active = item_state["like_active"] if list_type == "favorites" else item_state["save_active"]
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         favorites_labels = ("Liked", "Like") if request.POST.get("label_context") == "like" else ("Saved to Favorites", "Favorite")
         list_labels = {
@@ -1375,7 +1460,14 @@ def toggle_saved_item(request, item_id, list_type):
         return JsonResponse(
             {
                 "ok": True,
+                "item_id": item.id,
+                "action": "like" if list_type == "favorites" else "save",
+                "list_type": list_type,
                 "active": active,
+                "like_active": item_state["like_active"],
+                "save_active": item_state["save_active"],
+                "recommended_active": item_state["recommended_active"],
+                "save_list_type": item_state["save_list_type"],
                 "label": on_label if active else off_label,
             }
         )
@@ -1500,7 +1592,10 @@ def user_profile(request, username):
             or Friendship.objects.filter(to_user=viewed_user).count(),
             "following_count": Follow.objects.filter(follower=viewed_user).count()
             or Friendship.objects.filter(from_user=viewed_user).count(),
-            "likes_received": ReviewLike.objects.filter(review__user=viewed_user).count(),
+            "likes_received": SavedItem.objects.filter(
+                list_type="favorites",
+                item__reviews__user=viewed_user,
+            ).distinct().count(),
             "is_following": is_following,
             "mutual_count": mutual_count,
         },

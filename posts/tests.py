@@ -1,17 +1,44 @@
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from unittest.mock import patch
 
-from .models import Friendship, Item, Recommendation, Review
+from .models import Friendship, Item, Recommendation, Review, SavedItem
 
 
 class SocialReviewTests(TestCase):
     def setUp(self):
-        self.alex = User.objects.create_user(username="alex", password="pass")
+        self.alex = User.objects.create_user(username="alex", email="alex@example.com", password="pass")
         self.sam = User.objects.create_user(username="sam", password="pass")
         self.casey = User.objects.create_user(username="casey", password="pass")
         self.item = Item.objects.create(title="Arrival", item_type="movie")
+
+    def test_user_can_authenticate_with_username_or_email(self):
+        username_user = authenticate(username="alex", password="pass")
+        email_user = authenticate(username="alex@example.com", password="pass")
+        mixed_case_email_user = authenticate(username="Alex@Example.com", password="pass")
+
+        self.assertEqual(username_user, self.alex)
+        self.assertEqual(email_user, self.alex)
+        self.assertEqual(mixed_case_email_user, self.alex)
+
+    def test_signup_requires_unique_email(self):
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "first_name": "Another Alex",
+                "email": "alex@example.com",
+                "username": "anotheralex",
+                "password1": "ComplexPass123!",
+                "password2": "ComplexPass123!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "An account with this email already exists.")
+        self.assertFalse(User.objects.filter(username="anotheralex").exists())
 
     def test_friends_filter_only_shows_friend_reviews(self):
         Friendship.objects.create(from_user=self.alex, to_user=self.sam)
@@ -172,6 +199,25 @@ class SocialReviewTests(TestCase):
         item = Item.objects.get(title__iexact="interstellar", item_type="movie")
         self.assertEqual(Review.objects.filter(item=item).count(), 2)
 
+    def test_feed_review_post_shows_inline_error_when_item_not_selected(self):
+        self.client.login(username="alex", password="pass")
+
+        response = self.client.post(
+            reverse("feed"),
+            {
+                "item_title": "Unselected Movie",
+                "item_type": "movie",
+                "rating": 5,
+                "review_text": "This should stay on the feed.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "What are you recommending today?")
+        self.assertContains(response, "Please choose an item from the suggestions before posting.")
+        self.assertContains(response, "composer-error")
+        self.assertFalse(Review.objects.filter(review_text="This should stay on the feed.").exists())
+
     @patch("posts.views._podcast_metadata_from_url")
     def test_podcast_review_uses_link_as_input_and_metadata_title(self, metadata):
         metadata.return_value = {
@@ -197,6 +243,40 @@ class SocialReviewTests(TestCase):
         self.assertEqual(item.title, "Smart Podcast Episode")
         self.assertEqual(item.image_url, "https://img.youtube.com/vi/abc123/hqdefault.jpg")
         self.assertEqual(Review.objects.get(item=item).review_text, "Worth listening.")
+
+    def test_item_like_save_response_returns_centralized_item_state(self):
+        self.client.login(username="alex", password="pass")
+        SavedItem.objects.create(user=self.alex, item=self.item, list_type="watchlist")
+
+        response = self.client.post(
+            reverse("toggle_saved_item", args=[self.item.id, "favorites"]),
+            {"label_context": "like"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["item_id"], self.item.id)
+        self.assertEqual(payload["action"], "like")
+        self.assertTrue(payload["like_active"])
+        self.assertTrue(payload["save_active"])
+        self.assertFalse(payload["recommended_active"])
+
+    def test_recommend_response_returns_item_state_for_shared_buttons(self):
+        Friendship.objects.create(from_user=self.alex, to_user=self.sam)
+        self.client.login(username="alex", password="pass")
+
+        response = self.client.post(
+            reverse("recommend"),
+            {"item": self.item.id, "to_user": [self.sam.id], "message": "Try this."},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["item_id"], self.item.id)
+        self.assertEqual(payload["action"], "recommend")
+        self.assertTrue(payload["recommended_active"])
 
     def test_review_owner_can_edit_review(self):
         review = Review.objects.create(
@@ -261,3 +341,34 @@ class SocialReviewTests(TestCase):
 
         self.assertRedirects(response, reverse("feed"))
         self.assertFalse(Review.objects.filter(id=review.id).exists())
+
+    def test_profile_photo_can_be_uploaded_and_deleted(self):
+        self.client.login(username="alex", password="pass")
+        image = SimpleUploadedFile(
+            "avatar.jpg",
+            b"fake-image-bytes",
+            content_type="image/jpeg",
+        )
+
+        upload_response = self.client.post(
+            reverse("profile"),
+            {
+                "first_name": "Alex Reader",
+                "username": "alex",
+                "bio": "",
+                "location": "",
+                "website": "",
+                "favorite_categories": "",
+                "profile_photo": image,
+            },
+        )
+
+        self.assertRedirects(upload_response, reverse("profile"))
+        self.alex.profile.refresh_from_db()
+        self.assertTrue(self.alex.profile.profile_photo)
+
+        delete_response = self.client.post(reverse("delete_profile_photo"))
+
+        self.assertRedirects(delete_response, reverse("profile"))
+        self.alex.profile.refresh_from_db()
+        self.assertFalse(self.alex.profile.profile_photo)

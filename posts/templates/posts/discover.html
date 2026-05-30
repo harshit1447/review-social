@@ -9,7 +9,7 @@
             <h1>Discover</h1>
             <p>Trending reviews, people you may know, and popular movies, books, and shows.</p>
         </div>
-        <a class="button" href="{% url 'new_review' %}">Post review</a>
+        <a class="button" href="{% url 'feed' %}#feed-composer">Post review</a>
     </section>
 
     <section class="toolbar">
@@ -35,28 +35,46 @@
                 <h2 class="card-title">Trending Reviews</h2>
                 <div class="discover-review-list">
                     {% for review in trending_reviews %}
-                        <article class="discover-review-row">
-                            <a class="discover-review-poster" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
-                                <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                            </a>
-                            <div class="discover-review-copy">
-                                <header class="discover-review-header">
-                                    <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
-                                        {% if review.user.profile.profile_photo %}
-                                            <img src="{{ review.user.profile.profile_photo.url }}" alt="">
-                                        {% else %}
-                                            {{ review.user.get_full_name|default:review.user.username|first }}
-                                        {% endif %}
-                                    </a>
-                                    <div>
-                                        <strong><a class="profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></strong>
-                                        <div class="meta">{{ review.created_at|timesince }} ago</div>
+                        <article class="card social-review-card review-card tidy-review-card discover-review-row">
+                            <header class="post-header">
+                                <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
+                                    {% if review.user.profile.profile_photo %}
+                                        <img src="{{ review.user.profile.profile_photo.url }}" alt="">
+                                    {% else %}
+                                        {{ review.user.get_full_name|default:review.user.username|first }}
+                                    {% endif %}
+                                </a>
+                                <div>
+                                    <div class="post-name-line">
+                                        <a class="post-name profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a>
                                     </div>
-                                </header>
-                                <h3 class="item-title"><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h3>
-                                <p class="review-text">{{ review.review_text|truncatechars:180 }}</p>
+                                    <div class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</div>
+                                </div>
+                                <span class="rating">{{ review.rating }}/5</span>
+                            </header>
+                            <div class="post-item">
+                                <a class="review-poster" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                                    <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                                </a>
+                                <div class="review-copy">
+                                    <h3 class="item-title">
+                                        <a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a>
+                                        <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                    </h3>
+                                    <p class="meta">
+                                        {% if review.item.release_year %}{{ review.item.release_year }}{% endif %}
+                                        {% if review.item.creator_name %}{% if review.item.release_year %} &middot; {% endif %}{{ review.item.creator_name }}{% endif %}
+                                    </p>
+                                    <p class="review-text">{{ review.review_text|truncatechars:180 }}</p>
+                                    {% if review.item.imdb_rating or review.item.rotten_tomatoes_rating or review.item.book_rating %}
+                                        <div class="external-ratings">
+                                            {% if review.item.imdb_rating %}<span>IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
+                                            {% if review.item.rotten_tomatoes_rating %}<span>RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
+                                            {% if review.item.book_rating %}<span>{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <span class="rating">{{ review.rating }}/5</span>
                         </article>
                     {% empty %}
                         <p class="empty-state">No trending reviews yet.</p>

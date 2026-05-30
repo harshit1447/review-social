@@ -148,6 +148,7 @@
         }
 
         input[type="text"],
+        input[type="email"],
         input[type="password"],
         input[type="file"] {
             width: 100%;
@@ -160,6 +161,7 @@
         }
 
         input[type="text"]:focus,
+        input[type="email"]:focus,
         input[type="password"]:focus,
         input[type="file"]:focus {
             outline: 2px solid rgba(168, 100, 50, 0.26);
@@ -300,6 +302,11 @@
                         <label for="{{ form.username.id_for_label }}">Username</label>
                         {{ form.username }}
                         {{ form.username.errors }}
+                    </div>
+                    <div class="field">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
                     </div>
                     <div class="field">
                         <label for="{{ form.profile_photo.id_for_label }}">Profile photo</label>

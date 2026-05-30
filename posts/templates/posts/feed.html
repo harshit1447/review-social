@@ -21,8 +21,22 @@
                         </div>
                     </div>
 
-                    <form method="post" action="{% url 'new_review' %}" class="inline-review-form">
+                    <form method="post" action="{% url 'feed' %}#feed-composer" class="inline-review-form">
                         {% csrf_token %}
+                        {% if review_form.errors %}
+                            <div class="composer-error post-meta" role="alert">
+                                {% if review_form.non_field_errors %}
+                                    {% for error in review_form.non_field_errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                                {% for field in review_form %}
+                                    {% for error in field.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         <div class="composer-grid">
                             <label for="{{ review_form.item_type.id_for_label }}">Type
                                 {{ review_form.item_type }}
@@ -155,7 +169,7 @@
                                                 {% csrf_token %}
                                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                                 <input type="hidden" name="label_context" value="like">
-                                                <button type="submit" class="icon-button {% if review.item_id in favorite_item_ids %}active liked{% endif %}" data-icon-button="1" data-like-action="1" aria-label="Like">
+                                                <button type="submit" class="icon-button {% if review.item_id in favorite_item_ids %}active liked{% endif %}" data-icon-button="1" data-item-action="like" data-item-id="{{ review.item_id }}" data-like-action="1" aria-label="Like">
                                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
                                                     <span class="sr-only">Like</span>
                                                 </button>
@@ -164,13 +178,13 @@
                                             <form method="post" action="{% if review.item.item_type == 'book' %}{% url 'toggle_saved_item' review.item_id 'readlist' %}{% else %}{% url 'toggle_saved_item' review.item_id 'watchlist' %}{% endif %}" class="js-async-form">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                                <button type="submit" class="icon-button {% if review.item.item_type == 'book' and review.item_id in readlist_item_ids %}active{% elif review.item.item_type != 'book' and review.item_id in watchlist_item_ids %}active{% endif %}" data-icon-button="1" aria-label="Save">
+                                                <button type="submit" class="icon-button {% if review.item.item_type == 'book' and review.item_id in readlist_item_ids %}active{% elif review.item.item_type != 'book' and review.item_id in watchlist_item_ids %}active{% endif %}" data-icon-button="1" data-item-action="save" data-item-id="{{ review.item_id }}" aria-label="Save">
                                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
                                                     <span class="sr-only">Save</span>
                                                 </button>
                                             </form>
 
-                                            <button type="button" class="icon-button recommend-button js-open-recommend" data-item-id="{{ review.item_id }}" data-item-title="{{ review.item.title }}" aria-label="Recommend {{ review.item.title }}" title="Recommend">
+                                            <button type="button" class="icon-button recommend-button js-open-recommend {% if review.item_id in recommended_item_ids %}active{% endif %}" data-item-action="recommend" data-item-id="{{ review.item_id }}" data-item-title="{{ review.item.title }}" aria-label="Recommend {{ review.item.title }}" title="Recommend">
                                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
                                                 <span class="sr-only">Recommend</span>
                                             </button>

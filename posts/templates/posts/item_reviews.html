@@ -42,7 +42,7 @@
                                         <span>IMDb {{ item.imdb_rating }}/10</span>
                                     {% endif %}
                                     {% if item.rotten_tomatoes_rating %}
-                                        <span>Rotten Tomatoes {{ item.rotten_tomatoes_rating }}</span>
+                                        <span>RT {{ item.rotten_tomatoes_rating }}</span>
                                     {% endif %}
                                     {% if item.book_rating %}
                                         <span>{{ item.book_rating_source|default:"Google Books" }} {{ item.book_rating }}/5</span>
@@ -63,7 +63,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <input type="hidden" name="label_context" value="like">
-                            <button type="submit" class="icon-button {% if liked_item_active %}active liked{% endif %}" data-icon-button="1" data-like-action="1" aria-label="Like" title="Like">
+                            <button type="submit" class="icon-button {% if liked_item_active %}active liked{% endif %}" data-icon-button="1" data-item-action="like" data-item-id="{{ item.id }}" data-like-action="1" aria-label="Like" title="Like">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
                                 <span class="sr-only">Like</span>
                             </button>
@@ -71,12 +71,12 @@
                         <form method="post" action="{% url 'toggle_saved_item' item.id item_save_list_type %}" class="js-async-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                            <button type="submit" class="icon-button {% if saved_item_active %}active{% endif %}" data-icon-button="1" aria-label="Save" title="Save">
+                            <button type="submit" class="icon-button {% if saved_item_active %}active{% endif %}" data-icon-button="1" data-item-action="save" data-item-id="{{ item.id }}" aria-label="Save" title="Save">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
                                 <span class="sr-only">Save</span>
                             </button>
                         </form>
-                        <button type="button" class="icon-button recommend-button js-open-recommend" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}" aria-label="Recommend" title="Recommend">
+                        <button type="button" class="icon-button recommend-button js-open-recommend {% if recommended_item_active %}active{% endif %}" data-item-action="recommend" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}" aria-label="Recommend" title="Recommend">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
                             <span>Recommend</span>
                         </button>

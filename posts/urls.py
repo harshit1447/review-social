@@ -29,6 +29,7 @@ urlpatterns = [
     path("items/<int:item_id>/save/<str:list_type>/", views.toggle_saved_item, name="toggle_saved_item"),
     path("recommend/", views.recommend, name="recommend"),
     path("profile/", views.profile, name="profile"),
+    path("profile/photo/delete/", views.delete_profile_photo, name="delete_profile_photo"),
     path("notifications/", views.notifications, name="notifications"),
     path("saved-reviews/", views.saved_reviews, name="saved_reviews"),
     path("collections/", login_required(views.CollectionListView.as_view()), name="collections"),

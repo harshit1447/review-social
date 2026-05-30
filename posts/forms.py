@@ -7,6 +7,7 @@ from .models import Collection, Comment, Item, Profile, Recommendation, Review
 
 class SignUpForm(UserCreationForm):
     first_name = forms.CharField(label="Name", max_length=150)
+    email = forms.EmailField(label="Email")
     profile_photo = forms.FileField(
         label="Profile photo",
         required=False,
@@ -20,11 +21,18 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "username", "password1", "password2"]
+        fields = ["first_name", "email", "username", "password1", "password2"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data["first_name"].strip()
+        user.email = self.cleaned_data["email"].strip().lower()
         if commit:
             user.save()
             profile, _ = Profile.objects.get_or_create(user=user)
@@ -58,7 +66,11 @@ class ReviewForm(forms.Form):
     selected_item_image_url = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_external_source = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_external_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    rating = forms.IntegerField(min_value=1, max_value=5)
+    rating = forms.IntegerField(
+        min_value=1,
+        max_value=5,
+        widget=forms.NumberInput(attrs={"placeholder": "out of 5"}),
+    )
     review_text = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}))
 
     def clean(self):
@@ -95,7 +107,7 @@ class ReviewForm(forms.Form):
             return cleaned_data
 
         if not selected_item_key or not selected_item_title:
-            raise forms.ValidationError("Please choose an item from the suggestions.")
+            raise forms.ValidationError("Please choose an item from the suggestions before posting.")
 
         if selected_item_title.lower() != typed_title.lower():
             raise forms.ValidationError("Please select an exact item from the suggestions list.")

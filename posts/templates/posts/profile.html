@@ -6,12 +6,12 @@
     <div class="page">
         <section class="card profile-hero">
             <div class="profile-cover" {% if user.profile.cover_image %}style="background-image:url('{{ user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}>
-                <label class="image-edit-trigger cover-edit-trigger" for="{{ profile_form.cover_image.id_for_label }}" title="Change cover image" aria-label="Change cover image">
+                <button class="image-edit-trigger cover-edit-trigger js-cover-edit" type="button" title="Change cover image" aria-label="Change cover image">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                     </svg>
-                </label>
+                </button>
             </div>
             <div class="profile-info">
                 <span class="profile-avatar-wrap">
@@ -22,12 +22,12 @@
                             {{ user.get_full_name|default:user.username|first }}
                         {% endif %}
                     </span>
-                    <label class="image-edit-trigger avatar-edit-trigger" for="{{ profile_form.profile_photo.id_for_label }}" title="Change profile photo" aria-label="Change profile photo">
+                    <button class="image-edit-trigger avatar-edit-trigger js-avatar-edit" type="button" title="Change profile photo" aria-label="Change profile photo">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
-                    </label>
+                    </button>
                 </span>
                 <div class="profile-copy">
                     <h1>{{ user.get_full_name|default:user.username }}</h1>
@@ -74,7 +74,7 @@
 
                 <section class="card form-card">
                     <h2 class="card-title">Edit profile</h2>
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" id="profile-edit-form">
                         {% csrf_token %}
                         <div class="profile-file-fields" aria-hidden="true">
                             {{ profile_form.profile_photo }}
@@ -164,7 +164,7 @@
                     {% empty %}
                         <div class="card">
                             <p class="empty-state">You have not posted reviews yet.</p>
-                            <div class="form-actions"><a class="button" href="{% url 'new_review' %}">Write your first review</a></div>
+                            <div class="form-actions"><a class="button" href="{% url 'feed' %}#feed-composer">Write your first review</a></div>
                         </div>
                     {% endfor %}
                 </section>
@@ -248,6 +248,231 @@
                 </section>
             </aside>
         </div>
+
+        <div class="profile-photo-modal" id="profile-photo-modal" aria-hidden="true">
+            <div class="profile-photo-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-photo-title">
+                <header class="profile-photo-dialog-header">
+                    <div>
+                        <h2 id="profile-photo-title">Edit profile photo</h2>
+                        <p class="meta">Move and scale the image so it fits the circular avatar.</p>
+                    </div>
+                    <button type="button" class="modal-close-button js-photo-modal-close" aria-label="Close">x</button>
+                </header>
+                <div class="avatar-cropper" id="avatar-cropper">
+                    <canvas id="avatar-crop-canvas" width="320" height="320" aria-label="Profile photo crop preview"></canvas>
+                </div>
+                <label class="profile-edit-field">
+                    Scale
+                    <input type="range" id="avatar-zoom" min="1" max="3" step="0.01" value="1">
+                </label>
+                <div class="profile-photo-actions">
+                    <button type="button" class="secondary js-photo-pick">Choose photo</button>
+                    {% if user.profile.profile_photo %}
+                        <form method="post" action="{% url 'delete_profile_photo' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="secondary danger-text">Delete photo</button>
+                        </form>
+                    {% endif %}
+                    <button type="button" class="js-photo-save">Save photo</button>
+                </div>
+            </div>
+        </div>
     </div>
+    <script>
+        (function () {
+            var profileForm = document.getElementById("profile-edit-form");
+            var avatarInput = document.getElementById("{{ profile_form.profile_photo.id_for_label }}");
+            var coverInput = document.getElementById("{{ profile_form.cover_image.id_for_label }}");
+            var avatarEdit = document.querySelector(".js-avatar-edit");
+            var coverEdit = document.querySelector(".js-cover-edit");
+            var modal = document.getElementById("profile-photo-modal");
+            var closeButton = document.querySelector(".js-photo-modal-close");
+            var chooseButton = document.querySelector(".js-photo-pick");
+            var saveButton = document.querySelector(".js-photo-save");
+            var canvas = document.getElementById("avatar-crop-canvas");
+            var zoomInput = document.getElementById("avatar-zoom");
+            var ctx = canvas ? canvas.getContext("2d") : null;
+            var currentPhotoUrl = "{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url|escapejs }}{% endif %}";
+            var image = null;
+            var imageName = "profile-photo.jpg";
+            var offsetX = 0;
+            var offsetY = 0;
+            var dragging = false;
+            var lastX = 0;
+            var lastY = 0;
+
+            function openModal() {
+                if (!modal) return;
+                modal.classList.add("open");
+                modal.setAttribute("aria-hidden", "false");
+                if (!image) drawEmptyCrop();
+            }
+
+            function closeModal() {
+                if (!modal) return;
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+            }
+
+            function drawCrop() {
+                if (!ctx || !image) return;
+                var size = canvas.width;
+                var zoom = Number(zoomInput.value || 1);
+                var baseScale = Math.max(size / image.width, size / image.height);
+                var scale = baseScale * zoom;
+                var drawWidth = image.width * scale;
+                var drawHeight = image.height * scale;
+                var x = (size - drawWidth) / 2 + offsetX;
+                var y = (size - drawHeight) / 2 + offsetY;
+
+                ctx.clearRect(0, 0, size, size);
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.fillStyle = "#f8f4ed";
+                ctx.fillRect(0, 0, size, size);
+                ctx.drawImage(image, x, y, drawWidth, drawHeight);
+                ctx.restore();
+                ctx.strokeStyle = "rgba(255,255,255,0.95)";
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            function drawEmptyCrop() {
+                if (!ctx || !canvas) return;
+                var size = canvas.width;
+                ctx.clearRect(0, 0, size, size);
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.fillStyle = "#f3eadf";
+                ctx.fillRect(0, 0, size, size);
+                ctx.fillStyle = "#7a6d61";
+                ctx.font = "600 18px Arial, sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("Choose photo", size / 2, size / 2);
+                ctx.restore();
+                ctx.strokeStyle = "rgba(255,255,255,0.95)";
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            function loadAvatarUrl(url) {
+                if (!url) {
+                    openModal();
+                    return;
+                }
+                imageName = "profile-photo.jpg";
+                image = new Image();
+                image.onload = function () {
+                    offsetX = 0;
+                    offsetY = 0;
+                    if (zoomInput) zoomInput.value = "1";
+                    openModal();
+                    drawCrop();
+                };
+                image.src = url;
+            }
+
+            function loadAvatarFile(file) {
+                if (!file || !file.type || !file.type.startsWith("image/")) return;
+                imageName = file.name || imageName;
+                var reader = new FileReader();
+                reader.onload = function () {
+                    image = new Image();
+                    image.onload = function () {
+                        offsetX = 0;
+                        offsetY = 0;
+                        if (zoomInput) zoomInput.value = "1";
+                        openModal();
+                        drawCrop();
+                    };
+                    image.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (avatarEdit && avatarInput) {
+                avatarEdit.addEventListener("click", function () {
+                    if (currentPhotoUrl && !image) {
+                        loadAvatarUrl(currentPhotoUrl);
+                        return;
+                    }
+                    openModal();
+                    if (image) drawCrop();
+                });
+                avatarInput.addEventListener("change", function () {
+                    loadAvatarFile(avatarInput.files && avatarInput.files[0]);
+                });
+            }
+
+            if (coverEdit && coverInput && profileForm) {
+                coverEdit.addEventListener("click", function () {
+                    coverInput.click();
+                });
+                coverInput.addEventListener("change", function () {
+                    if (coverInput.files && coverInput.files.length) {
+                        profileForm.submit();
+                    }
+                });
+            }
+
+            if (chooseButton && avatarInput) {
+                chooseButton.addEventListener("click", function () {
+                    avatarInput.click();
+                });
+            }
+            if (closeButton) closeButton.addEventListener("click", closeModal);
+            if (modal) {
+                modal.addEventListener("click", function (event) {
+                    if (event.target === modal) closeModal();
+                });
+            }
+            if (zoomInput) zoomInput.addEventListener("input", drawCrop);
+            if (canvas) {
+                canvas.addEventListener("pointerdown", function (event) {
+                    if (!image) return;
+                    dragging = true;
+                    lastX = event.clientX;
+                    lastY = event.clientY;
+                    canvas.setPointerCapture(event.pointerId);
+                });
+                canvas.addEventListener("pointermove", function (event) {
+                    if (!dragging) return;
+                    offsetX += event.clientX - lastX;
+                    offsetY += event.clientY - lastY;
+                    lastX = event.clientX;
+                    lastY = event.clientY;
+                    drawCrop();
+                });
+                canvas.addEventListener("pointerup", function (event) {
+                    dragging = false;
+                    canvas.releasePointerCapture(event.pointerId);
+                });
+            }
+            if (saveButton && avatarInput && profileForm && canvas) {
+                saveButton.addEventListener("click", function () {
+                    if (!image) {
+                        avatarInput.click();
+                        return;
+                    }
+                    canvas.toBlob(function (blob) {
+                        if (!blob) return;
+                        var croppedFile = new File([blob], imageName.replace(/\.[^.]+$/, "") + "-avatar.jpg", { type: "image/jpeg" });
+                        var files = new DataTransfer();
+                        files.items.add(croppedFile);
+                        avatarInput.files = files.files;
+                        profileForm.submit();
+                    }, "image/jpeg", 0.92);
+                });
+            }
+        })();
+    </script>
 {% endblock %}
 

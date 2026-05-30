@@ -540,12 +540,28 @@
         .review-text {
             color: #332d27;
             font-size: 1.02rem;
+            font-style: italic;
             line-height: 1.6;
             margin: 12px 0 0;
         }
 
         .podcast-link-field[hidden] {
             display: none !important;
+        }
+
+        .composer-error {
+            background: rgba(159, 47, 47, 0.06);
+            border: 1px solid rgba(159, 47, 47, 0.16);
+            border-radius: 14px;
+            color: #9f2f2f;
+            display: grid;
+            gap: 3px;
+            margin: 0;
+            padding: 9px 12px;
+        }
+
+        .composer-error p {
+            margin: 0;
         }
 
         .external-ratings {
@@ -783,6 +799,101 @@
             list-style: none;
             margin: 0;
             padding: 0;
+        }
+
+        .profile-photo-modal {
+            align-items: center;
+            background: rgba(23, 21, 19, 0.42);
+            display: none;
+            inset: 0;
+            justify-content: center;
+            padding: 24px;
+            position: fixed;
+            z-index: 80;
+        }
+
+        .profile-photo-modal.open {
+            display: flex;
+        }
+
+        .profile-photo-dialog {
+            background: var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(33, 24, 16, 0.26);
+            display: grid;
+            gap: 18px;
+            max-width: 520px;
+            padding: 22px;
+            width: min(100%, 520px);
+        }
+
+        .profile-photo-dialog-header {
+            align-items: start;
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+        }
+
+        .profile-photo-dialog-header h2 {
+            margin: 0 0 4px;
+        }
+
+        .modal-close-button {
+            align-items: center;
+            background: transparent;
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 999px;
+            color: var(--text);
+            display: inline-flex;
+            height: 34px;
+            justify-content: center;
+            padding: 0;
+            width: 34px;
+        }
+
+        .avatar-cropper {
+            align-items: center;
+            background:
+                linear-gradient(45deg, rgba(126, 67, 30, 0.06) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(126, 67, 30, 0.06) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(126, 67, 30, 0.06) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(126, 67, 30, 0.06) 75%);
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+            background-size: 20px 20px;
+            border-radius: 22px;
+            display: flex;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .avatar-cropper canvas {
+            border-radius: 50%;
+            box-shadow: 0 18px 42px rgba(33, 24, 16, 0.22);
+            cursor: grab;
+            max-width: min(320px, 70vw);
+            touch-action: none;
+            width: 100%;
+        }
+
+        .avatar-cropper canvas:active {
+            cursor: grabbing;
+        }
+
+        .profile-photo-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .profile-photo-actions form {
+            margin: 0;
+        }
+
+        .danger-text {
+            color: #9f3c22;
         }
 
         .stat-grid {
@@ -2271,21 +2382,16 @@
 
         .discover-review-list {
             display: grid;
-            gap: 0;
+            gap: 18px;
         }
 
         .discover-review-row {
-            align-items: start;
-            border-top: 1px solid rgba(126, 67, 30, 0.1);
-            display: grid;
-            gap: 14px;
-            grid-template-columns: 72px minmax(0, 1fr) auto;
-            padding: 16px 0;
+            border-top: 0;
+            margin: 0;
         }
 
         .discover-review-row:first-child {
-            border-top: 0;
-            padding-top: 4px;
+            padding-top: 16px;
         }
 
         .discover-review-row:last-child {
@@ -2634,6 +2740,7 @@
                             return;
                         }
                         closeRecommendPanel();
+                        syncItemActionButtons(data);
                         showToast(data.message || "Recommendation sent");
                     } catch (error) {
                         showToast("Could not send recommendation");
@@ -2671,6 +2778,28 @@
                 }
             }
 
+            function syncItemActionButtons(data) {
+                if (!data || typeof data.item_id === "undefined") return;
+                var actionStates = {
+                    like: data.like_active,
+                    save: data.save_active,
+                    recommend: data.recommended_active
+                };
+                Object.keys(actionStates).forEach(function (action) {
+                    if (typeof actionStates[action] === "undefined") return;
+                    document.querySelectorAll('[data-item-action="' + action + '"][data-item-id="' + data.item_id + '"]').forEach(function (button) {
+                        updateButton(button, {
+                            active: Boolean(actionStates[action]),
+                            label: action === "like"
+                                ? (actionStates[action] ? "Liked" : "Like")
+                                : action === "save"
+                                    ? (actionStates[action] ? "Saved" : "Save")
+                                    : "Recommend"
+                        });
+                    });
+                });
+            }
+
             document.addEventListener("submit", async function (event) {
                 var form = event.target;
                 if (!(form instanceof HTMLFormElement) || !form.classList.contains("js-async-form")) return;
@@ -2687,7 +2816,12 @@
                         window.location.reload();
                         return;
                     }
-                    updateButton(button, await response.json());
+                    var data = await response.json();
+                    if (data.item_id) {
+                        syncItemActionButtons(data);
+                    } else {
+                        updateButton(button, data);
+                    }
                     showToast("Saved your action");
                 } catch (error) {
                     window.location.reload();
