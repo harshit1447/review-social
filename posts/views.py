@@ -893,7 +893,7 @@ def signup(request):
         form = SignUpForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user, backend="posts.auth_backends.EmailOrUsernameBackend")
             return redirect("feed")
     else:
         form = SignUpForm()

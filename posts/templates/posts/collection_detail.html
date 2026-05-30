@@ -12,7 +12,7 @@
         {% for row in collection.items.all %}
             <article class="card social-review-card">
                 <div class="post-item">
-                    <a class="review-poster" href="{% url 'item_reviews' row.item_id %}"><img src="{% if row.item.image_url %}{{ row.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt=""></a>
+                    <a class="review-poster {% if row.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' row.item_id %}"><img src="{% if row.item.image_url %}{{ row.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt=""></a>
                     <div>
                         <span class="badge">{{ row.item.get_item_type_display }}</span>
                         <h2 class="item-title">{{ row.item.title }}</h2>

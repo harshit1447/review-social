@@ -1177,6 +1177,11 @@ textarea {
     padding-top: 10px;
 }
 
+.item-ratings-fact {
+    border-top: 0;
+    padding-top: 0;
+}
+
 .item-facts dt {
     color: var(--muted);
     font-size: 0.78rem;

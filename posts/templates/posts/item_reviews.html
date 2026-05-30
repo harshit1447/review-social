@@ -83,7 +83,7 @@
                     </div>
                 </div>
             </div>
-            <div class="item-hero-poster">
+            <div class="item-hero-poster {% if item.item_type == 'podcast' %}podcast-poster{% endif %}">
                 <img src="{% if item.image_url %}{{ item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
             </div>
         </section>

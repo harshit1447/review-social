@@ -147,6 +147,12 @@
             font-weight: 800;
         }
 
+        .optional-label {
+            color: #7a736c;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
         input[type="text"],
         input[type="email"],
         input[type="password"],
@@ -290,7 +296,7 @@
                     <div class="divider">OR</div>
                 {% endif %}
 
-                <form method="post" enctype="multipart/form-data">
+                <form method="post">
                     {% csrf_token %}
                     {{ form.non_field_errors }}
                     <div class="field">
@@ -307,16 +313,6 @@
                         <label for="{{ form.email.id_for_label }}">Email</label>
                         {{ form.email }}
                         {{ form.email.errors }}
-                    </div>
-                    <div class="field">
-                        <label for="{{ form.profile_photo.id_for_label }}">Profile photo</label>
-                        {{ form.profile_photo }}
-                        {{ form.profile_photo.errors }}
-                    </div>
-                    <div class="field">
-                        <label for="{{ form.cover_image.id_for_label }}">Background photo</label>
-                        {{ form.cover_image }}
-                        {{ form.cover_image.errors }}
                     </div>
                     <div class="field">
                         <label for="{{ form.password1.id_for_label }}">Password</label>

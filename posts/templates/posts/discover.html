@@ -53,7 +53,7 @@
                                 <span class="rating">{{ review.rating }}/5</span>
                             </header>
                             <div class="post-item">
-                                <a class="review-poster" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                                <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
                                     <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
                                 </a>
                                 <div class="review-copy">

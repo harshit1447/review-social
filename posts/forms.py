@@ -8,16 +8,6 @@ from .models import Collection, Comment, Item, Profile, Recommendation, Review
 class SignUpForm(UserCreationForm):
     first_name = forms.CharField(label="Name", max_length=150)
     email = forms.EmailField(label="Email")
-    profile_photo = forms.FileField(
-        label="Profile photo",
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
-    )
-    cover_image = forms.FileField(
-        label="Background photo",
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
-    )
 
     class Meta:
         model = User
@@ -35,15 +25,7 @@ class SignUpForm(UserCreationForm):
         user.email = self.cleaned_data["email"].strip().lower()
         if commit:
             user.save()
-            profile, _ = Profile.objects.get_or_create(user=user)
-            profile_photo = self.cleaned_data.get("profile_photo")
-            cover_image = self.cleaned_data.get("cover_image")
-            if profile_photo:
-                profile.profile_photo = profile_photo
-            if cover_image:
-                profile.cover_image = cover_image
-            if profile_photo or cover_image:
-                profile.save()
+            Profile.objects.get_or_create(user=user)
         return user
 
 

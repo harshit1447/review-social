@@ -40,6 +40,24 @@ class SocialReviewTests(TestCase):
         self.assertContains(response, "An account with this email already exists.")
         self.assertFalse(User.objects.filter(username="anotheralex").exists())
 
+    def test_signup_works_without_profile_or_cover_photo(self):
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "first_name": "Photo Optional",
+                "email": "photo-optional@example.com",
+                "username": "photooptional",
+                "password1": "ComplexPass123!",
+                "password2": "ComplexPass123!",
+            },
+        )
+
+        self.assertRedirects(response, reverse("feed"))
+        user = User.objects.get(username="photooptional")
+        self.assertEqual(user.email, "photo-optional@example.com")
+        self.assertFalse(user.profile.profile_photo)
+        self.assertFalse(user.profile.cover_image)
+
     def test_friends_filter_only_shows_friend_reviews(self):
         Friendship.objects.create(from_user=self.alex, to_user=self.sam)
         Review.objects.create(

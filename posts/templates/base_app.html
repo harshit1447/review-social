@@ -88,6 +88,7 @@
             font-weight: 900;
             height: 42px;
             justify-content: center;
+            overflow: hidden;
             text-transform: uppercase;
             width: 42px;
         }
@@ -96,9 +97,11 @@
         .post-avatar img,
         .profile-avatar img,
         .mini-avatar img {
+            border-radius: inherit;
             display: block;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             width: 100%;
         }
 
@@ -514,6 +517,22 @@
             display: block;
             height: 100%;
             object-fit: cover;
+            width: 100%;
+        }
+
+        .podcast-poster {
+            align-items: center;
+            background:
+                linear-gradient(145deg, rgba(179, 106, 50, 0.14), rgba(23, 21, 19, 0.1)),
+                #f8f1e8;
+            display: flex;
+            justify-content: center;
+        }
+
+        .podcast-poster img {
+            height: auto;
+            max-height: 100%;
+            object-fit: contain !important;
             width: 100%;
         }
 
@@ -1328,6 +1347,7 @@
             font-weight: 950;
             height: 36px;
             justify-content: center;
+            overflow: hidden;
             width: 36px;
         }
 
@@ -2085,7 +2105,9 @@
         }
 
         .item-detail-page .item-ratings-fact {
+            border-top: 0;
             min-width: 0;
+            padding-top: 0;
         }
 
         .item-detail-page .item-facts dt {
