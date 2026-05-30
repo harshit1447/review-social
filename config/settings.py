@@ -31,17 +31,39 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
-    if host.strip()
+DEFAULT_ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'revue.social',
+    'www.revue.social',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
-    if origin.strip()
+ALLOWED_HOSTS = list(
+    dict.fromkeys(
+        DEFAULT_ALLOWED_HOSTS
+        + [
+            host.strip()
+            for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+            if host.strip()
+        ]
+    )
+)
+
+DEFAULT_CSRF_TRUSTED_ORIGINS = [
+    'https://revue.social',
+    'https://www.revue.social',
 ]
+
+CSRF_TRUSTED_ORIGINS = list(
+    dict.fromkeys(
+        DEFAULT_CSRF_TRUSTED_ORIGINS
+        + [
+            origin.strip()
+            for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+            if origin.strip()
+        ]
+    )
+)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', str(not DEBUG)) == 'True'
