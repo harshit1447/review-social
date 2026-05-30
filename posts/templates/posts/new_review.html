@@ -28,7 +28,7 @@
                     {{ form.selected_item_external_source }}
                     {{ form.selected_item_external_id }}
                     <p id="item-suggestion-message" class="meta" style="display:none; margin:6px 0;"></p>
-                    <div id="item-suggestions" class="card" style="display:none; margin-top:8px; padding:8px;"></div>
+                    <div id="item-suggestions" class="item-suggestions" hidden></div>
                     {% if form.non_field_errors %}
                         <ul class="errorlist">
                             {% for error in form.non_field_errors %}
@@ -85,7 +85,7 @@
             }
 
             function hideList() {
-                list.style.display = "none";
+                list.hidden = true;
                 list.innerHTML = "";
             }
 
@@ -133,27 +133,24 @@
                 items.forEach(function (item) {
                     var button = document.createElement("button");
                     button.type = "button";
-                    button.className = "button secondary";
-                    button.style.width = "100%";
-                    button.style.justifyContent = "flex-start";
-                    button.style.marginBottom = "6px";
-                    button.style.gap = "10px";
+                    button.className = "suggestion-button";
 
                     var image = document.createElement("img");
                     image.alt = "";
-                    image.style.width = "38px";
-                    image.style.height = "54px";
-                    image.style.objectFit = "cover";
-                    image.style.borderRadius = "6px";
-                    image.style.flex = "0 0 auto";
                     image.src = item.image_url || "/static/posts/images/revue-layouts.png";
                     button.appendChild(image);
 
                     var creator = item.creator || (item.item_type === "book" ? "Unknown writer" : "Unknown director");
                     var year = item.year || "Unknown year";
-                    var text = document.createElement("span");
-                    text.textContent = item.title + " | " + item.item_type + " | " + year + " | " + creator;
-                    button.appendChild(text);
+                    var copy = document.createElement("span");
+                    var title = document.createElement("strong");
+                    var meta = document.createElement("small");
+                    copy.className = "suggestion-copy";
+                    title.textContent = item.title;
+                    meta.textContent = item.item_type + " · " + year + " · " + creator;
+                    copy.appendChild(title);
+                    copy.appendChild(meta);
+                    button.appendChild(copy);
 
                     button.addEventListener("click", function () {
                         titleInput.value = item.title;
@@ -168,7 +165,7 @@
                     });
                     list.appendChild(button);
                 });
-                list.style.display = "block";
+                list.hidden = false;
             }
 
             async function fetchSuggestions() {

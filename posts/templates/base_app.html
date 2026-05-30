@@ -1735,6 +1735,14 @@
             grid-template-columns: 118px minmax(0, 1fr) 94px;
         }
 
+        .composer-grid label {
+            position: relative;
+        }
+
+        .inline-review-form {
+            position: relative;
+        }
+
         .suggestion-message {
             display: none;
             margin: 0;
@@ -1743,13 +1751,31 @@
         .item-suggestions {
             background: rgba(255, 253, 249, 0.98);
             border: 1px solid rgba(126, 67, 30, 0.16);
-            border-radius: 16px;
-            box-shadow: 0 16px 42px rgba(77, 49, 27, 0.12);
+            border-radius: 18px;
+            box-shadow: 0 18px 46px rgba(77, 49, 27, 0.14);
             display: grid;
-            gap: 6px;
-            max-height: 310px;
+            gap: 4px;
+            margin-top: -2px;
+            max-height: 280px;
             overflow: auto;
-            padding: 8px;
+            padding: 10px;
+            scrollbar-color: rgba(126, 67, 30, 0.34) transparent;
+            scrollbar-width: thin;
+            width: 100%;
+            z-index: 15;
+        }
+
+        .item-suggestions::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .item-suggestions::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .item-suggestions::-webkit-scrollbar-thumb {
+            background: rgba(126, 67, 30, 0.28);
+            border-radius: 999px;
         }
 
         .item-suggestions[hidden] {
@@ -1764,28 +1790,33 @@
             color: var(--text);
             cursor: pointer;
             display: grid;
-            gap: 10px;
-            grid-template-columns: 42px minmax(0, 1fr);
-            min-height: 58px;
-            padding: 6px;
+            gap: 12px;
+            grid-template-columns: 56px minmax(0, 1fr);
+            min-height: 72px;
+            padding: 8px;
             text-align: left;
+            transition: background 0.15s ease, transform 0.15s ease;
             width: 100%;
         }
 
         .suggestion-button:hover {
             background: var(--accent-soft);
+            transform: translateY(-1px);
         }
 
         .suggestion-button img {
             aspect-ratio: 2 / 3;
             border-radius: 8px;
+            background: #eee3d8;
+            height: 56px;
             object-fit: cover;
-            width: 42px;
+            width: 56px;
         }
 
         .suggestion-copy {
             display: grid;
-            gap: 2px;
+            gap: 4px;
+            justify-content: center;
             min-width: 0;
         }
 
@@ -1795,9 +1826,16 @@
             overflow-wrap: anywhere;
         }
 
+        .suggestion-copy strong {
+            font-size: 0.92rem;
+            line-height: 1.18;
+        }
+
         .suggestion-copy small {
             color: var(--muted);
-            font-weight: 750;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.25;
         }
 
         .feed-quick-filters {
@@ -2494,33 +2532,44 @@
             align-items: center;
             background: transparent;
             border: 0;
-            border-radius: 999px;
-            color: #3a3129;
+            color: #8a8178;
             cursor: pointer;
             display: inline-flex;
-            font-size: 0.9rem;
-            gap: 3px;
-            height: 28px;
+            font-size: 0.82rem;
+            gap: 2px;
+            height: 20px;
             justify-content: center;
-            min-width: 28px;
-            padding: 0 6px;
-            transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+            min-width: 20px;
+            padding: 0 2px;
+            transition: color 0.16s ease, transform 0.16s ease;
         }
 
         .comment-icon-button:hover {
-            background: rgba(179, 106, 50, 0.1);
-            color: var(--accent-dark);
+            color: #4c4640;
             transform: translateY(-1px);
+        }
+
+        .comment-icon-button.active {
+            color: #3d3935;
+        }
+
+        .comment-icon-button.active .comment-heart {
+            color: #3d3935;
+        }
+
+        .comment-heart {
+            font-size: 0.92rem;
+            line-height: 1;
         }
 
         .comment-icon-button svg {
             fill: none;
-            height: 15px;
+            height: 14px;
             stroke: currentColor;
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-width: 2;
-            width: 15px;
+            width: 14px;
         }
 
         .comment-icon-button.danger:hover {
@@ -2528,8 +2577,8 @@
         }
 
         .comment-action-count {
-            font-size: 0.76rem;
-            font-weight: 650;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
         .reply-form .button {
@@ -3233,6 +3282,16 @@
 
             function updateButton(button, data) {
                 if (!button || !data) return;
+                if (button.hasAttribute("data-comment-like-button")) {
+                    button.classList.toggle("active", Boolean(data.active));
+                    button.setAttribute("aria-label", data.active ? "Unlike comment" : "Like comment");
+                    button.setAttribute("title", data.active ? "Unlike comment" : "Like comment");
+                    var heart = button.querySelector(".comment-heart");
+                    if (heart) heart.textContent = data.active ? "♥" : "♡";
+                    var commentCount = button.querySelector(".comment-action-count");
+                    if (commentCount && typeof data.count !== "undefined") commentCount.textContent = data.count;
+                    return;
+                }
                 if (button.hasAttribute("data-icon-button")) {
                     button.classList.toggle("active", Boolean(data.active));
                     if (button.hasAttribute("data-like-action")) {
@@ -3303,7 +3362,9 @@
                     } else {
                         updateButton(button, data);
                     }
-                    showToast("Saved your action");
+                    if (!button || !button.hasAttribute("data-comment-like-button")) {
+                        showToast("Saved your action");
+                    }
                 } catch (error) {
                     window.location.reload();
                 } finally {

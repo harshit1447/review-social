@@ -167,8 +167,8 @@
                             <div class="comment-actions" aria-label="Comment actions">
                                 <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
                                     {% csrf_token %}
-                                    <button type="submit" class="comment-icon-button" data-plain-button="1" aria-label="Like comment">
-                                        <span aria-hidden="true">♡</span>
+                                    <button type="submit" class="comment-icon-button comment-like-button {% if user in comment.likes.all %}active{% endif %}" data-comment-like-button="1" aria-label="Like comment">
+                                        <span class="comment-heart" aria-hidden="true">♡</span>
                                         <span class="comment-action-count">{{ comment.likes.count }}</span>
                                     </button>
                                 </form>
