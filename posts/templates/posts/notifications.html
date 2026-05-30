@@ -28,7 +28,7 @@
                     </a>
                     <div>
                         <strong>{{ notification.message }}</strong>
-                        <p class="meta">{{ notification.created_at|timesince }} ago{% if not notification.is_read %} - unread{% endif %}</p>
+                        <p class="meta">posted on {{ notification.created_at|date:"j F Y"|lower }}{% if not notification.is_read %} - unread{% endif %}</p>
                     </div>
                 </article>
             {% empty %}
@@ -50,7 +50,7 @@
                     <div>
                         <strong>{{ activity.message }}</strong>
                         <p class="meta">
-                            {{ activity.created_at|timesince }} ago
+                            posted on {{ activity.created_at|date:"j F Y"|lower }}
                             {% if activity.review %} &middot; {{ activity.review.item.get_item_type_display }}{% endif %}
                         </p>
                         {% if activity.review %}

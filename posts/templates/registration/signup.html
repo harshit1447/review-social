@@ -245,6 +245,69 @@
             font-weight: 800;
         }
 
+        /* Global density pass: match the tighter 80% zoom feel. */
+        body {
+            font-size: 13px;
+        }
+
+        .page {
+            gap: 11px;
+            padding: clamp(18px, 2.5vh, 28px) clamp(18px, 3.4vw, 44px);
+        }
+
+        .wordmark {
+            font-size: clamp(2.75rem, 5.8vw, 4.4rem);
+        }
+
+        .top-actions a {
+            min-height: 38px;
+            padding: 8px 16px;
+        }
+
+        .layout {
+            gap: clamp(20px, 2.7vw, 40px);
+            grid-template-columns: minmax(300px, 0.92fr) minmax(330px, 0.72fr);
+        }
+
+        .copy h1 {
+            font-size: clamp(3rem, 5.4vw, 4.8rem);
+        }
+
+        .lead {
+            font-size: clamp(1rem, 1.25vw, 1.28rem);
+        }
+
+        .card {
+            border-radius: 18px;
+            padding: clamp(14px, 1.45vw, 18px);
+        }
+
+        form {
+            gap: 12px;
+        }
+
+        .field {
+            gap: 5px;
+        }
+
+        .field input {
+            border-radius: 11px;
+            font-size: 0.9rem;
+            min-height: 44px;
+            padding: 8px 11px;
+        }
+
+        .google,
+        .submit {
+            border-radius: 11px;
+            min-height: 44px;
+            padding: 9px 12px;
+        }
+
+        .divider {
+            margin: 4px 0;
+        }
+
         @media (max-width: 940px) {
             .layout {
                 grid-template-columns: 1fr;

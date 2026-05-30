@@ -15,7 +15,10 @@
         {% for collection in collections %}
             <article class="recommendation-card">
                 <small>{% if collection.is_public %}Public{% else %}Private{% endif %}</small>
-                <h2 class="card-title"><a href="{% url 'collection_detail' collection.id %}">{{ collection.title }}</a></h2>
+                <div class="collection-title-row">
+                    <h2 class="card-title"><a href="{% url 'collection_detail' collection.id %}">{{ collection.title }}</a></h2>
+                    <a class="collection-add-button" href="{% url 'collection_detail' collection.id %}#add-item" aria-label="Add item to {{ collection.title }}">+</a>
+                </div>
                 <p class="meta">{{ collection.description|default:"No description yet." }}</p>
                 <strong>{{ collection.items.count }} item{{ collection.items.count|pluralize }}</strong>
             </article>

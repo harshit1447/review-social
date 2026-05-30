@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=linkedin-font-1">
     <style>
         :root {
+            --app-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
             --bg: #f6efe6;
             --bg-strong: #ead8c4;
             --surface: rgba(255, 253, 249, 0.92);
@@ -35,7 +36,7 @@
                 radial-gradient(circle at 86% 4%, rgba(179, 106, 50, 0.12), transparent 28%),
                 linear-gradient(135deg, #fbf6ee 0%, #ead8c4 100%);
             color: var(--text);
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
+            font-family: var(--app-font);
             font-size: 14px;
             line-height: 1.5;
         }
@@ -1956,7 +1957,7 @@
         select,
         textarea,
         button {
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
+            font-family: var(--app-font);
         }
 
         strong,
@@ -2026,6 +2027,39 @@
             border-radius: 18px;
         }
 
+        .profile-page .profile-hero {
+            border-radius: 22px;
+        }
+
+        .profile-page .profile-cover {
+            height: 92px;
+        }
+
+        .profile-page .profile-info {
+            gap: 14px;
+            padding: 16px 20px 20px;
+        }
+
+        .profile-page .profile-avatar {
+            border-width: 4px;
+            font-size: 1.45rem;
+            height: 72px;
+            width: 72px;
+        }
+
+        .profile-page .profile-info h1 {
+            font-size: clamp(1.75rem, 2.6vw, 2.45rem);
+            line-height: 1.06;
+        }
+
+        .profile-page .profile-copy .meta {
+            margin-top: 4px;
+        }
+
+        .profile-page .profile-hero .page-subtitle {
+            max-width: 680px;
+        }
+
         .profile-hero .page-subtitle {
             font-size: 0.95rem;
             margin-top: 6px;
@@ -2034,6 +2068,145 @@
         .profile-info .button {
             min-height: 38px;
             padding: 8px 14px;
+        }
+
+        .profile-detail-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+            margin-top: 18px;
+        }
+
+        .profile-main-column,
+        .profile-side-column,
+        .profile-review-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .profile-side-column {
+            align-self: start;
+            position: sticky;
+            top: 22px;
+        }
+
+        .profile-compact-card {
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .profile-review-row {
+            border-top: 1px solid rgba(126, 67, 30, 0.12);
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 82px minmax(0, 1fr);
+            padding-top: 14px;
+        }
+
+        .profile-review-row:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .profile-review-poster {
+            background: linear-gradient(145deg, rgba(179, 106, 50, 0.12), rgba(23, 21, 19, 0.08));
+            border-radius: 12px;
+            display: block;
+            height: 118px;
+            overflow: hidden;
+            width: 82px;
+        }
+
+        .profile-review-poster img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .profile-review-topline {
+            align-items: start;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .profile-review-topline h3 {
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .profile-review-row .review-text {
+            font-size: 0.92rem;
+            margin: 8px 0 0;
+        }
+
+        .collection-title-row,
+        .collection-row {
+            align-items: start;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .collection-title-row .card-title {
+            margin: 0;
+        }
+
+        .collection-row > a:first-child {
+            min-width: 0;
+        }
+
+        .collection-add-button {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.76);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 1.1rem;
+            font-weight: 650;
+            height: 32px;
+            justify-content: center;
+            line-height: 1;
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+            width: 32px;
+        }
+
+        .collection-add-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .collection-add-panel {
+            margin-bottom: 18px;
+        }
+
+        .collection-add-form {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .collection-add-form select {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 14px;
+            color: var(--text);
+            min-height: 42px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+
+        .collection-add-form button {
+            border-radius: 999px;
+            min-height: 42px;
+            min-width: 46px;
+            padding: 0 16px;
         }
 
         .stat-grid {
@@ -2475,14 +2648,224 @@
             white-space: nowrap;
         }
 
+        /* Global density pass: tuned to feel like the app at 80% browser zoom. */
+        body {
+            font-size: 13px;
+        }
+
+        .app-shell-authenticated {
+            grid-template-columns: 226px minmax(0, 1fr);
+        }
+
+        .sidebar {
+            gap: 10px;
+            padding: 16px 12px;
+        }
+
+        .sidebar-header {
+            padding-bottom: 12px;
+        }
+
+        .sidebar-brand {
+            font-size: 2.35rem;
+        }
+
+        .sidebar-profile-card {
+            border-radius: 18px;
+            padding: 12px;
+        }
+
+        .sidebar-link,
+        .sidebar-logout {
+            border-radius: 12px;
+            min-height: 36px;
+            padding: 7px 10px;
+        }
+
+        .main-content {
+            padding: 22px clamp(16px, 3vw, 34px);
+        }
+
+        .page {
+            max-width: 1320px;
+        }
+
+        .page-header {
+            margin-bottom: 16px;
+        }
+
+        .page-header h1,
+        .page-header h2 {
+            font-size: clamp(2rem, 3.1vw, 3.4rem);
+            letter-spacing: -0.045em;
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+            margin-top: 7px;
+        }
+
+        .card,
+        .toolbar,
+        .form-card {
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 1.06rem;
+            margin-bottom: 10px;
+        }
+
+        .social-layout,
+        .layout-grid {
+            gap: 26px;
+            grid-template-columns: minmax(0, 1fr) 300px;
+        }
+
+        .feed-layout-tidy {
+            gap: 28px;
+            grid-template-columns: minmax(0, 1fr) 280px;
+        }
+
+        .social-center,
+        .feed-stack,
+        .right-rail,
+        .tidy-feed-stack,
+        .tidy-right-rail {
+            gap: 16px;
+        }
+
+        .form-card input,
+        .form-card select,
+        .form-card textarea,
+        .inline-review-form input,
+        .inline-review-form select,
+        .inline-review-form textarea,
+        .tidy-toolbar input {
+            border-radius: 12px;
+            font-size: 0.86rem;
+            min-height: 34px;
+            padding: 7px 10px;
+        }
+
+        .inline-review-form textarea,
+        .form-card textarea {
+            min-height: 70px;
+        }
+
+        .button,
+        .filter-link,
+        .tab,
+        .icon-button {
+            font-size: 0.9rem;
+        }
+
+        .button,
+        .filter-link,
+        .form-actions button,
+        .notification-actions button,
+        .inline-review-form button {
+            min-height: 34px;
+            padding: 7px 13px;
+        }
+
+        .composer-grid {
+            grid-template-columns: 112px minmax(0, 1fr) 88px;
+        }
+
+        .social-review-card,
+        .review-card,
+        .tidy-review-card {
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .social-review-card .post-header {
+            grid-template-columns: 40px minmax(0, 1fr) auto !important;
+        }
+
+        .avatar,
+        .post-avatar {
+            height: 38px;
+            width: 38px;
+        }
+
+        .social-review-card .post-item {
+            gap: 14px;
+            grid-template-columns: 104px minmax(0, 1fr) !important;
+        }
+
+        .social-review-card .review-poster,
+        .review-poster {
+            border-radius: 14px;
+            height: 150px !important;
+            min-height: 150px !important;
+            width: 104px !important;
+        }
+
+        .item-title {
+            font-size: 1.12rem;
+        }
+
+        .review-text {
+            font-size: 0.93rem;
+        }
+
+        .external-ratings span,
+        .rating,
+        .badge {
+            font-size: 0.78rem;
+            padding: 5px 9px;
+        }
+
+        .stat-grid {
+            gap: 12px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .profile-cover {
+            height: 84px;
+        }
+
+        .profile-info {
+            padding: 14px 18px 18px;
+        }
+
+        .profile-page .profile-avatar {
+            height: 66px;
+            width: 66px;
+        }
+
+        .profile-detail-grid {
+            gap: 16px;
+        }
+
+        .profile-compact-card {
+            padding: 16px;
+        }
+
+        .right-rail {
+            top: 22px;
+        }
+
         @media (max-width: 1080px) {
             .social-layout,
             .layout-grid,
-            .notification-grid {
+            .notification-grid,
+            .profile-detail-grid {
                 grid-template-columns: 1fr;
             }
 
             .right-rail {
+                position: static;
+            }
+
+            .profile-side-column {
                 position: static;
             }
         }

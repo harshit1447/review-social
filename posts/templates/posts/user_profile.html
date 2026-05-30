@@ -3,7 +3,7 @@
 {% block title %}{{ viewed_user.get_full_name|default:viewed_user.username }} | Revue{% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page profile-page public-profile-page">
     <section class="card profile-hero">
         <div class="profile-cover" {% if viewed_user.profile.cover_image %}style="background-image:url('{{ viewed_user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}></div>
         <div class="profile-info">
@@ -37,56 +37,87 @@
         <div class="stat-card"><span class="stat-value">{{ following_count }}</span><span class="meta">Following</span></div>
         <div class="stat-card"><span class="stat-value">{{ likes_received }}</span><span class="meta">Likes received</span></div>
     </section>
-    <section class="card">
-        <h2 class="card-title">Mutual followers</h2>
-        <p class="meta">{{ mutual_count }} mutual connection{{ mutual_count|pluralize }}</p>
-    </section>
-    <section class="feed-stack">
-        {% for review in reviews %}
-            <article class="card social-review-card review-card tidy-review-card">
-                <header class="post-header">
-                    <a class="post-avatar profile-link" href="{% url 'user_profile' viewed_user.username %}" aria-label="{{ viewed_user.get_full_name|default:viewed_user.username }} profile">
-                        {% if viewed_user.profile.profile_photo %}
-                            <img src="{{ viewed_user.profile.profile_photo.url }}" alt="">
-                        {% else %}
-                            {{ viewed_user.get_full_name|default:viewed_user.username|first }}
-                        {% endif %}
-                    </a>
-                    <div>
-                        <div class="post-name-line">
-                            <a class="post-name profile-link" href="{% url 'user_profile' viewed_user.username %}">{{ viewed_user.get_full_name|default:viewed_user.username }}</a>
-                        </div>
-                        <div class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</div>
-                    </div>
-                    <span class="rating">{{ review.rating }}/5</span>
-                </header>
-                <div class="post-item">
-                    <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
-                        <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                    </a>
-                    <div class="review-copy">
-                        <h2 class="item-title">
-                            <a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a>
-                            <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
-                        </h2>
-                        <p class="meta">
-                            {% if review.item.release_year %}{{ review.item.release_year }}{% endif %}
-                            {% if review.item.creator_name %}{% if review.item.release_year %} &middot; {% endif %}{{ review.item.creator_name }}{% endif %}
-                        </p>
-                        <p class="review-text">{{ review.review_text }}</p>
-                        {% if review.item.imdb_rating or review.item.rotten_tomatoes_rating or review.item.book_rating %}
-                            <div class="external-ratings">
-                                {% if review.item.imdb_rating %}<span>IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
-                                {% if review.item.rotten_tomatoes_rating %}<span>RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
-                                {% if review.item.book_rating %}<span>{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}
+    <div class="profile-detail-grid">
+        <main class="profile-main-column">
+            <section class="card profile-compact-card">
+                <h2 class="card-title">Mutual followers</h2>
+                <p class="meta">{{ mutual_count }} mutual connection{{ mutual_count|pluralize }}</p>
+            </section>
+
+            <section class="card profile-compact-card">
+                <h2 class="card-title">Reviews</h2>
+                <div class="profile-review-list">
+                    {% for review in reviews %}
+                        <article class="profile-review-row">
+                            <a class="profile-review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                                <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                            </a>
+                            <div>
+                                <div class="profile-review-topline">
+                                    <h3><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h3>
+                                    <span class="rating">{{ review.rating }}/5</span>
+                                </div>
+                                <p class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</p>
+                                <p class="meta">
+                                    {{ review.item.get_item_type_display }}
+                                    {% if review.item.release_year %} &middot; {{ review.item.release_year }}{% endif %}
+                                    {% if review.item.creator_name %} &middot; {{ review.item.creator_name }}{% endif %}
+                                </p>
+                                <p class="review-text">{{ review.review_text }}</p>
                             </div>
-                        {% endif %}
+                        </article>
+                    {% empty %}
+                        <p class="empty-state">This profile has not posted reviews yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <aside class="profile-side-column">
+            <section class="card profile-compact-card">
+                <h2 class="card-title">Saved lists</h2>
+                <div class="recommendation-list">
+                    <div class="recommendation">
+                        <strong>Watchlist</strong>
+                        {% for saved in watchlist_items %}
+                            <p class="meta"><a href="{% url 'item_reviews' saved.item_id %}">{{ saved.item.title }}</a></p>
+                        {% empty %}
+                            <p class="meta">No watchlist items yet.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="recommendation">
+                        <strong>Readlist</strong>
+                        {% for saved in readlist_items %}
+                            <p class="meta"><a href="{% url 'item_reviews' saved.item_id %}">{{ saved.item.title }}</a></p>
+                        {% empty %}
+                            <p class="meta">No readlist items yet.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="recommendation">
+                        <strong>Saved reviews</strong>
+                        {% for saved in saved_reviews %}
+                            <p class="meta"><a href="{% url 'item_reviews' saved.review.item_id %}">{{ saved.review.item.title }}</a></p>
+                        {% empty %}
+                            <p class="meta">No saved reviews yet.</p>
+                        {% endfor %}
                     </div>
                 </div>
-            </article>
-        {% empty %}
-            <div class="card empty-panel"><h2>No reviews yet</h2><p>This profile has not posted reviews yet.</p></div>
-        {% endfor %}
-    </section>
+            </section>
+
+            <section class="card profile-compact-card">
+                <h2 class="card-title">Collections</h2>
+                <div class="rail-list">
+                    {% for collection in collections %}
+                        <a class="rail-item" href="{% url 'collection_detail' collection.id %}">
+                            <strong>{{ collection.title }}</strong>
+                            <div class="meta">{{ collection.items.count }} item{{ collection.items.count|pluralize }}</div>
+                        </a>
+                    {% empty %}
+                        <p class="empty-state">No public collections yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </aside>
+    </div>
 </div>
 {% endblock %}

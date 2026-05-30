@@ -8,6 +8,21 @@
         <h1>{{ collection.title }}</h1>
         <p class="page-subtitle">{{ collection.description|default:"A Revue collection." }}</p>
     </section>
+    {% if collection.user == user %}
+        <section id="add-item" class="card collection-add-panel">
+            <h2 class="card-title">Add to this collection</h2>
+            <form method="post" action="{% url 'add_existing_item_to_collection' collection.id %}" class="collection-add-form">
+                {% csrf_token %}
+                <select name="item" required>
+                    <option value="">Choose a reviewed item</option>
+                    {% for item in available_items %}
+                        <option value="{{ item.id }}">{{ item.title }}{% if item.release_year %} - {{ item.release_year }}{% endif %} · {{ item.get_item_type_display }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" aria-label="Add selected item">+</button>
+            </form>
+        </section>
+    {% endif %}
     <section class="feed-stack">
         {% for row in collection.items.all %}
             <article class="card social-review-card">

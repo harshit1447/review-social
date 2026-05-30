@@ -35,5 +35,6 @@ urlpatterns = [
     path("collections/", login_required(views.CollectionListView.as_view()), name="collections"),
     path("collections/new/", login_required(views.CollectionCreateView.as_view()), name="collection_create"),
     path("collections/<int:pk>/", login_required(views.CollectionDetailView.as_view()), name="collection_detail"),
+    path("collections/<int:collection_id>/items/add/", views.add_existing_item_to_collection, name="add_existing_item_to_collection"),
     path("collections/<int:collection_id>/items/<int:item_id>/add/", views.add_item_to_collection, name="add_item_to_collection"),
 ]

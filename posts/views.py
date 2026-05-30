@@ -1314,10 +1314,6 @@ def profile(request):
     readlist_items = SavedItem.objects.filter(
         user=request.user, list_type="readlist"
     ).select_related("item").order_by("-created_at")
-    favorite_items = SavedItem.objects.filter(
-        user=request.user, list_type="favorites"
-    ).select_related("item").order_by("-created_at")
-
     return render(
         request,
         "posts/profile.html",
@@ -1331,7 +1327,6 @@ def profile(request):
             "top_types": top_types,
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
-            "favorite_items": favorite_items,
             "profile_form": form,
             "collections": Collection.objects.filter(user=request.user)[:5],
             "saved_reviews": SavedReview.objects.filter(user=request.user).select_related("review", "review__item")[:5],
@@ -1581,6 +1576,18 @@ def user_profile(request, username):
     my_following_ids = _followed_user_ids(request.user)
     mutual_count = len(follower_ids & my_following_ids)
     reviews = Review.objects.filter(user=viewed_user).select_related("item").order_by("-created_at")[:10]
+    watchlist_items = SavedItem.objects.filter(
+        user=viewed_user,
+        list_type="watchlist",
+    ).select_related("item").order_by("-created_at")[:5]
+    readlist_items = SavedItem.objects.filter(
+        user=viewed_user,
+        list_type="readlist",
+    ).select_related("item").order_by("-created_at")[:5]
+    saved_reviews = SavedReview.objects.filter(
+        user=viewed_user,
+    ).select_related("review", "review__item").order_by("-created_at")[:5]
+    collections = Collection.objects.filter(user=viewed_user, is_public=True).prefetch_related("items")[:5]
     return render(
         request,
         "posts/user_profile.html",
@@ -1598,6 +1605,10 @@ def user_profile(request, username):
             ).distinct().count(),
             "is_following": is_following,
             "mutual_count": mutual_count,
+            "watchlist_items": watchlist_items,
+            "readlist_items": readlist_items,
+            "saved_reviews": saved_reviews,
+            "collections": collections,
         },
     )
 
@@ -1673,6 +1684,11 @@ class CollectionDetailView(DetailView):
     def get_queryset(self):
         return Collection.objects.filter(Q(user=self.request.user) | Q(is_public=True))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["available_items"] = Item.objects.order_by("title")[:120]
+        return context
+
 
 @login_required
 def add_item_to_collection(request, collection_id, item_id):
@@ -1680,4 +1696,15 @@ def add_item_to_collection(request, collection_id, item_id):
     item = get_object_or_404(Item, id=item_id)
     CollectionItem.objects.get_or_create(collection=collection, item=item)
     messages.success(request, "Item added to collection.")
+    return redirect("collection_detail", pk=collection.id)
+
+
+@login_required
+def add_existing_item_to_collection(request, collection_id):
+    collection = get_object_or_404(Collection, id=collection_id, user=request.user)
+    if request.method == "POST":
+        item_id = request.POST.get("item")
+        item = get_object_or_404(Item, id=item_id)
+        CollectionItem.objects.get_or_create(collection=collection, item=item)
+        messages.success(request, "Item added to collection.")
     return redirect("collection_detail", pk=collection.id)

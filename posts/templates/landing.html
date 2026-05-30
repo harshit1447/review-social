@@ -263,6 +263,66 @@
             margin-bottom: 6px;
         }
 
+        /* Global density pass: match the tighter 80% zoom feel. */
+        body {
+            font-size: 13px;
+        }
+
+        .landing {
+            gap: clamp(22px, 3.8vw, 48px);
+            max-width: 1320px;
+            padding: 22px clamp(18px, 4vw, 46px) 34px;
+        }
+
+        .nav {
+            gap: 14px;
+            grid-template-columns: auto minmax(220px, 380px) auto;
+        }
+
+        .wordmark {
+            font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+        }
+
+        .nav-search {
+            min-height: 40px;
+            padding: 0 14px;
+        }
+
+        .pill {
+            min-height: 38px;
+            padding: 8px 15px;
+        }
+
+        .hero {
+            gap: clamp(22px, 3.8vw, 48px);
+        }
+
+        h1 {
+            font-size: clamp(2.75rem, 5.6vw, 5.5rem);
+        }
+
+        .hero-copy {
+            font-size: clamp(0.98rem, 1.45vw, 1.18rem);
+        }
+
+        .mock-card,
+        .feature {
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .review-mock {
+            grid-template-columns: 64px minmax(0, 1fr);
+        }
+
+        .poster {
+            border-radius: 12px;
+        }
+
+        .feature-strip {
+            gap: 12px;
+        }
+
         @media (max-width: 920px) {
             .nav,
             .hero,
@@ -354,7 +414,7 @@
 
         <section class="feature-strip" aria-label="Revue features">
             <article class="feature"><strong>Follow your circle</strong><span class="muted">See reviews from people whose taste you already understand.</span></article>
-            <article class="feature"><strong>Save what matters</strong><span class="muted">Build watchlists, readlists, favorites, and recommendations.</span></article>
+            <article class="feature"><strong>Save what matters</strong><span class="muted">Build watchlists, readlists, saved reviews, and collections.</span></article>
             <article class="feature"><strong>Find better picks</strong><span class="muted">Search across reviews, people, categories, and items.</span></article>
         </section>
     </main>

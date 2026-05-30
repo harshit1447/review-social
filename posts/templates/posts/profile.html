@@ -3,7 +3,7 @@
 {% block title %}Profile | Revue{% endblock %}
 
 {% block content %}
-    <div class="page">
+    <div class="page profile-page">
         <section class="card profile-hero">
             <div class="profile-cover" {% if user.profile.cover_image %}style="background-image:url('{{ user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}>
                 <button class="image-edit-trigger cover-edit-trigger js-cover-edit" type="button" title="Change cover image" aria-label="Change cover image">
@@ -66,7 +66,6 @@
                 <section class="card">
                     <div class="tabs" aria-label="Profile tabs">
                         <a class="tab active" href="#reviews">Reviews</a>
-                        <a class="tab" href="#recommendations">Recommendations</a>
                         <a class="tab" href="#saved">Saved</a>
                         <a class="tab" href="#lists">Lists</a>
                     </div>
@@ -204,30 +203,6 @@
                                 <p class="meta">No readlist items yet.</p>
                             {% endfor %}
                         </div>
-                        <div class="recommendation">
-                            <strong>Favorites</strong>
-                            {% for saved in favorite_items|slice:":3" %}
-                                <p class="meta">{{ saved.item.title }}</p>
-                            {% empty %}
-                                <p class="meta">No favorites yet.</p>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </section>
-
-                <section id="recommendations" class="card">
-                    <h2 class="card-title">Recommendations</h2>
-                    <div class="recommendation-grid" style="grid-template-columns: 1fr;">
-                        <article class="recommendation-card">
-                            <small>Because you liked</small>
-                            <strong>Character-first stories</strong>
-                            <p class="meta">Personalized suggestions will live here as the backend matures.</p>
-                        </article>
-                        <article class="recommendation-card">
-                            <small>Friends recommend</small>
-                            <strong>Weekly picks</strong>
-                            <p class="meta">Shows recommendations sent by people you follow.</p>
-                        </article>
                     </div>
                 </section>
 
@@ -238,7 +213,10 @@
                     </div>
                     <div class="rail-list">
                         {% for collection in collections %}
-                            <a class="rail-item" href="{% url 'collection_detail' collection.id %}"><strong>{{ collection.title }}</strong><div class="meta">{{ collection.items.count }} item{{ collection.items.count|pluralize }}</div></a>
+                            <div class="rail-item collection-row">
+                                <a href="{% url 'collection_detail' collection.id %}"><strong>{{ collection.title }}</strong><div class="meta">{{ collection.items.count }} item{{ collection.items.count|pluralize }}</div></a>
+                                <a class="collection-add-button" href="{% url 'collection_detail' collection.id %}#add-item" aria-label="Add item to {{ collection.title }}">+</a>
+                            </div>
                         {% empty %}
                             <div class="rail-item"><strong>Top 10 Sci-Fi Movies</strong><div class="meta">Placeholder collection</div></div>
                             <div class="rail-item"><strong>Best Books of 2025</strong><div class="meta">Reading list</div></div>
