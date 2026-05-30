@@ -2467,22 +2467,71 @@
             margin: 2px 0 0;
         }
 
+        .comment-body-row {
+            align-items: center;
+            display: flex;
+            gap: 10px;
+            margin: 4px 0 0 44px;
+        }
+
         .comment-body {
             color: #2d2823;
+            flex: 0 1 auto;
             font-size: 0.92rem;
             line-height: 1.45;
-            margin: 4px 0 0 44px;
+            margin: 0;
         }
 
         .comment-actions {
             align-items: center;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-left: 44px;
+            gap: 6px;
+            margin-left: 0;
         }
 
-        .comment-actions .button,
+        .comment-icon-button {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 999px;
+            color: #3a3129;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 0.9rem;
+            gap: 3px;
+            height: 28px;
+            justify-content: center;
+            min-width: 28px;
+            padding: 0 6px;
+            transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+        }
+
+        .comment-icon-button:hover {
+            background: rgba(179, 106, 50, 0.1);
+            color: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .comment-icon-button svg {
+            fill: none;
+            height: 15px;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2;
+            width: 15px;
+        }
+
+        .comment-icon-button.danger:hover {
+            color: #9a2f1f;
+        }
+
+        .comment-action-count {
+            font-size: 0.76rem;
+            font-weight: 650;
+        }
+
         .reply-form .button {
             min-height: 34px;
             padding: 7px 12px;
@@ -2649,6 +2698,33 @@
         }
 
         /* Global density pass: tuned to feel like the app at 80% browser zoom. */
+        :root {
+            --app-zoom-scale: 0.8;
+            --app-zoom-size: 125%;
+        }
+
+        @media (min-width: 821px) {
+            .app-shell-authenticated {
+                height: 125vh;
+                width: 125vw;
+                zoom: var(--app-zoom-scale);
+            }
+
+            .sidebar,
+            .main-content {
+                height: 125vh;
+            }
+
+            @supports not (zoom: 1) {
+                .app-shell-authenticated {
+                    height: 125vh;
+                    transform: scale(var(--app-zoom-scale));
+                    transform-origin: top left;
+                    width: 125vw;
+                }
+            }
+        }
+
         body {
             font-size: 13px;
         }
@@ -2687,7 +2763,7 @@
         }
 
         .page {
-            max-width: 1320px;
+            max-width: 1650px;
         }
 
         .page-header {

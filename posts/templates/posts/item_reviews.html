@@ -162,18 +162,31 @@
                                 <p class="meta">on {{ comment.review.item.title }}</p>
                             </div>
                         </header>
-                        <p class="comment-body">{{ comment.body }}</p>
-                        <div class="comment-actions">
-                            <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
-                                {% csrf_token %}
-                                <button type="submit" class="button secondary" data-plain-button="1">Like {{ comment.likes.count }}</button>
-                            </form>
-                            {% if comment.user == user %}
-                                <form method="post" action="{% url 'delete_comment' comment.id %}">
+                        <div class="comment-body-row">
+                            <p class="comment-body">{{ comment.body }}</p>
+                            <div class="comment-actions" aria-label="Comment actions">
+                                <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
                                     {% csrf_token %}
-                                    <button type="submit" class="button secondary">Delete</button>
+                                    <button type="submit" class="comment-icon-button" data-plain-button="1" aria-label="Like comment">
+                                        <span aria-hidden="true">♡</span>
+                                        <span class="comment-action-count">{{ comment.likes.count }}</span>
+                                    </button>
                                 </form>
-                            {% endif %}
+                                {% if comment.user == user %}
+                                    <form method="post" action="{% url 'delete_comment' comment.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="comment-icon-button danger" aria-label="Delete comment" onclick="return confirm('Delete this comment?');">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M4 7h16" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                                <path d="M6 7l1 14h10l1-14" />
+                                                <path d="M9 7V4h6v3" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </div>
                         {% for reply in comment.replies.all %}
                             <div class="reply-card">
