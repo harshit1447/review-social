@@ -575,6 +575,20 @@
             white-space: nowrap;
         }
 
+        .inline-rating-chip {
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 0.72rem;
+            font-weight: 500;
+            line-height: 1;
+            margin-left: 5px;
+            padding: 4px 7px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
         .item-title a:hover {
             color: var(--accent-dark);
         }
@@ -585,6 +599,57 @@
             font-style: italic;
             line-height: 1.6;
             margin: 12px 0 0;
+        }
+
+        .review-social-stats {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .review-social-stats form {
+            margin: 0;
+        }
+
+        .review-stat-button {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            color: var(--muted);
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 0.82rem;
+            gap: 4px;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+
+        .review-stat-button:hover,
+        .review-stat-button.active {
+            color: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .review-stat-button svg {
+            fill: none;
+            height: 14px;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+            width: 14px;
+        }
+
+        .review-stat-icon {
+            font-size: 0.96rem;
+            line-height: 1;
+        }
+
+        .review-stat-count {
+            font-size: 0.78rem;
+            font-weight: 500;
         }
 
         .podcast-link-field[hidden] {
@@ -662,6 +727,41 @@
             fill: currentColor;
             height: 17px;
             width: 17px;
+        }
+
+        .icon-button.has-count {
+            background: transparent;
+            border-color: transparent;
+            color: #312b25;
+            flex-direction: column;
+            gap: 1px;
+            min-height: 38px;
+            min-width: 34px;
+            padding: 4px 8px;
+        }
+
+        .icon-button.has-count .icon-count {
+            color: var(--muted);
+            font-size: 0.66rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .icon-button.has-count.active,
+        .icon-button.has-count:hover {
+            background: transparent;
+            border-color: transparent;
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .icon-button.has-count.active .icon-count {
+            color: var(--accent-dark);
+        }
+
+        .icon-button.has-count svg {
+            height: 16px;
+            width: 16px;
         }
 
         .rail-list,
@@ -1660,6 +1760,23 @@
             color: var(--accent-dark);
         }
 
+        .compact-actions button.icon-button,
+        .item-action-buttons button.icon-button {
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .compact-actions button.icon-button.active,
+        .compact-actions button.icon-button:hover,
+        .item-action-buttons button.icon-button.active,
+        .item-action-buttons button.icon-button:hover {
+            background: transparent;
+            border-color: transparent;
+            color: var(--accent);
+            box-shadow: none;
+        }
+
         /* Feed hard reset: overrides older static CSS still shipped for legacy pages. */
         .social-layout .toolbar {
             align-items: stretch !important;
@@ -2070,14 +2187,19 @@
 
         .compact-actions .icon-button {
             border-radius: 999px;
-            min-height: 30px;
-            min-width: 36px;
-            padding: 6px 9px;
+            min-height: 33px;
+            min-width: 40px;
+            padding: 6px 10px;
         }
 
         .compact-actions .icon-button svg {
-            height: 15px;
-            width: 15px;
+            height: 17px;
+            width: 17px;
+        }
+
+        .compact-actions .icon-button.has-count svg {
+            height: 16px;
+            width: 16px;
         }
 
         .tidy-right-rail {
@@ -3478,6 +3600,16 @@
                     if (commentCount && typeof data.count !== "undefined") commentCount.textContent = data.count;
                     return;
                 }
+                if (button.hasAttribute("data-review-like-button")) {
+                    button.classList.toggle("active", Boolean(data.active));
+                    button.setAttribute("aria-label", data.active ? "Unlike review" : "Like review");
+                    button.setAttribute("title", data.active ? "Unlike review" : "Like review");
+                    var reviewHeart = button.querySelector(".review-stat-icon");
+                    if (reviewHeart) reviewHeart.textContent = data.active ? "\u2665" : "\u2661";
+                    var reviewCount = button.querySelector(".review-stat-count");
+                    if (reviewCount && typeof data.count !== "undefined") reviewCount.textContent = data.count;
+                    return;
+                }
                 if (button.hasAttribute("data-icon-button")) {
                     button.classList.toggle("active", Boolean(data.active));
                     if (button.hasAttribute("data-like-action")) {
@@ -3520,7 +3652,8 @@
                                 ? (actionStates[action] ? "Liked" : "Like")
                                 : action === "save"
                                     ? (actionStates[action] ? "Saved" : "Save")
-                                    : "Recommend"
+                                    : "Recommend",
+                            count: action === "like" ? data.like_count : undefined
                         });
                     });
                 });

@@ -150,27 +150,37 @@
                                     <h2 class="item-title">
                                         <a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a>
                                         <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                        {% if review.item.imdb_rating %}<span class="inline-rating-chip">IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
+                                        {% if review.item.rotten_tomatoes_rating %}<span class="inline-rating-chip">RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
+                                        {% if review.item.book_rating %}<span class="inline-rating-chip">{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}
                                     </h2>
                                     <p class="meta">
                                         {% if review.item.release_year %}{{ review.item.release_year }}{% endif %}
                                         {% if review.item.creator_name %}{% if review.item.release_year %} &middot; {% endif %}{{ review.item.creator_name }}{% endif %}
                                     </p>
                                     <p class="review-text">{{ review.review_text }}</p>
+                                    <div class="review-social-stats" aria-label="Review reactions">
+                                        <form method="post" action="{% url 'toggle_like' review.id %}" class="js-async-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button type="submit" class="review-stat-button {% if review.id in review_liked_ids %}active{% endif %}" data-review-like-button="1" aria-label="Like review" title="Like review">
+                                                <span class="review-stat-icon" aria-hidden="true">{% if review.id in review_liked_ids %}♥{% else %}♡{% endif %}</span>
+                                                <span class="review-stat-count">{{ review.review_like_total|default:0 }}</span>
+                                            </button>
+                                        </form>
+                                        <a class="review-stat-button" href="{% url 'item_reviews' review.item_id %}#review-comment-{{ review.id }}" aria-label="Reply to review" title="Reply">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-5 3 1.5-5A7.5 7.5 0 1 1 21 11.5Z"/></svg>
+                                            <span class="review-stat-count">{{ review.comment_total|default:0 }}</span>
+                                        </a>
+                                    </div>
                                     <div class="review-meta-actions">
-                                        {% if review.item.imdb_rating or review.item.rotten_tomatoes_rating or review.item.book_rating %}
-                                            <div class="external-ratings">
-                                            {% if review.item.imdb_rating %}<span>IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
-                                            {% if review.item.rotten_tomatoes_rating %}<span>RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
-                                            {% if review.item.book_rating %}<span>{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}
-                                            </div>
-                                        {% endif %}
-
                                         <div class="feed-actions compact-actions" aria-label="Review actions">
                                             <form method="post" action="{% url 'toggle_saved_item' review.item_id 'favorites' %}" class="js-async-form">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                                 <input type="hidden" name="label_context" value="like">
-                                                <button type="submit" class="icon-button {% if review.item_id in favorite_item_ids %}active liked{% endif %}" data-icon-button="1" data-item-action="like" data-item-id="{{ review.item_id }}" data-like-action="1" aria-label="Like">
+                                                <button type="submit" class="icon-button item-like-button has-count {% if review.item_id in favorite_item_ids %}active liked{% endif %}" data-icon-button="1" data-item-action="like" data-item-id="{{ review.item_id }}" data-like-action="1" aria-label="Like">
+                                                    <span class="icon-count">{{ review.likes_total|default:0 }}</span>
                                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
                                                     <span class="sr-only">Like</span>
                                                 </button>

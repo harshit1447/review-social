@@ -213,7 +213,7 @@ def _wikidata_suggestions(query: str, item_type: str):
                 "search": query,
                 "language": "en",
                 "format": "json",
-                "limit": 12,
+                "limit": 50,
             }
         )
         search_payload = _json_get(f"https://www.wikidata.org/w/api.php?{search_params}")
@@ -269,8 +269,6 @@ def _wikidata_suggestions(query: str, item_type: str):
                 "source": "wikidata",
             }
         )
-        if len(results) >= 8:
-            break
     return results
 
 
@@ -282,7 +280,7 @@ def _google_books_suggestions(query: str):
             {
                 "q": query,
                 "printType": "books",
-                "maxResults": 8,
+                "maxResults": 40,
             }
         )
         payload = _json_get(f"https://www.googleapis.com/books/v1/volumes?{params}")
@@ -327,7 +325,6 @@ def _openlibrary_suggestions(query: str):
         params = urlencode(
             {
                 "q": query,
-                "limit": 8,
                 "fields": "key,title,author_name,first_publish_year,cover_i",
             }
         )
@@ -373,7 +370,7 @@ def _omdb_suggestions(query: str, item_type: str):
         return []
 
     results = []
-    for row in search_payload.get("Search", [])[:8]:
+    for row in search_payload.get("Search", []):
         imdb_id = row.get("imdbID", "")
         if not imdb_id:
             continue
@@ -421,9 +418,8 @@ def _omdb_fast_suggestions(query: str, item_type: str):
         return []
     if search_payload.get("Response") != "True":
         return []
-
     results = []
-    for row in search_payload.get("Search", [])[:8]:
+    for row in search_payload.get("Search", []):
         imdb_id = row.get("imdbID", "")
         if not imdb_id:
             continue
@@ -555,7 +551,7 @@ def suggest_items(request):
             Q(title__icontains=query),
             Q(item_type=item_type) if item_type in {"movie", "book", "series"} else Q(),
         )
-        .order_by("title")[:8]
+        .order_by("title")
         .values("id", "title", "item_type", "release_year", "creator_name", "image_url")
     )
     results = [
@@ -594,8 +590,6 @@ def suggest_items(request):
         if normalized in existing_titles:
             continue
         results.append(row)
-        if len(results) >= 12:
-            break
 
     return JsonResponse({"results": results, "error": error_message})
 
@@ -638,7 +632,9 @@ def feed(request, review_form=None):
             "item__saved_entries",
             filter=Q(item__saved_entries__list_type="favorites"),
             distinct=True,
-        )
+        ),
+        review_like_total=Count("likes", distinct=True),
+        comment_total=Count("comments", distinct=True),
     )
     if sort == "top":
         reviews = reviews.order_by("-likes_total", "-rating", "-created_at")
@@ -652,6 +648,7 @@ def feed(request, review_form=None):
     favorite_item_ids = set()
     saved_review_ids = set()
     recommended_item_ids = set()
+    review_liked_ids = set()
     if request.user.is_authenticated:
         watchlist_item_ids = set(
             SavedItem.objects.filter(
@@ -686,6 +683,12 @@ def feed(request, review_form=None):
                 item_id__in=page_reviews.values_list("item_id", flat=True),
             ).values_list("item_id", flat=True)
         )
+        review_liked_ids = set(
+            ReviewLike.objects.filter(
+                user=request.user,
+                review_id__in=page_reviews.values_list("id", flat=True),
+            ).values_list("review_id", flat=True)
+        )
     activities = Activity.objects.select_related("user", "review", "review__item", "target_user", "collection")
     followed_activities = activities.filter(user_id__in=friend_ids) if friend_ids else Activity.objects.none()
     popular_reviews = Review.objects.select_related("user", "item").annotate(
@@ -715,6 +718,7 @@ def feed(request, review_form=None):
             "favorite_item_ids": favorite_item_ids,
             "saved_review_ids": saved_review_ids,
             "recommended_item_ids": recommended_item_ids,
+            "review_liked_ids": review_liked_ids,
             "review_form": review_form or ReviewForm(),
             "activities": activities[:12],
             "followed_activities": followed_activities[:6],
@@ -1353,9 +1357,24 @@ def item_reviews(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     _enrich_item_metadata(item)
     item.refresh_from_db()
-    reviews = Review.objects.filter(item=item).select_related("user").order_by("-created_at")
+    reviews = (
+        Review.objects.filter(item=item)
+        .select_related("user")
+        .annotate(
+            review_like_total=Count("likes", distinct=True),
+            comment_total=Count("comments", distinct=True),
+        )
+        .order_by("-created_at")
+    )
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
     item_state = _item_action_state(request.user, item)
+    item_like_count = SavedItem.objects.filter(item=item, list_type="favorites").count()
+    review_liked_ids = set(
+        ReviewLike.objects.filter(
+            user=request.user,
+            review_id__in=page_obj.object_list.values_list("id", flat=True),
+        ).values_list("review_id", flat=True)
+    )
     friend_ids = _followed_user_ids(request.user)
     popular_reviews = (
         Review.objects.exclude(item=item)
@@ -1387,6 +1406,8 @@ def item_reviews(request, item_id):
             "liked_item_active": item_state["like_active"],
             "saved_item_active": item_state["save_active"],
             "recommended_item_active": item_state["recommended_active"],
+            "item_like_count": item_like_count,
+            "review_liked_ids": review_liked_ids,
             "popular_reviews": popular_reviews,
             "suggested_users": suggested_users,
         },
@@ -1399,15 +1420,13 @@ def toggle_like(request, review_id):
         return redirect("feed")
 
     review = get_object_or_404(Review, id=review_id)
-    like, created = SavedItem.objects.get_or_create(
+    like, created = ReviewLike.objects.get_or_create(
         user=request.user,
-        item=review.item,
-        list_type="favorites",
+        review=review,
     )
     if not created:
         like.delete()
-    item_state = _item_action_state(request.user, review.item)
-    active = item_state["like_active"]
+    active = created
     if created:
         _create_activity(
             request.user,
@@ -1422,18 +1441,14 @@ def toggle_like(request, review_id):
             f"{_display_name(request.user)} liked your review of {review.item.title}.",
             review=review,
         )
-    count = SavedItem.objects.filter(item=review.item, list_type="favorites").count()
+    count = review.likes.count()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse(
             {
                 "ok": True,
-                "item_id": review.item_id,
-                "action": "like",
+                "review_id": review.id,
+                "action": "review_like",
                 "active": active,
-                "like_active": item_state["like_active"],
-                "save_active": item_state["save_active"],
-                "recommended_active": item_state["recommended_active"],
-                "save_list_type": item_state["save_list_type"],
                 "label": "Unlike" if active else "Like",
                 "count": count,
             }
@@ -1468,6 +1483,7 @@ def toggle_saved_item(request, item_id, list_type):
             "favorites": favorites_labels,
         }
         on_label, off_label = list_labels[list_type]
+        count = SavedItem.objects.filter(item=item, list_type="favorites").count() if list_type == "favorites" else None
         return JsonResponse(
             {
                 "ok": True,
@@ -1480,6 +1496,7 @@ def toggle_saved_item(request, item_id, list_type):
                 "recommended_active": item_state["recommended_active"],
                 "save_list_type": item_state["save_list_type"],
                 "label": on_label if active else off_label,
+                "like_count": count,
             }
         )
 
