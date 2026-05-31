@@ -612,22 +612,31 @@
             margin: 0;
         }
 
-        .review-stat-button {
+        .review-social-stats button.review-stat-button,
+        .review-social-stats .review-stat-button {
             align-items: center;
-            background: transparent;
-            border: 0;
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
             color: var(--muted);
             cursor: pointer;
             display: inline-flex;
             font-size: 0.82rem;
             gap: 4px;
             line-height: 1;
-            padding: 0;
+            min-height: 0 !important;
+            padding: 0 !important;
             transition: color 0.15s ease, transform 0.15s ease;
         }
 
-        .review-stat-button:hover,
-        .review-stat-button.active {
+        .review-social-stats button.review-stat-button:hover,
+        .review-social-stats button.review-stat-button.active,
+        .review-social-stats .review-stat-button:hover,
+        .review-social-stats .review-stat-button.active {
+            background: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
             color: var(--accent-dark);
             transform: translateY(-1px);
         }
@@ -645,6 +654,10 @@
         .review-stat-icon {
             font-size: 0.96rem;
             line-height: 1;
+        }
+
+        .review-stat-button.active .review-stat-icon {
+            color: var(--accent);
         }
 
         .review-stat-count {
@@ -2176,7 +2189,7 @@
         }
 
         .compact-actions {
-            align-items: center;
+            align-items: flex-end;
             display: flex !important;
             gap: 8px;
             justify-content: flex-end;
@@ -2187,19 +2200,25 @@
 
         .compact-actions .icon-button {
             border-radius: 999px;
-            min-height: 33px;
-            min-width: 40px;
-            padding: 6px 10px;
+            min-height: 46px;
+            min-width: 46px;
+            padding: 7px 11px;
         }
 
         .compact-actions .icon-button svg {
-            height: 17px;
-            width: 17px;
+            height: 24px;
+            width: 24px;
+        }
+
+        .compact-actions .icon-button.has-count {
+            min-height: 46px;
+            min-width: 46px;
+            padding: 4px 10px 5px;
         }
 
         .compact-actions .icon-button.has-count svg {
-            height: 16px;
-            width: 16px;
+            height: 22px;
+            width: 22px;
         }
 
         .tidy-right-rail {
@@ -2615,18 +2634,36 @@
         .item-action-buttons {
             border-top: 0;
             grid-column: 4;
+            align-items: flex-end;
             justify-content: flex-start;
             margin-left: 0;
             padding-top: 0;
         }
 
         .item-action-buttons .icon-button {
-            min-height: 38px;
-            min-width: 42px;
+            min-height: 46px;
+            min-width: 46px;
+            padding: 7px 11px;
+        }
+
+        .item-action-buttons .icon-button svg {
+            height: 24px;
+            width: 24px;
+        }
+
+        .item-action-buttons .icon-button.has-count {
+            min-height: 46px;
+            min-width: 46px;
+            padding: 4px 10px 5px;
+        }
+
+        .item-action-buttons .icon-button.has-count svg {
+            height: 22px;
+            width: 22px;
         }
 
         .item-action-buttons .recommend-button {
-            padding-inline: 13px;
+            padding-inline: 11px;
         }
 
         .recommend-button {
