@@ -808,6 +808,7 @@
 
         let searchTimer = null;
         let latestController = null;
+        const searchCache = {};
         let toastIndex = 0;
 
         function escapeHtml(value) {
@@ -862,6 +863,11 @@
         }
 
         function searchTitles(query) {
+            const cacheKey = query.toLowerCase();
+            if (searchCache[cacheKey]) {
+                renderSuggestions(searchCache[cacheKey], query);
+                return;
+            }
             if (latestController) {
                 latestController.abort();
             }
@@ -875,7 +881,8 @@
             })
                 .then(function (response) { return response.json(); })
                 .then(function (payload) {
-                    renderSuggestions(payload.results || [], query);
+                    searchCache[cacheKey] = payload.results || [];
+                    renderSuggestions(searchCache[cacheKey], query);
                 })
                 .catch(function (error) {
                     if (error.name === "AbortError") {
@@ -905,7 +912,7 @@
             }
             searchTimer = setTimeout(function () {
                 searchTitles(query);
-            }, 180);
+            }, 70);
         });
 
         suggestions.addEventListener("click", function (event) {

@@ -106,18 +106,19 @@ def landing_suggest_items(request):
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    cache_key = f"landing_suggest:v2:{query.lower()}"
+    cache_key = f"landing_suggest:v3:{query.lower()}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse({"results": cached})
 
     results = []
     seen = set()
+    normalized_query = query.lower()
 
     existing = Item.objects.filter(
         title__icontains=query,
         item_type__in=["movie", "series"],
-    ).order_by("title").values("title", "item_type", "release_year", "creator_name", "image_url")
+    ).order_by("title").values("title", "item_type", "release_year", "creator_name", "image_url")[:14]
     for row in existing:
         title = (row.get("title") or "").strip()
         key = f"{title.lower()}:{row.get('release_year', '')}:{row.get('item_type', '')}"
@@ -134,44 +135,33 @@ def landing_suggest_items(request):
             }
         )
 
-    for item_type in ("movie", "series"):
-        external_results = _omdb_fast_suggestions(query, item_type)
-        if not external_results:
-            external_results = _wikidata_suggestions(query, item_type)
-        for row in external_results:
-            title = (row.get("title") or "").strip()
-            if not title:
-                continue
-            key = f"{title.lower()}:{row.get('year', '')}:{row.get('item_type', '')}"
-            if key in seen:
-                continue
-            seen.add(key)
-            results.append(
-                {
-                    "title": title,
-                    "item_type": row.get("item_type", item_type),
-                    "year": row.get("year", ""),
-                    "creator": row.get("creator", ""),
-                    "image_url": row.get("image_url", ""),
-                }
-            )
-
-    if not results:
-        fallback_titles = [
-            {"title": "Inception", "item_type": "movie", "year": "2010", "creator": "Christopher Nolan", "image_url": ""},
-            {"title": "Interstellar", "item_type": "movie", "year": "2014", "creator": "Christopher Nolan", "image_url": ""},
-            {"title": "The Social Network", "item_type": "movie", "year": "2010", "creator": "David Fincher", "image_url": ""},
-            {"title": "3 Idiots", "item_type": "movie", "year": "2009", "creator": "Rajkumar Hirani", "image_url": ""},
-            {"title": "Succession", "item_type": "series", "year": "2018", "creator": "Jesse Armstrong", "image_url": ""},
-            {"title": "Brooklyn Nine-Nine", "item_type": "series", "year": "2013", "creator": "Dan Goor, Michael Schur", "image_url": ""},
-            {"title": "Fool Me Once", "item_type": "series", "year": "2024", "creator": "Harlan Coben", "image_url": ""},
-            {"title": "Maamla Legal Hai", "item_type": "series", "year": "2024", "creator": "Sameer Saxena", "image_url": ""},
-        ]
-        normalized_query = query.lower()
-        results = [
-            row for row in fallback_titles
-            if normalized_query in row["title"].lower()
-        ]
+    fallback_titles = [
+        {"title": "Inception", "item_type": "movie", "year": "2010", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "Interstellar", "item_type": "movie", "year": "2014", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "The Social Network", "item_type": "movie", "year": "2010", "creator": "David Fincher", "image_url": ""},
+        {"title": "3 Idiots", "item_type": "movie", "year": "2009", "creator": "Rajkumar Hirani", "image_url": ""},
+        {"title": "Shutter Island", "item_type": "movie", "year": "2010", "creator": "Martin Scorsese", "image_url": ""},
+        {"title": "The Dark Knight", "item_type": "movie", "year": "2008", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "Dune: Part Two", "item_type": "movie", "year": "2024", "creator": "Denis Villeneuve", "image_url": ""},
+        {"title": "Parasite", "item_type": "movie", "year": "2019", "creator": "Bong Joon Ho", "image_url": ""},
+        {"title": "Succession", "item_type": "series", "year": "2018", "creator": "Jesse Armstrong", "image_url": ""},
+        {"title": "Brooklyn Nine-Nine", "item_type": "series", "year": "2013", "creator": "Dan Goor, Michael Schur", "image_url": ""},
+        {"title": "Fool Me Once", "item_type": "series", "year": "2024", "creator": "Harlan Coben", "image_url": ""},
+        {"title": "Maamla Legal Hai", "item_type": "series", "year": "2024", "creator": "Sameer Saxena", "image_url": ""},
+        {"title": "Suits", "item_type": "series", "year": "2011", "creator": "Aaron Korsh", "image_url": ""},
+        {"title": "Silo", "item_type": "series", "year": "2023", "creator": "Graham Yost", "image_url": ""},
+        {"title": "Severance", "item_type": "series", "year": "2022", "creator": "Dan Erickson", "image_url": ""},
+    ]
+    for row in fallback_titles:
+        title = row["title"]
+        compact_title = title.lower().replace(" ", "")
+        if normalized_query not in title.lower() and normalized_query not in compact_title:
+            continue
+        key = f"{title.lower()}:{row.get('year', '')}:{row.get('item_type', '')}"
+        if key in seen:
+            continue
+        seen.add(key)
+        results.append(row)
 
     cache.set(cache_key, results, 300)
     return JsonResponse({"results": results})
