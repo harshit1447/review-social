@@ -1676,6 +1676,10 @@
             padding: 9px 10px;
         }
 
+        .recommend-friend[hidden] {
+            display: none !important;
+        }
+
         .recommend-friend:hover {
             background: var(--accent-soft);
         }
@@ -2340,6 +2344,10 @@
             width: 108px;
         }
 
+        .profile-page .profile-avatar-wrap {
+            min-width: 108px;
+        }
+
         .profile-page .profile-info h1 {
             font-size: clamp(1.75rem, 2.6vw, 2.45rem);
             line-height: 1.06;
@@ -2644,9 +2652,17 @@
             border-top: 0;
             grid-column: 4;
             align-items: flex-end;
+            display: flex !important;
+            flex-wrap: nowrap;
+            gap: 10px;
             justify-content: flex-start;
             margin-left: 0;
             padding-top: 0;
+        }
+
+        .item-action-buttons form {
+            display: inline-flex;
+            margin: 0;
         }
 
         .item-action-buttons .icon-button {
@@ -2672,6 +2688,7 @@
         }
 
         .item-action-buttons .recommend-button {
+            flex: 0 0 auto;
             padding-inline: 11px;
         }
 
@@ -3259,9 +3276,11 @@
             padding: 14px 18px 18px;
         }
 
-        .profile-page .profile-avatar {
-            height: 66px;
-            width: 66px;
+        .profile-page .profile-avatar,
+        .profile-page .profile-avatar.profile-photo-view-button {
+            font-size: 2.15rem;
+            height: 108px;
+            width: 108px;
         }
 
         .profile-detail-grid {
@@ -3948,9 +3967,13 @@
 
             if (recommendSearch) {
                 recommendSearch.addEventListener("input", function () {
-                    var query = recommendSearch.value.trim().toLowerCase();
+                    var query = recommendSearch.value.trim().toLowerCase().replace(/^@/, "");
                     document.querySelectorAll(".recommend-friend").forEach(function (row) {
-                        row.hidden = query && !(row.getAttribute("data-friend-name") || "").includes(query);
+                        var haystack = [
+                            row.getAttribute("data-friend-name") || "",
+                            row.textContent || ""
+                        ].join(" ").toLowerCase().replace(/@/g, "");
+                        row.hidden = Boolean(query && !haystack.includes(query));
                     });
                 });
             }
