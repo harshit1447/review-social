@@ -3,18 +3,21 @@
 {% block title %}Friends | Revue{% endblock %}
 
 {% block content %}
-    <div class="page">
-        <section class="page-header">
-            <h1>Friends</h1>
-            <p class="page-subtitle">Find people, follow taste you trust, and keep recommendations moving.</p>
+    <div class="page friends-page">
+        <section class="page-header friends-header">
+            <div>
+                <h1>Friends</h1>
+                <p class="page-subtitle">People whose taste shapes your feed and recommendations.</p>
+            </div>
+            <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Find people</a>
         </section>
 
-        <section class="toolbar">
+        <section class="toolbar friends-toolbar">
             <form class="search-form" method="get">
                 <input type="hidden" name="tab" value="{{ active_tab }}">
                 <label for="friends-search">Search people</label>
                 <div class="search-row">
-                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search by name, username, recommendation, or title">
+                    <input id="friends-search" type="search" name="q" value="{{ query }}" placeholder="Search by name or username">
                     <button type="submit">Search</button>
                 </div>
             </form>
@@ -25,104 +28,123 @@
             </div>
         </section>
 
-        <div class="social-layout">
+        <div class="social-layout friends-layout">
             <main class="social-center">
-                <section class="card">
-                    <h2 class="card-title">Friend recommendations</h2>
-                    <div class="recommendation-list">
+                <section class="card friends-recommendations-card">
+                    <div class="section-heading">
+                        <h2>Friend recommendations</h2>
+                        <span class="rank-label">{{ recommendations|length }}</span>
+                    </div>
+                    <div class="recommendation-list compact-recommendation-list">
                         {% for recommendation in recommendations %}
                             <article class="recommendation">
-                                <p><strong><a class="profile-link" href="{% url 'user_profile' recommendation.from_user.username %}">{{ recommendation.from_user.get_full_name|default:recommendation.from_user.username }}</a></strong> recommended <strong>{{ recommendation.item.title }}</strong></p>
+                                <p>
+                                    <strong><a class="profile-link" href="{% url 'user_profile' recommendation.from_user.username %}">{{ recommendation.from_user.get_full_name|default:recommendation.from_user.username }}</a></strong>
+                                    recommended
+                                    <strong><a class="profile-link" href="{% url 'item_reviews' recommendation.item.title %}">{{ recommendation.item.title }}</a></strong>
+                                </p>
                                 {% if recommendation.message %}
                                     <p class="meta">{{ recommendation.message|truncatechars:140 }}</p>
                                 {% endif %}
                             </article>
                         {% empty %}
-                            <p class="empty-state">No recommendations from friends yet. Follow a few people or send one first.</p>
+                            <p class="empty-state">Recommendations from friends will appear here.</p>
                         {% endfor %}
                     </div>
                 </section>
 
-                <section>
-                    <div class="people-grid">
+                <section class="card people-directory-card">
+                    <div class="section-heading">
+                        <h2>
+                            {% if active_tab == "followers" %}
+                                Followers
+                            {% elif active_tab == "suggestions" %}
+                                Suggested people
+                            {% else %}
+                                Following
+                            {% endif %}
+                        </h2>
+                        <span class="rank-label">
+                            {% if active_tab == "followers" %}
+                                {{ followers|length }}
+                            {% elif active_tab == "suggestions" %}
+                                {{ suggested_users|length }}
+                            {% else %}
+                                {{ friends|length }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="people-directory">
                         {% if active_tab == "followers" %}
                             {% for person in followers %}
-                                <article class="person-card">
-                                    <div class="person-card-top">
-                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
-                                        <div>
-                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
-                                            <div class="meta">Follows your reviews</div>
-                                        </div>
+                                <article class="person-row-card">
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <div class="person-row-main">
+                                        <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                                        <span class="meta">@{{ person.username }} · follows you</span>
                                     </div>
-                                    <p class="meta">Mutual taste will appear as you both review more titles.</p>
                                     <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                                         {% csrf_token %}
                                         <button type="submit" class="button" data-plain-button="1">Follow back</button>
                                     </form>
                                 </article>
                             {% empty %}
-                                <div class="card"><p class="empty-state">No followers yet.</p></div>
+                                <p class="empty-state">No followers yet.</p>
                             {% endfor %}
                         {% elif active_tab == "suggestions" %}
                             {% for person in suggested_users %}
-                                <article class="person-card">
-                                    <div class="person-card-top">
-                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
-                                        <div>
-                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
-                                            <div class="meta">Suggested for you</div>
-                                        </div>
+                                <article class="person-row-card">
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <div class="person-row-main">
+                                        <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                                        <span class="meta">@{{ person.username }} · suggested for you</span>
                                     </div>
-                                    <p class="meta">Follow to see their reviews, lists, and recommendations in your feed.</p>
                                     <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                                         {% csrf_token %}
                                         <button type="submit" class="button" data-plain-button="1">Follow</button>
                                     </form>
                                 </article>
                             {% empty %}
-                                <div class="card"><p class="empty-state">No more suggestions match this search.</p></div>
+                                <p class="empty-state">No more suggestions match this search.</p>
                             {% endfor %}
                         {% else %}
                             {% for person in friends %}
-                                <article class="person-card">
-                                    <div class="person-card-top">
-                                        <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
-                                        <div>
-                                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
-                                            <div class="meta">Following</div>
-                                        </div>
+                                <article class="person-row-card">
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <div class="person-row-main">
+                                        <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                                        <span class="meta">@{{ person.username }} · following</span>
                                     </div>
-                                    <p class="meta">You will see this person in feed filters and recommendation flows.</p>
                                     <form method="post" action="{% url 'remove_friend' person.id %}" class="js-async-form">
                                         {% csrf_token %}
                                         <button type="submit" class="button secondary" data-plain-button="1">Unfollow</button>
                                     </form>
                                 </article>
                             {% empty %}
-                                <div class="card"><p class="empty-state">You are not following anyone yet. Try suggestions.</p></div>
+                                <p class="empty-state">You are not following anyone yet. Try suggestions.</p>
                             {% endfor %}
                         {% endif %}
                     </div>
                 </section>
             </main>
 
-            <aside class="right-rail">
+            <aside class="right-rail friends-rail">
                 <section class="card">
                     <h2 class="card-title">People to discover</h2>
-                    <div class="person-list">
-                        {% for person in suggested_users|slice:":5" %}
+                    <div class="person-list compact-person-list">
+                        {% for person in suggested_users|slice:":8" %}
                             <div class="person-row">
                                 <div class="person-name">
-                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div>
                                         <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
-                                        <div class="meta">Potential follow</div>
+                                        <div class="meta">@{{ person.username }}</div>
                                     </div>
                                 </div>
                                 <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                                     {% csrf_token %}
-                                    <button type="submit" class="button secondary" data-plain-button="1">Add</button>
+                                    <button type="submit" class="button secondary" data-plain-button="1">Follow</button>
                                 </form>
                             </div>
                         {% empty %}
@@ -133,7 +155,7 @@
 
                 <section class="card">
                     <h2 class="card-title">How it works</h2>
-                    <p class="meta">Following someone makes their reviews easier to find and lets them receive your recommendations.</p>
+                    <p class="meta">Follow people to bring their reviews into your feed and send them recommendations.</p>
                 </section>
             </aside>
         </div>

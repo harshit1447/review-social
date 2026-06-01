@@ -867,6 +867,115 @@
             gap: 12px;
         }
 
+        .friends-header {
+            align-items: end;
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+        }
+
+        .friends-toolbar {
+            align-items: end;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .friends-layout {
+            grid-template-columns: minmax(0, 1fr) 300px;
+        }
+
+        .friends-recommendations-card,
+        .people-directory-card {
+            padding: 18px;
+        }
+
+        .compact-recommendation-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .compact-recommendation-list .recommendation {
+            border-top: 1px solid rgba(126, 67, 30, 0.1);
+            padding-top: 10px;
+        }
+
+        .compact-recommendation-list .recommendation:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .people-directory {
+            display: grid;
+            gap: 10px;
+        }
+
+        .person-row-card {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.48);
+            border: 1px solid rgba(126, 67, 30, 0.11);
+            border-radius: 18px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 44px minmax(0, 1fr) auto;
+            padding: 12px;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .person-row-card:hover {
+            background: rgba(255, 255, 255, 0.76);
+            border-color: rgba(179, 106, 50, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .person-row-main {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .person-row-main strong,
+        .person-row-main .meta {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .person-row-card button.secondary,
+        .compact-person-list button.secondary {
+            background: rgba(255, 255, 255, 0.58);
+            border-color: rgba(126, 67, 30, 0.16);
+            color: var(--text);
+        }
+
+        .person-row-card button,
+        .compact-person-list button {
+            min-width: 92px;
+        }
+
+        .friends-rail .card {
+            padding: 18px;
+        }
+
+        .compact-person-list {
+            display: grid;
+            gap: 0;
+            max-height: 430px;
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-color: rgba(126, 67, 30, 0.32) transparent;
+        }
+
+        .compact-person-list .person-row {
+            border-top: 1px solid rgba(126, 67, 30, 0.1);
+            padding: 12px 0;
+        }
+
+        .compact-person-list .person-row:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
         .profile-hero {
             overflow: hidden;
             padding: 0;
