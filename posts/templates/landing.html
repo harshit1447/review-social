@@ -8,7 +8,7 @@
         :root {
             --bg: #f7f1e8;
             --surface: #fffdf9;
-            --surface-soft: rgba(255, 253, 249, 0.76);
+            --surface-soft: rgba(255, 253, 249, 0.82);
             --text: #171513;
             --muted: #6f675f;
             --line: #e3d5c5;
@@ -25,7 +25,7 @@
             margin: 0;
             min-height: 100vh;
             background:
-                radial-gradient(circle at 78% 0%, rgba(189, 111, 49, 0.19), transparent 30%),
+                radial-gradient(circle at 74% 0%, rgba(189, 111, 49, 0.18), transparent 30%),
                 linear-gradient(135deg, #fbf7f0 0%, #ecdcc9 100%);
             color: var(--text);
             font-family: var(--font);
@@ -33,20 +33,24 @@
         }
 
         a { color: inherit; text-decoration: none; }
+        button, input { font: inherit; }
 
         .landing {
             display: grid;
-            gap: 22px;
+            gap: 26px;
             margin: 0 auto;
-            max-width: 1360px;
+            max-width: 1320px;
             min-height: 100vh;
-            padding: 22px clamp(18px, 4vw, 48px) 30px;
+            padding: 22px clamp(18px, 4vw, 48px) 92px;
         }
 
         .nav {
             align-items: center;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: auto minmax(260px, 560px) auto;
+            position: relative;
+            z-index: 12;
         }
 
         .wordmark {
@@ -62,9 +66,9 @@
 
         .nav-actions,
         .hero-actions,
-        .chip-row,
-        .review-actions,
-        .item-actions {
+        .taste-row,
+        .social-row,
+        .toast-meta {
             align-items: center;
             display: flex;
             gap: 10px;
@@ -72,8 +76,11 @@
 
         .button {
             align-items: center;
+            background: rgba(255, 253, 249, 0.58);
             border: 1px solid rgba(23, 21, 19, 0.15);
             border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
             display: inline-flex;
             font-weight: 700;
             justify-content: center;
@@ -104,11 +111,115 @@
             border-color: var(--accent-dark);
         }
 
+        .search-wrap {
+            position: relative;
+        }
+
+        .landing-search {
+            align-items: center;
+            background: rgba(255, 253, 249, 0.86);
+            border: 1px solid rgba(126, 66, 30, 0.16);
+            border-radius: 999px;
+            box-shadow: 0 16px 42px rgba(73, 48, 28, 0.08);
+            display: grid;
+            gap: 10px;
+            grid-template-columns: auto minmax(0, 1fr);
+            min-height: 46px;
+            padding: 0 16px;
+        }
+
+        .landing-search span {
+            color: var(--accent-dark);
+            font-weight: 800;
+        }
+
+        .landing-search input {
+            background: transparent;
+            border: 0;
+            color: var(--text);
+            min-width: 0;
+            outline: 0;
+        }
+
+        .suggestions {
+            background: var(--surface);
+            border: 1px solid rgba(126, 66, 30, 0.16);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            display: none;
+            left: 0;
+            max-height: 380px;
+            overflow: auto;
+            padding: 10px;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            z-index: 20;
+        }
+
+        .suggestions.is-open {
+            display: grid;
+            gap: 7px;
+        }
+
+        .suggestion-row {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 14px;
+            color: var(--text);
+            cursor: pointer;
+            display: grid;
+            gap: 11px;
+            grid-template-columns: 46px minmax(0, 1fr);
+            padding: 8px;
+            text-align: left;
+            transition: background 0.16s ease, transform 0.16s ease;
+        }
+
+        .suggestion-row:hover,
+        .suggestion-row:focus-visible {
+            background: var(--accent-soft);
+            transform: translateY(-1px);
+        }
+
+        .suggestion-poster {
+            background: linear-gradient(135deg, #2a211b, #bd6f31);
+            border-radius: 10px;
+            height: 62px;
+            overflow: hidden;
+            width: 46px;
+        }
+
+        .suggestion-poster img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .suggestion-title {
+            font-weight: 800;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .suggestion-meta {
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-top: 3px;
+        }
+
+        .suggestion-empty {
+            color: var(--muted);
+            padding: 14px;
+        }
+
         .hero {
             align-items: center;
             display: grid;
-            gap: clamp(24px, 4vw, 54px);
-            grid-template-columns: minmax(290px, 0.62fr) minmax(640px, 1.38fr);
+            gap: clamp(24px, 4vw, 58px);
+            grid-template-columns: minmax(300px, 0.76fr) minmax(460px, 1.24fr);
         }
 
         .hero-copy {
@@ -126,11 +237,11 @@
         }
 
         h1 {
-            font-size: clamp(3rem, 5.8vw, 5.4rem);
+            font-size: clamp(3.1rem, 6vw, 5.7rem);
             letter-spacing: -0.07em;
             line-height: 0.93;
             margin: 0;
-            max-width: 590px;
+            max-width: 650px;
         }
 
         .subline {
@@ -138,66 +249,59 @@
             font-size: clamp(1rem, 1.45vw, 1.22rem);
             line-height: 1.42;
             margin: 0;
-            max-width: 500px;
+            max-width: 520px;
         }
 
-        .chip-row {
+        .taste-row {
             flex-wrap: wrap;
         }
 
-        .chip {
+        .taste-pill {
             background: rgba(255, 253, 249, 0.7);
             border: 1px solid rgba(126, 66, 30, 0.13);
             border-radius: 999px;
             color: #504940;
             font-weight: 650;
-            padding: 7px 11px;
+            padding: 8px 12px;
         }
 
-        .product-shell {
-            background: var(--surface-soft);
-            border: 1px solid rgba(126, 66, 30, 0.14);
-            border-radius: 30px;
-            box-shadow: var(--shadow);
+        .live-stage {
             display: grid;
             gap: 16px;
-            grid-template-columns: 164px minmax(0, 1fr) 214px;
-            min-height: 600px;
-            overflow: hidden;
-            padding: 18px;
+            grid-template-columns: 1fr 0.86fr;
         }
 
-        .sidebar {
-            border-right: 1px solid rgba(126, 66, 30, 0.13);
+        .live-card,
+        .mini-card,
+        .search-prompt {
+            background: var(--surface-soft);
+            border: 1px solid rgba(126, 66, 30, 0.14);
+            box-shadow: var(--shadow);
+        }
+
+        .live-card {
+            animation: floatCard 6s ease-in-out infinite;
+            border-radius: 30px;
             display: grid;
-            align-content: start;
             gap: 18px;
-            padding-right: 16px;
+            min-height: 430px;
+            padding: 22px;
         }
 
-        .mini-wordmark {
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 2rem;
-            font-style: italic;
-            letter-spacing: -0.055em;
-            transform: skewX(-8deg);
+        .live-card:nth-child(2) {
+            animation-delay: 1.2s;
         }
 
-        .profile-card,
-        .panel,
-        .rail-card,
-        .review-card {
-            background: var(--surface);
-            border: 1px solid rgba(126, 66, 30, 0.13);
-            box-shadow: 0 16px 44px rgba(73, 48, 28, 0.08);
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
-        .profile-card {
+        .card-head {
             align-items: center;
-            border-radius: 18px;
-            display: flex;
-            gap: 10px;
-            padding: 10px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 46px minmax(0, 1fr) auto;
         }
 
         .avatar {
@@ -208,201 +312,98 @@
             display: inline-flex;
             flex: 0 0 auto;
             font-weight: 800;
-            height: 36px;
+            height: 46px;
             justify-content: center;
-            width: 36px;
+            width: 46px;
         }
 
-        .tiny {
+        .muted {
             color: var(--muted);
-            font-size: 0.84rem;
-        }
-
-        .sidebar-nav {
-            display: grid;
-            gap: 7px;
-        }
-
-        .sidebar-nav span {
-            border-radius: 14px;
-            color: #433d36;
-            font-weight: 650;
-            padding: 9px 10px;
-        }
-
-        .sidebar-nav .active {
-            background: var(--accent-soft);
-            color: var(--accent-dark);
-        }
-
-        .main-preview,
-        .right-rail {
-            align-content: start;
-            display: grid;
-            gap: 16px;
-            min-width: 0;
-        }
-
-        .preview-header h2 {
-            font-size: clamp(1.8rem, 3vw, 2.35rem);
-            letter-spacing: -0.055em;
-            line-height: 1;
-            margin: 0 0 6px;
-        }
-
-        .panel {
-            border-radius: 22px;
-            padding: 16px;
-        }
-
-        .composer {
-            display: grid;
-            gap: 12px;
-        }
-
-        .composer-title {
-            font-size: 1.05rem;
-            font-weight: 800;
-        }
-
-        .composer-grid {
-            display: grid;
-            gap: 10px;
-            grid-template-columns: 104px minmax(0, 1fr) 86px;
-        }
-
-        .fake-field {
-            background: #fff;
-            border: 1px solid rgba(112, 103, 94, 0.22);
-            border-radius: 14px;
-            color: #504940;
-            min-height: 38px;
-            padding: 9px 12px;
-        }
-
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .filters span {
-            border: 1px solid rgba(126, 66, 30, 0.14);
-            border-radius: 999px;
-            font-weight: 700;
-            padding: 8px 13px;
-        }
-
-        .filters .active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-        }
-
-        .review-card {
-            border-radius: 24px;
-            display: grid;
-            gap: 14px;
-            padding: 18px;
-        }
-
-        .post-head {
-            align-items: center;
-            display: grid;
-            gap: 10px;
-            grid-template-columns: 40px minmax(0, 1fr) auto;
+            font-size: 0.92rem;
         }
 
         .rating {
             background: var(--accent-soft);
             border-radius: 999px;
             color: var(--accent-dark);
-            font-weight: 750;
-            padding: 6px 10px;
+            font-weight: 800;
+            padding: 7px 10px;
         }
 
-        .post-body {
+        .review-preview {
             display: grid;
-            gap: 16px;
-            grid-template-columns: 112px minmax(0, 1fr);
+            gap: 18px;
+            grid-template-columns: 132px minmax(0, 1fr);
         }
 
         .poster {
-            background:
-                linear-gradient(145deg, rgba(23, 21, 19, 0.18), rgba(189, 111, 49, 0.25)),
-                linear-gradient(135deg, #171513 0%, #3b3028 46%, #bd6f31 100%);
-            border-radius: 18px;
+            background: linear-gradient(135deg, #171513, #bd6f31);
+            border-radius: 20px;
             color: #fff;
             display: grid;
-            min-height: 162px;
+            min-height: 190px;
             place-items: end start;
-            padding: 12px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            padding: 14px;
+            font-weight: 850;
+            letter-spacing: -0.03em;
         }
 
-        .item-title {
+        .review-title {
             align-items: baseline;
             display: flex;
             flex-wrap: wrap;
             gap: 9px;
+            margin-bottom: 8px;
         }
 
-        .item-title strong {
-            font-size: 1.18rem;
-            letter-spacing: -0.025em;
-        }
-
-        .meta {
-            color: var(--muted);
-            margin-top: 4px;
+        .review-title strong {
+            font-size: 1.35rem;
+            letter-spacing: -0.035em;
         }
 
         .quote {
-            font-style: italic;
-            margin: 12px 0 0;
-        }
-
-        .review-actions {
-            color: var(--muted);
-            font-size: 0.95rem;
-            margin-top: 14px;
-        }
-
-        .item-actions {
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .item-actions span {
-            font-size: 1.42rem;
-            line-height: 1;
-        }
-
-        .rail-card {
-            border-radius: 22px;
-            padding: 16px;
-        }
-
-        .rail-card h3 {
             font-size: 1.05rem;
-            letter-spacing: -0.02em;
-            margin: 0 0 12px;
+            font-style: italic;
+            line-height: 1.45;
+            margin: 16px 0 0;
         }
 
-        .rail-list {
+        .social-row {
+            color: var(--muted);
+            margin-top: 20px;
+        }
+
+        .side-stack {
             display: grid;
-            gap: 11px;
+            gap: 16px;
         }
 
-        .rail-row {
-            border-top: 1px solid rgba(126, 66, 30, 0.11);
+        .mini-card {
+            border-radius: 24px;
+            padding: 18px;
+        }
+
+        .mini-card h2,
+        .mini-card h3 {
+            font-size: 1.08rem;
+            letter-spacing: -0.025em;
+            margin: 0 0 14px;
+        }
+
+        .trend-list,
+        .people-list {
             display: grid;
-            gap: 4px;
-            padding-top: 11px;
+            gap: 10px;
         }
 
-        .rail-row:first-child {
+        .trend-row {
+            border-top: 1px solid rgba(126, 66, 30, 0.12);
+            display: grid;
+            gap: 3px;
+            padding-top: 10px;
+        }
+
+        .trend-row:first-child {
             border-top: 0;
             padding-top: 0;
         }
@@ -410,21 +411,25 @@
         .person-row {
             align-items: center;
             display: grid;
-            gap: 8px;
-            grid-template-columns: 34px minmax(0, 1fr) auto;
+            gap: 10px;
+            grid-template-columns: 38px minmax(0, 1fr);
         }
 
         .person-row .avatar {
-            height: 34px;
-            width: 34px;
+            height: 38px;
+            width: 38px;
         }
 
-        .follow {
-            border: 1px solid rgba(126, 66, 30, 0.18);
-            border-radius: 999px;
-            font-size: 0.82rem;
-            font-weight: 750;
-            padding: 6px 10px;
+        .search-prompt {
+            border-radius: 28px;
+            display: grid;
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .search-prompt strong {
+            font-size: 1.35rem;
+            letter-spacing: -0.04em;
         }
 
         .glance {
@@ -445,6 +450,128 @@
             margin-bottom: 4px;
         }
 
+        .review-toast {
+            align-items: center;
+            background: rgba(23, 21, 19, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 22px;
+            bottom: 18px;
+            box-shadow: 0 20px 46px rgba(23, 21, 19, 0.24);
+            color: #fff;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 42px minmax(0, 1fr);
+            left: 50%;
+            max-width: min(520px, calc(100vw - 28px));
+            opacity: 0;
+            padding: 12px 14px;
+            pointer-events: none;
+            position: fixed;
+            transform: translate(-50%, 18px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            width: 520px;
+            z-index: 40;
+        }
+
+        .review-toast.is-visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .review-toast .avatar {
+            background: #fff;
+            color: #171513;
+            height: 42px;
+            width: 42px;
+        }
+
+        .review-toast strong {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .review-toast .muted {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .modal {
+            align-items: center;
+            background: rgba(23, 21, 19, 0.42);
+            display: none;
+            inset: 0;
+            justify-content: center;
+            padding: 18px;
+            position: fixed;
+            z-index: 60;
+        }
+
+        .modal.is-open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--surface);
+            border: 1px solid rgba(126, 66, 30, 0.14);
+            border-radius: 28px;
+            box-shadow: 0 28px 88px rgba(23, 21, 19, 0.26);
+            display: grid;
+            gap: 18px;
+            max-width: 470px;
+            padding: 24px;
+            position: relative;
+            text-align: center;
+            width: 100%;
+        }
+
+        .modal-close {
+            background: var(--accent-soft);
+            border: 1px solid rgba(126, 66, 30, 0.14);
+            border-radius: 50%;
+            cursor: pointer;
+            height: 38px;
+            position: absolute;
+            right: 14px;
+            top: 14px;
+            width: 38px;
+        }
+
+        .modal-poster {
+            background: linear-gradient(135deg, #171513, #bd6f31);
+            border-radius: 20px;
+            height: 174px;
+            justify-self: center;
+            overflow: hidden;
+            width: 124px;
+        }
+
+        .modal-poster img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .modal-card h2 {
+            font-size: 1.9rem;
+            letter-spacing: -0.055em;
+            line-height: 1.05;
+            margin: 0;
+        }
+
+        .modal-card p {
+            color: var(--muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
         @media (min-width: 821px) {
             .landing {
                 min-height: 125vh;
@@ -460,28 +587,30 @@
             }
         }
 
-        @media (max-width: 1100px) {
-            .hero {
+        @media (max-width: 1040px) {
+            .nav,
+            .hero,
+            .live-stage {
                 grid-template-columns: 1fr;
             }
 
-            .hero-copy {
-                max-width: 720px;
-            }
-
-            .product-shell {
-                grid-template-columns: 146px minmax(0, 1fr);
-            }
-
-            .right-rail {
-                display: none;
+            .nav-actions {
+                justify-content: flex-start;
             }
         }
 
-        @media (max-width: 720px) {
+        @media (max-width: 680px) {
             .landing {
-                gap: 20px;
-                padding: 18px 14px 26px;
+                gap: 22px;
+                padding: 18px 14px 96px;
+            }
+
+            .nav {
+                gap: 14px;
+            }
+
+            .nav-actions {
+                gap: 8px;
             }
 
             .button {
@@ -490,34 +619,16 @@
             }
 
             h1 {
-                font-size: clamp(2.8rem, 14vw, 4.1rem);
+                font-size: clamp(2.9rem, 14vw, 4.2rem);
             }
 
-            .subline {
-                font-size: 1rem;
-            }
-
-            .product-shell {
+            .live-card {
                 border-radius: 24px;
-                grid-template-columns: 1fr;
                 min-height: 0;
-                padding: 14px;
+                padding: 16px;
             }
 
-            .sidebar {
-                border-bottom: 1px solid rgba(126, 66, 30, 0.13);
-                border-right: 0;
-                grid-template-columns: auto minmax(0, 1fr);
-                padding: 0 0 12px;
-            }
-
-            .profile-card,
-            .sidebar-nav {
-                display: none;
-            }
-
-            .composer-grid,
-            .post-body,
+            .review-preview,
             .glance {
                 grid-template-columns: 1fr;
             }
@@ -532,155 +643,315 @@
     <main class="landing">
         <nav class="nav" aria-label="Primary">
             <a class="wordmark" href="{% url 'landing' %}" aria-label="Revue home">Revue</a>
+
+            <div class="search-wrap">
+                <label class="landing-search" for="landing-search-input">
+                    <span>Search</span>
+                    <input id="landing-search-input" type="search" autocomplete="off" placeholder="Find a movie or series">
+                </label>
+                <div class="suggestions" id="landing-suggestions" role="listbox" aria-label="Movie and series suggestions"></div>
+            </div>
+
             <div class="nav-actions">
                 <a class="button" href="{% url 'account_login' %}">Log in</a>
-                <a class="button primary" href="{% url 'signup' %}">Join</a>
+                <a class="button primary" href="{% url 'signup' %}">Sign up</a>
             </div>
         </nav>
 
         <section class="hero">
             <div class="hero-copy">
-                <p class="eyebrow">Reviews through people</p>
-                <h1>See what your friends recommend.</h1>
-                <p class="subline">A social feed for movies, books, shows, podcasts, and experiences worth your time.</p>
+                <p class="eyebrow">Your taste network</p>
+                <h1>Find what to watch next through people you trust.</h1>
+                <p class="subline">Search a title, follow friends, and see reviews that feel personal instead of random.</p>
                 <div class="hero-actions">
                     <a class="button primary" href="{% url 'signup' %}">Join Revue</a>
                     <a class="button" href="{% url 'account_login' %}">Log in</a>
                 </div>
-                <div class="chip-row" aria-label="Product highlights">
-                    <span class="chip">Post</span>
-                    <span class="chip">Like</span>
-                    <span class="chip">Save</span>
-                    <span class="chip">Recommend</span>
+                <div class="taste-row" aria-label="Revue actions">
+                    <span class="taste-pill">Reviews</span>
+                    <span class="taste-pill">Friends</span>
+                    <span class="taste-pill">Saved lists</span>
+                    <span class="taste-pill">Recommendations</span>
                 </div>
             </div>
 
-            <section class="product-shell" aria-label="Revue app preview">
-                <aside class="sidebar">
-                    <div class="mini-wordmark">Revue</div>
-                    <div class="profile-card">
-                        <span class="avatar">H</span>
+            <section class="live-stage" aria-label="Live Revue preview">
+                <article class="live-card" id="hero-card">
+                    <header class="card-head">
+                        <span class="avatar">M</span>
                         <div>
-                            <strong>Harshit More</strong>
-                            <div class="tiny">View profile</div>
+                            <strong>Mira Kapoor</strong>
+                            <div class="muted">posted just now</div>
+                        </div>
+                        <span class="rating">5/5</span>
+                    </header>
+                    <div class="review-preview">
+                        <div class="poster">The<br>Glass<br>Harbor</div>
+                        <div>
+                            <div class="review-title">
+                                <strong>The Glass Harbor</strong>
+                                <span class="muted">Series</span>
+                                <span class="rating">IMDb 8.3/10</span>
+                            </div>
+                            <div class="muted">A tense coastal mystery everyone in her group is talking about.</div>
+                            <p class="quote">Slow at first, then suddenly impossible to pause.</p>
+                            <div class="social-row">
+                                <span>heart 18</span>
+                                <span>comments 6</span>
+                                <span>saved by 9</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="sidebar-nav">
-                        <span class="active">Home Feed</span>
-                        <span>Discover</span>
-                        <span>Friends</span>
-                        <span>Notifications</span>
-                    </div>
-                </aside>
+                </article>
 
-                <main class="main-preview">
-                    <div class="preview-header">
-                        <h2>Home feed</h2>
-                        <div class="tiny">Reviews from friends, recent posts, and what is trending.</div>
-                    </div>
-
-                    <section class="panel composer">
-                        <div class="composer-title">What are you recommending today?</div>
-                        <div class="composer-grid">
-                            <div class="fake-field">Movie</div>
-                            <div class="fake-field">The Social Network</div>
-                            <div class="fake-field">out of 5</div>
+                <div class="side-stack">
+                    <section class="mini-card">
+                        <h2>Trending with friends</h2>
+                        <div class="trend-list">
+                            <div class="trend-row">
+                                <strong>Paper Planets</strong>
+                                <span class="muted">Book - 12 new reviews</span>
+                            </div>
+                            <div class="trend-row">
+                                <strong>Metro After Dark</strong>
+                                <span class="muted">Movie - 4 friends saved it</span>
+                            </div>
+                            <div class="trend-row">
+                                <strong>The Monday Table</strong>
+                                <span class="muted">Series - rising this week</span>
+                            </div>
                         </div>
                     </section>
 
-                    <section class="panel filters" aria-label="Feed filters">
-                        <span class="active">All</span>
-                        <span>Movies</span>
-                        <span>Books</span>
-                        <span>TV Shows</span>
-                        <span>Podcasts</span>
-                    </section>
-
-                    <article class="review-card">
-                        <header class="post-head">
-                            <span class="avatar">A</span>
-                            <div>
-                                <strong>Ankana Boruah</strong>
-                                <div class="tiny">posted on 1 june 2026</div>
-                            </div>
-                            <span class="rating">5/5</span>
-                        </header>
-                        <div class="post-body">
-                            <div class="poster">Brooklyn<br>Nine-Nine</div>
-                            <div>
-                                <div class="item-title">
-                                    <strong>Brooklyn Nine-Nine</strong>
-                                    <span class="tiny">Series</span>
-                                    <span class="rating">IMDb 8.4/10</span>
-                                </div>
-                                <div class="meta">2013 - Dan Goor, Michael Schur</div>
-                                <p class="quote">Good interesting.</p>
-                                <div class="review-actions">
-                                    <span>&#9825; 4</span>
-                                    <span>comment 2</span>
-                                    <span>Post your review</span>
-                                </div>
-                                <div class="item-actions" aria-label="Item actions">
-                                    <span>&hearts;</span>
-                                    <span>&#9825;</span>
-                                    <span>-&gt;</span>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </main>
-
-                <aside class="right-rail">
-                    <section class="rail-card">
-                        <h3>Trending</h3>
-                        <div class="rail-list">
-                            <div class="rail-row">
-                                <strong>Succession</strong>
-                                <span class="tiny">5/5 by Harshit</span>
-                            </div>
-                            <div class="rail-row">
-                                <strong>Atomic Habits</strong>
-                                <span class="tiny">Book</span>
-                            </div>
-                            <div class="rail-row">
-                                <strong>Fool Me Once</strong>
-                                <span class="tiny">Recommended today</span>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="rail-card">
-                        <h3>People</h3>
-                        <div class="rail-list">
-                            <div class="person-row">
-                                <span class="avatar">P</span>
-                                <strong>Priya</strong>
-                                <span class="follow">Follow</span>
-                            </div>
+                    <section class="mini-card">
+                        <h3>People to follow</h3>
+                        <div class="people-list">
                             <div class="person-row">
                                 <span class="avatar">R</span>
-                                <strong>Rohan</strong>
-                                <span class="follow">Follow</span>
+                                <div><strong>Rhea Sen</strong><div class="muted">sharp movie notes</div></div>
+                            </div>
+                            <div class="person-row">
+                                <span class="avatar">A</span>
+                                <div><strong>Ayaan Mehta</strong><div class="muted">books and shows</div></div>
                             </div>
                         </div>
                     </section>
-                </aside>
+
+                    <section class="search-prompt">
+                        <strong>Try the search.</strong>
+                        <span class="muted">Pick a movie or series and Revue will ask you to join before showing reviews.</span>
+                    </section>
+                </div>
             </section>
         </section>
 
         <section class="glance" aria-label="Revue in five seconds">
             <article class="glance-card">
-                <strong>Follow taste</strong>
-                <span class="tiny">See what people you trust are watching and reading.</span>
+                <strong>See activity</strong>
+                <span class="muted">Friends' reviews and recommendations arrive in one feed.</span>
             </article>
             <article class="glance-card">
-                <strong>Review once</strong>
-                <span class="tiny">Every post attaches to a real title, so reviews stay grouped.</span>
+                <strong>Search first</strong>
+                <span class="muted">Titles stay grouped, so every review lands in the right place.</span>
             </article>
             <article class="glance-card">
-                <strong>Recommend fast</strong>
-                <span class="tiny">Send a title to friends without leaving the feed.</span>
+                <strong>Come back daily</strong>
+                <span class="muted">Trending picks, saved lists, and people worth following.</span>
             </article>
         </section>
     </main>
+
+    <div class="review-toast" id="review-toast" aria-live="polite">
+        <span class="avatar" id="toast-avatar">N</span>
+        <div>
+            <strong id="toast-title">Nikhil reviewed Lantern Road</strong>
+            <div class="toast-meta">
+                <span class="muted" id="toast-copy">4/5 - "Unexpectedly warm."</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="join-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <button class="modal-close" type="button" id="modal-close" aria-label="Close">x</button>
+            <div class="modal-poster" id="modal-poster"></div>
+            <div>
+                <h2 id="modal-title">Join Revue to see reviews</h2>
+                <p id="modal-copy">Create your taste profile to see what friends think, save this title, and recommend it to people you know.</p>
+            </div>
+            <div class="modal-actions">
+                <a class="button primary" href="{% url 'signup' %}">Sign up</a>
+                <a class="button" href="{% url 'account_login' %}">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById("landing-search-input");
+        const suggestions = document.getElementById("landing-suggestions");
+        const modal = document.getElementById("join-modal");
+        const modalClose = document.getElementById("modal-close");
+        const modalTitle = document.getElementById("modal-title");
+        const modalCopy = document.getElementById("modal-copy");
+        const modalPoster = document.getElementById("modal-poster");
+        const toast = document.getElementById("review-toast");
+        const toastAvatar = document.getElementById("toast-avatar");
+        const toastTitle = document.getElementById("toast-title");
+        const toastCopy = document.getElementById("toast-copy");
+
+        const liveReviews = [
+            { avatar: "N", title: "Nikhil reviewed Lantern Road", copy: "4/5 - \"Quiet, smart, and worth saving.\"" },
+            { avatar: "S", title: "Sara recommended Paper Planets", copy: "Book - \"The ending stayed with me.\"" },
+            { avatar: "V", title: "Vihaan liked Metro After Dark", copy: "Movie - now trending with friends." },
+            { avatar: "I", title: "Ira posted about The Monday Table", copy: "5/5 - \"Comfort food as a series.\"" }
+        ];
+
+        let searchTimer = null;
+        let latestController = null;
+        let toastIndex = 0;
+
+        function escapeHtml(value) {
+            return String(value || "").replace(/[&<>"']/g, function (char) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    "\"": "&quot;",
+                    "'": "&#039;"
+                }[char];
+            });
+        }
+
+        function labelForType(value) {
+            return value === "series" ? "Series" : "Movie";
+        }
+
+        function closeSuggestions() {
+            suggestions.classList.remove("is-open");
+            suggestions.innerHTML = "";
+        }
+
+        function renderSuggestions(rows, query) {
+            if (!query || query.length < 2) {
+                closeSuggestions();
+                return;
+            }
+
+            if (!rows.length) {
+                suggestions.innerHTML = '<div class="suggestion-empty">No movie or series suggestions yet. Try another title.</div>';
+                suggestions.classList.add("is-open");
+                return;
+            }
+
+            suggestions.innerHTML = rows.map(function (row) {
+                const image = row.image_url
+                    ? '<img src="' + escapeHtml(row.image_url) + '" alt="">'
+                    : "";
+                const meta = [labelForType(row.item_type), row.year, row.creator].filter(Boolean).join(" | ");
+                return (
+                    '<button class="suggestion-row" type="button" data-title="' + escapeHtml(row.title) + '" data-type="' + escapeHtml(labelForType(row.item_type)) + '" data-year="' + escapeHtml(row.year) + '" data-image="' + escapeHtml(row.image_url) + '">' +
+                        '<span class="suggestion-poster">' + image + '</span>' +
+                        '<span>' +
+                            '<span class="suggestion-title">' + escapeHtml(row.title) + '</span>' +
+                            '<span class="suggestion-meta">' + escapeHtml(meta || labelForType(row.item_type)) + '</span>' +
+                        '</span>' +
+                    '</button>'
+                );
+            }).join("");
+            suggestions.classList.add("is-open");
+        }
+
+        function searchTitles(query) {
+            if (latestController) {
+                latestController.abort();
+            }
+            latestController = new AbortController();
+            suggestions.innerHTML = '<div class="suggestion-empty">Searching movies and series...</div>';
+            suggestions.classList.add("is-open");
+
+            fetch("{% url 'landing_suggest_items' %}?q=" + encodeURIComponent(query), {
+                signal: latestController.signal,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    renderSuggestions(payload.results || [], query);
+                })
+                .catch(function (error) {
+                    if (error.name === "AbortError") {
+                        return;
+                    }
+                    suggestions.innerHTML = '<div class="suggestion-empty">Search is waking up. Try again in a moment.</div>';
+                    suggestions.classList.add("is-open");
+                });
+        }
+
+        function openJoinModal(row) {
+            const title = row.title || "this title";
+            modalTitle.textContent = "Join Revue to see reviews for " + title;
+            modalCopy.textContent = "See friend reviews, save it to your list, and recommend it to people you trust.";
+            modalPoster.innerHTML = row.image
+                ? '<img src="' + escapeHtml(row.image) + '" alt="">'
+                : "";
+            modal.classList.add("is-open");
+        }
+
+        searchInput.addEventListener("input", function () {
+            const query = searchInput.value.trim();
+            clearTimeout(searchTimer);
+            if (query.length < 2) {
+                closeSuggestions();
+                return;
+            }
+            searchTimer = setTimeout(function () {
+                searchTitles(query);
+            }, 180);
+        });
+
+        suggestions.addEventListener("click", function (event) {
+            const row = event.target.closest(".suggestion-row");
+            if (!row) {
+                return;
+            }
+            openJoinModal({
+                title: row.dataset.title,
+                type: row.dataset.type,
+                year: row.dataset.year,
+                image: row.dataset.image
+            });
+            closeSuggestions();
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(".search-wrap")) {
+                closeSuggestions();
+            }
+        });
+
+        modalClose.addEventListener("click", function () {
+            modal.classList.remove("is-open");
+        });
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.classList.remove("is-open");
+            }
+        });
+
+        function showToast() {
+            const review = liveReviews[toastIndex % liveReviews.length];
+            toastAvatar.textContent = review.avatar;
+            toastTitle.textContent = review.title;
+            toastCopy.textContent = review.copy;
+            toast.classList.add("is-visible");
+            window.setTimeout(function () {
+                toast.classList.remove("is-visible");
+            }, 4200);
+            toastIndex += 1;
+        }
+
+        showToast();
+        window.setInterval(showToast, 5000);
+    </script>
 </body>
 </html>
