@@ -172,6 +172,7 @@
                                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-5 3 1.5-5A7.5 7.5 0 1 1 21 11.5Z"/></svg>
                                             <span class="review-stat-count">{{ review.comment_total|default:0 }}</span>
                                         </a>
+                                        <a class="review-post-link" href="{% url 'new_review' %}?item={{ review.item_id }}">Post your review</a>
                                     </div>
                                     <div class="review-meta-actions">
                                         <div class="feed-actions compact-actions" aria-label="Review actions">

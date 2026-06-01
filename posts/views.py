@@ -515,6 +515,11 @@ def _google_book_rating(volume_id: str, title: str, creator: str = ""):
 
 
 def _enrich_item_metadata(item: Item):
+    if item.item_type in {"movie", "series"} and item.description and item.creator_name and item.image_url and item.imdb_rating:
+        return
+    if item.item_type == "book" and item.description and item.book_rating:
+        return
+
     if item.item_type in {"movie", "series"} and item.external_source == "omdb":
         metadata = _omdb_details(item.external_id)
     elif item.item_type in {"movie", "series"}:
@@ -610,7 +615,7 @@ def feed(request, review_form=None):
     if request.user.is_authenticated:
         friend_ids = _followed_user_ids(request.user)
 
-    reviews = Review.objects.select_related("user", "item")
+    reviews = Review.objects.select_related("user", "user__profile", "item")
 
     if friends_only and request.user.is_authenticated:
         reviews = reviews.filter(user_id__in=friend_ids)
@@ -642,7 +647,9 @@ def feed(request, review_form=None):
         reviews = reviews.order_by("-created_at")
     paginator = Paginator(reviews, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
-    page_reviews = page_obj.object_list
+    page_reviews = list(page_obj.object_list)
+    page_item_ids = [review.item_id for review in page_reviews]
+    page_review_ids = [review.id for review in page_reviews]
     watchlist_item_ids = set()
     readlist_item_ids = set()
     favorite_item_ids = set()
@@ -654,51 +661,51 @@ def feed(request, review_form=None):
             SavedItem.objects.filter(
                 user=request.user,
                 list_type="watchlist",
-                item_id__in=page_reviews.values_list("item_id", flat=True),
+                item_id__in=page_item_ids,
             ).values_list("item_id", flat=True)
         )
         readlist_item_ids = set(
             SavedItem.objects.filter(
                 user=request.user,
                 list_type="readlist",
-                item_id__in=page_reviews.values_list("item_id", flat=True),
+                item_id__in=page_item_ids,
             ).values_list("item_id", flat=True)
         )
         favorite_item_ids = set(
             SavedItem.objects.filter(
                 user=request.user,
                 list_type="favorites",
-                item_id__in=page_reviews.values_list("item_id", flat=True),
+                item_id__in=page_item_ids,
             ).values_list("item_id", flat=True)
         )
         saved_review_ids = set(
             SavedReview.objects.filter(
                 user=request.user,
-                review_id__in=page_reviews.values_list("id", flat=True),
+                review_id__in=page_review_ids,
             ).values_list("review_id", flat=True)
         )
         recommended_item_ids = set(
             Recommendation.objects.filter(
                 from_user=request.user,
-                item_id__in=page_reviews.values_list("item_id", flat=True),
+                item_id__in=page_item_ids,
             ).values_list("item_id", flat=True)
         )
         review_liked_ids = set(
             ReviewLike.objects.filter(
                 user=request.user,
-                review_id__in=page_reviews.values_list("id", flat=True),
+                review_id__in=page_review_ids,
             ).values_list("review_id", flat=True)
         )
-    activities = Activity.objects.select_related("user", "review", "review__item", "target_user", "collection")
+    activities = Activity.objects.select_related("user", "user__profile", "review", "review__item", "target_user", "collection")
     followed_activities = activities.filter(user_id__in=friend_ids) if friend_ids else Activity.objects.none()
-    popular_reviews = Review.objects.select_related("user", "item").annotate(
+    popular_reviews = Review.objects.select_related("user", "user__profile", "item").annotate(
         likes_total=Count(
             "item__saved_entries",
             filter=Q(item__saved_entries__list_type="favorites"),
             distinct=True,
         )
     ).order_by("-likes_total", "-created_at")[:5]
-    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:5]
+    suggested_users = User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:5]
     notifications_preview = Notification.objects.filter(
         recipient=request.user
     ).select_related("actor").order_by("-created_at")[:5]
@@ -736,11 +743,11 @@ def discover(request):
     sort = request.GET.get("sort", "newest")
     friend_ids = _followed_user_ids(request.user)
 
-    trending_reviews = Review.objects.select_related("item", "user")
-    friend_favorites = Review.objects.select_related("item", "user").filter(
+    trending_reviews = Review.objects.select_related("item", "user", "user__profile")
+    friend_favorites = Review.objects.select_related("item", "user", "user__profile").filter(
         user_id__in=friend_ids
     )
-    recent_reviews = Review.objects.select_related("item", "user")
+    recent_reviews = Review.objects.select_related("item", "user", "user__profile")
 
     if query:
         filter_query = (
@@ -805,11 +812,11 @@ def discover(request):
             "trending_reviews": trending_page.object_list,
             "friend_favorites": friends_page.object_list,
             "recent_reviews": recent_page.object_list,
-            "trending_users": User.objects.annotate(review_total=Count("review")).order_by("-review_total")[:6],
+            "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:6],
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
-            "suggested_users": User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
+            "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
@@ -1301,7 +1308,7 @@ def profile(request):
     recommendation_count = Recommendation.objects.filter(to_user=request.user).count()
     recent_reviews = Review.objects.filter(
         user=request.user
-    ).select_related("item").order_by("-created_at")[:5]
+    ).select_related("user", "user__profile", "item").order_by("-created_at")[:5]
     top_types = Review.objects.filter(user=request.user).values(
         "item__item_type"
     ).annotate(
@@ -1359,7 +1366,7 @@ def item_reviews(request, item_id):
     item.refresh_from_db()
     reviews = (
         Review.objects.filter(item=item)
-        .select_related("user")
+        .select_related("user", "user__profile")
         .annotate(
             review_like_total=Count("likes", distinct=True),
             comment_total=Count("comments", distinct=True),
@@ -1367,18 +1374,19 @@ def item_reviews(request, item_id):
         .order_by("-created_at")
     )
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
+    page_reviews = list(page_obj.object_list)
     item_state = _item_action_state(request.user, item)
     item_like_count = SavedItem.objects.filter(item=item, list_type="favorites").count()
     review_liked_ids = set(
         ReviewLike.objects.filter(
             user=request.user,
-            review_id__in=page_obj.object_list.values_list("id", flat=True),
+            review_id__in=[review.id for review in page_reviews],
         ).values_list("review_id", flat=True)
     )
     friend_ids = _followed_user_ids(request.user)
     popular_reviews = (
         Review.objects.exclude(item=item)
-        .select_related("item", "user")
+        .select_related("item", "user", "user__profile")
         .annotate(
             likes_total=Count(
                 "item__saved_entries",
@@ -1388,17 +1396,17 @@ def item_reviews(request, item_id):
         )
         .order_by("-likes_total", "-created_at")[:4]
     )
-    suggested_users = User.objects.exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:3]
+    suggested_users = User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:3]
     top_level_comments = Comment.objects.filter(
         review__item=item,
         parent__isnull=True,
-    ).select_related("user", "review").prefetch_related("replies", "likes")[:20]
+    ).select_related("user", "user__profile", "review").prefetch_related("replies", "likes")[:20]
     return render(
         request,
         "posts/item_reviews.html",
         {
             "item": item,
-            "reviews": page_obj.object_list,
+            "reviews": page_reviews,
             "page_obj": page_obj,
             "comment_form": CommentForm(),
             "comments": top_level_comments,
@@ -1608,7 +1616,7 @@ def user_profile(request, username):
     follower_ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True))
     my_following_ids = _followed_user_ids(request.user)
     mutual_count = len(follower_ids & my_following_ids)
-    reviews = Review.objects.filter(user=viewed_user).select_related("item").order_by("-created_at")[:10]
+    reviews = Review.objects.filter(user=viewed_user).select_related("user", "user__profile", "item").order_by("-created_at")[:10]
     watchlist_items = SavedItem.objects.filter(
         user=viewed_user,
         list_type="watchlist",
@@ -1648,7 +1656,7 @@ def user_profile(request, username):
 
 @login_required
 def notifications(request):
-    rows = Notification.objects.filter(recipient=request.user).select_related("actor", "review").order_by("-created_at")
+    rows = Notification.objects.filter(recipient=request.user).select_related("actor", "actor__profile", "review").order_by("-created_at")
     if request.method == "POST":
         rows.update(is_read=True)
         messages.success(request, "Notifications marked as read.")
@@ -1662,7 +1670,7 @@ def notifications(request):
             Activity.REVIEW_LIKED,
             Activity.RECOMMENDED,
         ],
-    ).select_related("user", "review", "review__item", "target_user").order_by("-created_at")[:20]
+    ).select_related("user", "user__profile", "review", "review__item", "target_user").order_by("-created_at")[:20]
     return render(
         request,
         "posts/notifications.html",
