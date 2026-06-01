@@ -57,10 +57,16 @@
 
                 <div class="item-hero-actions-row">
                     <div class="form-actions">
-                        <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
-                        <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+                        {% if user.is_authenticated %}
+                            <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
+                            <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+                        {% else %}
+                            <a class="button" href="{% url 'signup' %}">Join to review</a>
+                            <a class="button secondary" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">Log in</a>
+                        {% endif %}
                     </div>
                     <div class="feed-actions compact-actions item-action-buttons" aria-label="Item actions">
+                        {% if user.is_authenticated %}
                         <form method="post" action="{% url 'toggle_saved_item' item.id 'favorites' %}" class="js-async-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -83,6 +89,18 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
                             <span class="sr-only">Recommend</span>
                         </button>
+                        {% else %}
+                            <a class="icon-button item-like-button has-count" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like" title="Log in to like">
+                                <span class="icon-count">{{ item_like_count|default:0 }}</span>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
+                            </a>
+                            <a class="icon-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to save" title="Log in to save">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
+                            </a>
+                            <a class="icon-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to recommend" title="Log in to recommend">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -109,7 +127,7 @@
                         <div>
                             <div class="post-name-line">
                                 <a class="post-name profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a>
-                                {% if review.user_id == user.id %}
+                                {% if user.is_authenticated and review.user_id == user.id %}
                                     <span class="inline-owner-actions">
                                         <a class="owner-action" href="{% url 'edit_review' review.id %}?next={{ request.get_full_path|urlencode }}">Edit</a>
                                         <form method="post" action="{% url 'delete_review' review.id %}">
@@ -126,6 +144,7 @@
                     </header>
                     <p class="review-text">{{ review.review_text }}</p>
                     <div class="review-social-stats" aria-label="Review reactions">
+                        {% if user.is_authenticated %}
                         <form method="post" action="{% url 'toggle_like' review.id %}" class="js-async-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -134,24 +153,44 @@
                                 <span class="review-stat-count">{{ review.review_like_total|default:0 }}</span>
                             </button>
                         </form>
+                        {% else %}
+                            <a class="review-stat-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like review" title="Log in to like review">
+                                <span class="review-stat-icon" aria-hidden="true">&#9825;</span>
+                                <span class="review-stat-count">{{ review.review_like_total|default:0 }}</span>
+                            </a>
+                        {% endif %}
                         <a class="review-stat-button" href="#review-comment-{{ review.id }}" aria-label="Reply to review" title="Reply">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-5 3 1.5-5A7.5 7.5 0 1 1 21 11.5Z"/></svg>
                             <span class="review-stat-count">{{ review.comment_total|default:0 }}</span>
                         </a>
                     </div>
-                    <form method="post" action="{% url 'add_comment' review.id %}" class="inline-comment-form" id="review-comment-{{ review.id }}">
-                        {% csrf_token %}
-                        {{ comment_form.body }}
-                        <div class="form-actions">
-                            <button type="submit">Comment</button>
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'add_comment' review.id %}" class="inline-comment-form" id="review-comment-{{ review.id }}">
+                            {% csrf_token %}
+                            {{ comment_form.body }}
+                            <div class="form-actions">
+                                <button type="submit">Comment</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="inline-comment-form public-comment-prompt" id="review-comment-{{ review.id }}">
+                            <p class="meta">Log in to join the discussion.</p>
+                            <div class="form-actions">
+                                <a class="button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">Log in</a>
+                                <a class="button secondary" href="{% url 'signup' %}">Sign up</a>
+                            </div>
                         </div>
-                    </form>
+                    {% endif %}
                 </article>
             {% empty %}
                 <div class="card">
                     <p class="empty-state">No reviews posted yet for this item.</p>
                     <div class="form-actions">
-                        <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Be the first to review</a>
+                        {% if user.is_authenticated %}
+                            <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Be the first to review</a>
+                        {% else %}
+                            <a class="button" href="{% url 'signup' %}">Join to review</a>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
@@ -181,6 +220,7 @@
                         <div class="comment-body-row">
                             <p class="comment-body">{{ comment.body }}</p>
                             <div class="comment-actions" aria-label="Comment actions">
+                                {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
                                     {% csrf_token %}
                                     <button type="submit" class="comment-icon-button comment-like-button {% if user in comment.likes.all %}active{% endif %}" data-comment-like-button="1" aria-label="Like comment">
@@ -188,7 +228,13 @@
                                         <span class="comment-action-count">{{ comment.likes.count }}</span>
                                     </button>
                                 </form>
-                                {% if comment.user == user %}
+                                {% else %}
+                                    <a class="comment-icon-button comment-like-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like comment">
+                                        <span class="comment-heart" aria-hidden="true">&#9825;</span>
+                                        <span class="comment-action-count">{{ comment.likes.count }}</span>
+                                    </a>
+                                {% endif %}
+                                {% if user.is_authenticated and comment.user == user %}
                                     <form method="post" action="{% url 'delete_comment' comment.id %}">
                                         {% csrf_token %}
                                         <button type="submit" class="comment-icon-button danger" aria-label="Delete comment" onclick="return confirm('Delete this comment?');">
@@ -210,12 +256,14 @@
                                 <p>{{ reply.body }}</p>
                             </div>
                         {% endfor %}
-                        <form method="post" action="{% url 'add_comment' comment.review_id %}" class="reply-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="parent" value="{{ comment.id }}">
-                            <input type="text" name="body" placeholder="Reply..." required>
-                            <button type="submit" class="button secondary">Reply</button>
-                        </form>
+                        {% if user.is_authenticated %}
+                            <form method="post" action="{% url 'add_comment' comment.review_id %}" class="reply-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="parent" value="{{ comment.id }}">
+                                <input type="text" name="body" placeholder="Reply..." required>
+                                <button type="submit" class="button secondary">Reply</button>
+                            </form>
+                        {% endif %}
                     </article>
                 {% empty %}
                     <p class="empty-state">No discussion yet. Start the first comment.</p>

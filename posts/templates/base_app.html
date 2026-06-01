@@ -3829,13 +3829,14 @@
     </style>
 </head>
 <body>
-    <div class="app-shell app-shell-authenticated">
+    <div class="app-shell app-shell-authenticated {% if not user.is_authenticated %}app-shell-public{% endif %}">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a class="sidebar-brand" href="{% url 'feed' %}" aria-label="Revue home">Revue</a>
+                <a class="sidebar-brand" href="{% if user.is_authenticated %}{% url 'feed' %}{% else %}{% url 'landing' %}{% endif %}" aria-label="Revue home">Revue</a>
             </div>
 
             <nav class="sidebar-nav" aria-label="Main navigation">
+                {% if user.is_authenticated %}
                 <section class="sidebar-profile-card">
                     <div class="sidebar-profile-top">
                         {% if request.user.profile.profile_photo %}
@@ -3853,8 +3854,16 @@
                         </span>
                     </div>
                 </section>
+                {% else %}
+                    <section class="sidebar-profile-card public-sidebar-card">
+                        <strong>Join Revue</strong>
+                        <span class="meta">See reviews, save titles, and recommend them to friends.</span>
+                        <a class="button" href="{% url 'signup' %}">Sign up</a>
+                    </section>
+                {% endif %}
 
                 <p class="sidebar-section-title">Navigation</p>
+                {% if user.is_authenticated %}
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
@@ -3864,21 +3873,35 @@
                         <span class="nav-badge">{{ unread_notification_count }}</span>
                     {% endif %}
                 </a>
+                {% else %}
+                    <a href="{% url 'landing' %}" class="sidebar-link {% if request.resolver_match.url_name == 'landing' %}active{% endif %}">Home</a>
+                    <a href="{% url 'account_login' %}" class="sidebar-link {% if request.resolver_match.url_name == 'account_login' %}active{% endif %}">Log in</a>
+                    <a href="{% url 'signup' %}" class="sidebar-link {% if request.resolver_match.url_name == 'signup' %}active{% endif %}">Sign up</a>
+                {% endif %}
             </nav>
 
             <div class="sidebar-footer">
+                {% if user.is_authenticated %}
                 <form method="post" action="{% url 'account_logout' %}" class="sidebar-logout-form">
                     {% csrf_token %}
                     <button type="submit" class="sidebar-logout">Logout</button>
                 </form>
+                {% else %}
+                    <a class="sidebar-logout" href="{% url 'account_login' %}">Log in</a>
+                {% endif %}
             </div>
         </aside>
 
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
-        <a class="mobile-create" href="#feed-composer">Post review</a>
+        {% if user.is_authenticated %}
+            <a class="mobile-create" href="#feed-composer">Post review</a>
+        {% else %}
+            <a class="mobile-create" href="{% url 'signup' %}">Join Revue</a>
+        {% endif %}
         <nav class="mobile-tabbar" aria-label="Mobile navigation">
+            {% if user.is_authenticated %}
             <a href="{% url 'feed' %}" class="{% if request.resolver_match.url_name == 'feed' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>
                 <span>Feed</span>
@@ -3899,7 +3922,13 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><path d="M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
                 <span>Profile</span>
             </a>
+            {% else %}
+                <a href="{% url 'landing' %}" class="active"><span>Home</span></a>
+                <a href="{% url 'account_login' %}"><span>Log in</span></a>
+                <a href="{% url 'signup' %}"><span>Sign up</span></a>
+            {% endif %}
         </nav>
+        {% if user.is_authenticated %}
         <aside class="recommend-panel" id="recommend-panel" aria-label="Recommend to friends" aria-hidden="true">
             <header>
                 <div>
@@ -3936,6 +3965,7 @@
                 <button type="submit">Send recommendation</button>
             </form>
         </aside>
+        {% endif %}
         <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
     </div>
     <div class="profile-photo-lightbox" id="profile-photo-lightbox" aria-hidden="true">

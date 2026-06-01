@@ -1436,13 +1436,11 @@ def delete_profile_photo(request):
     return redirect("profile")
 
 
-@login_required
 def item_reviews_by_id(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     return redirect("item_reviews", item_title=item.title)
 
 
-@login_required
 def item_reviews(request, item_title):
     normalized_title = unquote(item_title).strip()
     item = get_object_or_404(
@@ -1462,15 +1460,25 @@ def item_reviews(request, item_title):
     )
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
     page_reviews = list(page_obj.object_list)
-    item_state = _item_action_state(request.user, item)
+    item_state = {
+        "save_list_type": _save_list_type_for_item(item),
+        "like_active": False,
+        "save_active": False,
+        "recommended_active": False,
+    }
+    if request.user.is_authenticated:
+        item_state = _item_action_state(request.user, item)
     item_like_count = SavedItem.objects.filter(item=item, list_type="favorites").count()
-    review_liked_ids = set(
-        ReviewLike.objects.filter(
-            user=request.user,
-            review_id__in=[review.id for review in page_reviews],
-        ).values_list("review_id", flat=True)
-    )
-    friend_ids = _followed_user_ids(request.user)
+    review_liked_ids = set()
+    friend_ids = set()
+    if request.user.is_authenticated:
+        review_liked_ids = set(
+            ReviewLike.objects.filter(
+                user=request.user,
+                review_id__in=[review.id for review in page_reviews],
+            ).values_list("review_id", flat=True)
+        )
+        friend_ids = _followed_user_ids(request.user)
     popular_reviews = (
         Review.objects.exclude(item=item)
         .select_related("item", "user", "user__profile")
@@ -1483,7 +1491,10 @@ def item_reviews(request, item_title):
         )
         .order_by("-likes_total", "-created_at")[:4]
     )
-    suggested_users = User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:3]
+    suggested_users = User.objects.select_related("profile")
+    if request.user.is_authenticated:
+        suggested_users = suggested_users.exclude(id=request.user.id).exclude(id__in=friend_ids)
+    suggested_users = suggested_users.order_by("first_name", "username")[:3]
     top_level_comments = Comment.objects.filter(
         review__item=item,
         parent__isnull=True,
