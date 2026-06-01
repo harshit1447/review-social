@@ -818,6 +818,25 @@
             justify-content: space-between;
         }
 
+        .scroll-list {
+            display: grid;
+            gap: 12px;
+            max-height: 390px;
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-color: rgba(126, 67, 30, 0.32) transparent;
+        }
+
+        .scroll-list .person-row {
+            border-top: 1px solid rgba(126, 67, 30, 0.11);
+            padding-top: 12px;
+        }
+
+        .scroll-list .person-row:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
         .person-name {
             align-items: center;
             display: flex;

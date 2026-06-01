@@ -111,14 +111,16 @@
         <aside class="right-rail">
             <section class="card">
                 <h2 class="card-title">Trending Users</h2>
-                {% for person in trending_users %}
-                    <div class="person-row">
-                        <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
-                        <a class="button secondary" href="{% url 'user_profile' person.username %}">View</a>
-                    </div>
-                {% empty %}
-                    <p class="empty-state">No users yet.</p>
-                {% endfor %}
+                <div class="scroll-list trending-user-list">
+                    {% for person in trending_users %}
+                        <div class="person-row">
+                            <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
+                            <a class="button secondary" href="{% url 'user_profile' person.username %}">View</a>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No users yet.</p>
+                    {% endfor %}
+                </div>
             </section>
             <section class="card">
                 <h2 class="card-title">People You May Know</h2>

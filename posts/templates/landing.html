@@ -7,14 +7,16 @@
     <style>
         :root {
             --bg: #f7f1e8;
-            --surface: rgba(255, 253, 249, 0.9);
-            --surface-strong: #fffdf8;
+            --surface: #fffdf9;
+            --surface-soft: rgba(255, 253, 249, 0.76);
             --text: #171513;
-            --muted: #6f665d;
-            --line: #e2d5c6;
-            --accent: #b36a32;
-            --accent-dark: #7e431e;
-            --shadow: 0 24px 70px rgba(77, 49, 27, 0.12);
+            --muted: #6f675f;
+            --line: #e3d5c5;
+            --accent: #bd6f31;
+            --accent-dark: #7e421e;
+            --accent-soft: #f3e7db;
+            --shadow: 0 24px 68px rgba(73, 48, 28, 0.13);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
         }
 
         * { box-sizing: border-box; }
@@ -23,35 +25,34 @@
             margin: 0;
             min-height: 100vh;
             background:
-                radial-gradient(circle at 82% 8%, rgba(179, 106, 50, 0.18), transparent 28%),
-                radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.72), transparent 26%),
-                linear-gradient(135deg, #fbf6ee 0%, #ead7c1 100%);
+                radial-gradient(circle at 78% 0%, rgba(189, 111, 49, 0.19), transparent 30%),
+                linear-gradient(135deg, #fbf7f0 0%, #ecdcc9 100%);
             color: var(--text);
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", Arial, sans-serif;
+            font-family: var(--font);
+            font-size: 14px;
         }
 
         a { color: inherit; text-decoration: none; }
 
         .landing {
             display: grid;
-            gap: clamp(28px, 5vw, 64px);
+            gap: 22px;
             margin: 0 auto;
-            max-width: 1220px;
+            max-width: 1360px;
             min-height: 100vh;
-            padding: 28px clamp(20px, 5vw, 56px) 42px;
+            padding: 22px clamp(18px, 4vw, 48px) 30px;
         }
 
         .nav {
             align-items: center;
-            display: grid;
-            gap: 18px;
-            grid-template-columns: auto minmax(240px, 430px) auto;
+            display: flex;
+            justify-content: space-between;
         }
 
         .wordmark {
             display: inline-block;
             font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(2rem, 4vw, 3.1rem);
+            font-size: clamp(2rem, 3vw, 2.75rem);
             font-style: italic;
             font-weight: 500;
             letter-spacing: -0.055em;
@@ -59,61 +60,46 @@
             transform: skewX(-8deg);
         }
 
-        .nav-search {
-            align-items: center;
-            background: rgba(255, 255, 255, 0.66);
-            border: 1px solid var(--line);
-            border-radius: 999px;
-            color: var(--muted);
-            display: flex;
-            gap: 10px;
-            min-height: 46px;
-            padding: 0 16px;
-            box-shadow: 0 12px 32px rgba(77, 49, 27, 0.06);
-        }
-
-        .nav-search svg {
-            height: 18px;
-            width: 18px;
-        }
-
-        .nav-actions {
+        .nav-actions,
+        .hero-actions,
+        .chip-row,
+        .review-actions,
+        .item-actions {
             align-items: center;
             display: flex;
             gap: 10px;
-            justify-content: flex-end;
         }
 
-        .pill {
+        .button {
             align-items: center;
-            border: 1px solid rgba(23, 21, 19, 0.14);
+            border: 1px solid rgba(23, 21, 19, 0.15);
             border-radius: 999px;
             display: inline-flex;
-            font-weight: 850;
-            gap: 10px;
+            font-weight: 700;
             justify-content: center;
-            min-height: 44px;
-            padding: 10px 18px;
-            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            min-height: 40px;
+            padding: 9px 18px;
+            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+            white-space: nowrap;
         }
 
-        .pill:hover,
-        .pill:focus-visible {
+        .button:hover,
+        .button:focus-visible {
             background: var(--text);
             border-color: var(--text);
             color: #fff;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .pill.primary {
+        .button.primary {
             background: var(--accent);
             border-color: var(--accent);
             color: #fff;
-            box-shadow: 0 16px 34px rgba(179, 106, 50, 0.22);
+            box-shadow: 0 14px 30px rgba(189, 111, 49, 0.24);
         }
 
-        .pill.primary:hover,
-        .pill.primary:focus-visible {
+        .button.primary:hover,
+        .button.primary:focus-visible {
             background: var(--accent-dark);
             border-color: var(--accent-dark);
         }
@@ -121,149 +107,344 @@
         .hero {
             align-items: center;
             display: grid;
-            gap: clamp(28px, 5vw, 64px);
-            grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+            gap: clamp(24px, 4vw, 54px);
+            grid-template-columns: minmax(290px, 0.62fr) minmax(640px, 1.38fr);
+        }
+
+        .hero-copy {
+            display: grid;
+            gap: 18px;
         }
 
         .eyebrow {
             color: var(--accent-dark);
-            font-size: 0.82rem;
-            font-weight: 900;
-            letter-spacing: 0.12em;
-            margin: 0 0 18px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+            margin: 0;
             text-transform: uppercase;
         }
 
         h1 {
-            font-size: clamp(3.2rem, 7vw, 6.8rem);
-            letter-spacing: -0.06em;
-            line-height: 0.95;
+            font-size: clamp(3rem, 5.8vw, 5.4rem);
+            letter-spacing: -0.07em;
+            line-height: 0.93;
             margin: 0;
-            max-width: 850px;
+            max-width: 590px;
         }
 
-        .hero-copy {
-            color: #4f4740;
-            font-size: clamp(1.08rem, 2vw, 1.35rem);
-            line-height: 1.55;
-            margin: 22px 0 0;
-            max-width: 640px;
+        .subline {
+            color: #504940;
+            font-size: clamp(1rem, 1.45vw, 1.22rem);
+            line-height: 1.42;
+            margin: 0;
+            max-width: 500px;
         }
 
-        .hero-actions {
-            align-items: center;
-            display: flex;
+        .chip-row {
             flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 30px;
         }
 
-        .proof-grid {
+        .chip {
+            background: rgba(255, 253, 249, 0.7);
+            border: 1px solid rgba(126, 66, 30, 0.13);
+            border-radius: 999px;
+            color: #504940;
+            font-weight: 650;
+            padding: 7px 11px;
+        }
+
+        .product-shell {
+            background: var(--surface-soft);
+            border: 1px solid rgba(126, 66, 30, 0.14);
+            border-radius: 30px;
+            box-shadow: var(--shadow);
             display: grid;
             gap: 16px;
-        }
-
-        .mock-card {
-            background: var(--surface);
-            border: 1px solid rgba(126, 67, 30, 0.15);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
+            grid-template-columns: 164px minmax(0, 1fr) 214px;
+            min-height: 600px;
+            overflow: hidden;
             padding: 18px;
         }
 
-        .review-mock {
+        .sidebar {
+            border-right: 1px solid rgba(126, 66, 30, 0.13);
             display: grid;
-            gap: 16px;
-            grid-template-columns: 76px minmax(0, 1fr);
+            align-content: start;
+            gap: 18px;
+            padding-right: 16px;
         }
 
-        .poster {
-            align-items: end;
-            background: linear-gradient(145deg, #2a1b14, #c76f2d);
-            border-radius: 16px;
-            color: #fff;
-            display: flex;
-            font-weight: 900;
-            min-height: 112px;
-            padding: 10px;
+        .mini-wordmark {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2rem;
+            font-style: italic;
+            letter-spacing: -0.055em;
+            transform: skewX(-8deg);
         }
 
-        .mock-top {
+        .profile-card,
+        .panel,
+        .rail-card,
+        .review-card {
+            background: var(--surface);
+            border: 1px solid rgba(126, 66, 30, 0.13);
+            box-shadow: 0 16px 44px rgba(73, 48, 28, 0.08);
+        }
+
+        .profile-card {
             align-items: center;
+            border-radius: 18px;
             display: flex;
-            justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
+            padding: 10px;
         }
 
         .avatar {
             align-items: center;
-            background: #181614;
+            background: #151311;
             border-radius: 50%;
             color: #fff;
             display: inline-flex;
-            font-weight: 900;
-            height: 42px;
+            flex: 0 0 auto;
+            font-weight: 800;
+            height: 36px;
             justify-content: center;
-            width: 42px;
+            width: 36px;
         }
 
-        .name {
-            font-weight: 900;
-        }
-
-        .muted {
+        .tiny {
             color: var(--muted);
-            font-size: 0.92rem;
+            font-size: 0.84rem;
         }
 
-        .stars {
-            color: var(--accent-dark);
-            font-weight: 950;
-        }
-
-        .profile-row {
-            align-items: center;
+        .sidebar-nav {
             display: grid;
-            gap: 14px;
-            grid-template-columns: 52px minmax(0, 1fr) auto;
+            gap: 7px;
         }
 
-        .trend-list {
+        .sidebar-nav span {
+            border-radius: 14px;
+            color: #433d36;
+            font-weight: 650;
+            padding: 9px 10px;
+        }
+
+        .sidebar-nav .active {
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+        }
+
+        .main-preview,
+        .right-rail {
+            align-content: start;
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .preview-header h2 {
+            font-size: clamp(1.8rem, 3vw, 2.35rem);
+            letter-spacing: -0.055em;
+            line-height: 1;
+            margin: 0 0 6px;
+        }
+
+        .panel {
+            border-radius: 22px;
+            padding: 16px;
+        }
+
+        .composer {
             display: grid;
             gap: 12px;
+        }
+
+        .composer-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .composer-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 104px minmax(0, 1fr) 86px;
+        }
+
+        .fake-field {
+            background: #fff;
+            border: 1px solid rgba(112, 103, 94, 0.22);
+            border-radius: 14px;
+            color: #504940;
+            min-height: 38px;
+            padding: 9px 12px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filters span {
+            border: 1px solid rgba(126, 66, 30, 0.14);
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 8px 13px;
+        }
+
+        .filters .active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .review-card {
+            border-radius: 24px;
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .post-head {
+            align-items: center;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 40px minmax(0, 1fr) auto;
+        }
+
+        .rating {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            font-weight: 750;
+            padding: 6px 10px;
+        }
+
+        .post-body {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 112px minmax(0, 1fr);
+        }
+
+        .poster {
+            background:
+                linear-gradient(145deg, rgba(23, 21, 19, 0.18), rgba(189, 111, 49, 0.25)),
+                linear-gradient(135deg, #171513 0%, #3b3028 46%, #bd6f31 100%);
+            border-radius: 18px;
+            color: #fff;
+            display: grid;
+            min-height: 162px;
+            place-items: end start;
+            padding: 12px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .item-title {
+            align-items: baseline;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .item-title strong {
+            font-size: 1.18rem;
+            letter-spacing: -0.025em;
+        }
+
+        .meta {
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .quote {
+            font-style: italic;
+            margin: 12px 0 0;
+        }
+
+        .review-actions {
+            color: var(--muted);
+            font-size: 0.95rem;
             margin-top: 14px;
         }
 
-        .trend {
-            align-items: center;
-            background: rgba(255, 255, 255, 0.58);
-            border: 1px solid rgba(126, 67, 30, 0.11);
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            padding: 12px;
+        .item-actions {
+            justify-content: flex-end;
+            margin-top: 10px;
         }
 
-        .feature-strip {
+        .item-actions span {
+            font-size: 1.42rem;
+            line-height: 1;
+        }
+
+        .rail-card {
+            border-radius: 22px;
+            padding: 16px;
+        }
+
+        .rail-card h3 {
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+            margin: 0 0 12px;
+        }
+
+        .rail-list {
+            display: grid;
+            gap: 11px;
+        }
+
+        .rail-row {
+            border-top: 1px solid rgba(126, 66, 30, 0.11);
+            display: grid;
+            gap: 4px;
+            padding-top: 11px;
+        }
+
+        .rail-row:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .person-row {
+            align-items: center;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: 34px minmax(0, 1fr) auto;
+        }
+
+        .person-row .avatar {
+            height: 34px;
+            width: 34px;
+        }
+
+        .follow {
+            border: 1px solid rgba(126, 66, 30, 0.18);
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 750;
+            padding: 6px 10px;
+        }
+
+        .glance {
             display: grid;
             gap: 14px;
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .feature {
-            background: rgba(255, 253, 249, 0.7);
-            border: 1px solid rgba(126, 67, 30, 0.12);
+        .glance-card {
+            background: rgba(255, 253, 249, 0.68);
+            border: 1px solid rgba(126, 66, 30, 0.12);
             border-radius: 20px;
-            padding: 18px;
+            padding: 15px;
         }
 
-        .feature strong {
+        .glance-card strong {
             display: block;
-            font-size: 1.03rem;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
-        /* Global density pass: match the tighter 80% zoom feel. */
         @media (min-width: 821px) {
             .landing {
                 min-height: 125vh;
@@ -279,85 +460,71 @@
             }
         }
 
-        body {
-            font-size: 13px;
-        }
-
-        .landing {
-            gap: clamp(22px, 3.8vw, 48px);
-            max-width: 1320px;
-            padding: 22px clamp(18px, 4vw, 46px) 34px;
-        }
-
-        .nav {
-            gap: 14px;
-            grid-template-columns: auto minmax(220px, 380px) auto;
-        }
-
-        .wordmark {
-            font-size: clamp(1.85rem, 3.2vw, 2.7rem);
-        }
-
-        .nav-search {
-            min-height: 40px;
-            padding: 0 14px;
-        }
-
-        .pill {
-            min-height: 38px;
-            padding: 8px 15px;
-        }
-
-        .hero {
-            gap: clamp(22px, 3.8vw, 48px);
-        }
-
-        h1 {
-            font-size: clamp(2.75rem, 5.6vw, 5.5rem);
-        }
-
-        .hero-copy {
-            font-size: clamp(0.98rem, 1.45vw, 1.18rem);
-        }
-
-        .mock-card,
-        .feature {
-            border-radius: 18px;
-            padding: 14px;
-        }
-
-        .review-mock {
-            grid-template-columns: 64px minmax(0, 1fr);
-        }
-
-        .poster {
-            border-radius: 12px;
-        }
-
-        .feature-strip {
-            gap: 12px;
-        }
-
-        @media (max-width: 920px) {
-            .nav,
-            .hero,
-            .feature-strip {
+        @media (max-width: 1100px) {
+            .hero {
                 grid-template-columns: 1fr;
             }
 
-            .nav-actions {
-                justify-content: flex-start;
+            .hero-copy {
+                max-width: 720px;
+            }
+
+            .product-shell {
+                grid-template-columns: 146px minmax(0, 1fr);
+            }
+
+            .right-rail {
+                display: none;
             }
         }
 
-        @media (max-width: 560px) {
-            .landing { padding: 22px 16px 34px; }
-            .nav-search { display: none; }
-            .nav-actions { width: 100%; }
-            .nav-actions .pill { flex: 1; padding-inline: 12px; }
-            .review-mock { grid-template-columns: 1fr; }
-            .poster { min-height: 150px; }
-            h1 { font-size: clamp(3rem, 16vw, 4.7rem); }
+        @media (max-width: 720px) {
+            .landing {
+                gap: 20px;
+                padding: 18px 14px 26px;
+            }
+
+            .button {
+                min-height: 36px;
+                padding: 8px 12px;
+            }
+
+            h1 {
+                font-size: clamp(2.8rem, 14vw, 4.1rem);
+            }
+
+            .subline {
+                font-size: 1rem;
+            }
+
+            .product-shell {
+                border-radius: 24px;
+                grid-template-columns: 1fr;
+                min-height: 0;
+                padding: 14px;
+            }
+
+            .sidebar {
+                border-bottom: 1px solid rgba(126, 66, 30, 0.13);
+                border-right: 0;
+                grid-template-columns: auto minmax(0, 1fr);
+                padding: 0 0 12px;
+            }
+
+            .profile-card,
+            .sidebar-nav {
+                display: none;
+            }
+
+            .composer-grid,
+            .post-body,
+            .glance {
+                grid-template-columns: 1fr;
+            }
+
+            .poster {
+                min-height: 150px;
+            }
         }
     </style>
 </head>
@@ -365,72 +532,154 @@
     <main class="landing">
         <nav class="nav" aria-label="Primary">
             <a class="wordmark" href="{% url 'landing' %}" aria-label="Revue home">Revue</a>
-            <div class="nav-search" aria-label="Search preview">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21 21-4.3-4.3M10.8 18.2a7.4 7.4 0 1 1 0-14.8 7.4 7.4 0 0 1 0 14.8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                <span>Search movies, books, shows, people...</span>
-            </div>
             <div class="nav-actions">
-                <a class="pill" href="{% url 'account_login' %}">Log in</a>
-                <a class="pill primary" href="{% url 'signup' %}">Sign up</a>
+                <a class="button" href="{% url 'account_login' %}">Log in</a>
+                <a class="button primary" href="{% url 'signup' %}">Join</a>
             </div>
         </nav>
 
         <section class="hero">
-            <div>
-                <p class="eyebrow">Social reviews for real taste</p>
-                <h1>Discover what your friends are watching, reading, and recommending.</h1>
-                <p class="hero-copy">Revue brings reviews, friend activity, saved lists, and recommendations into one clean place, so your next watch, read, purchase, or life experience starts with people you trust.</p>
+            <div class="hero-copy">
+                <p class="eyebrow">Reviews through people</p>
+                <h1>See what your friends recommend.</h1>
+                <p class="subline">A social feed for movies, books, shows, podcasts, and experiences worth your time.</p>
                 <div class="hero-actions">
-                    <a class="pill primary" href="{% url 'signup' %}">Join Revue</a>
-                    <a class="pill" href="{% url 'account_login' %}">Explore reviews</a>
+                    <a class="button primary" href="{% url 'signup' %}">Join Revue</a>
+                    <a class="button" href="{% url 'account_login' %}">Log in</a>
+                </div>
+                <div class="chip-row" aria-label="Product highlights">
+                    <span class="chip">Post</span>
+                    <span class="chip">Like</span>
+                    <span class="chip">Save</span>
+                    <span class="chip">Recommend</span>
                 </div>
             </div>
 
-            <div class="proof-grid landing-proof-grid" aria-label="Preview cards">
-                <article class="mock-card review-mock">
-                    <div class="poster">Dune<br>Part Two</div>
-                    <div>
-                        <div class="mock-top">
-                            <div>
-                                <div class="name">Aman reviewed a movie</div>
-                                <div class="muted">2h ago</div>
-                            </div>
-                            <div class="stars">5/5</div>
-                        </div>
-                        <p>"Huge, strange, and impossible to stop thinking about."</p>
-                    </div>
-                </article>
-
-                <article class="mock-card profile-row">
-                    <span class="avatar">P</span>
-                    <div>
-                        <div class="name">Priya Shah</div>
-                        <div class="muted">18 reviews · 7 recommendations this month</div>
-                    </div>
-                    <a class="pill" href="{% url 'signup' %}">Follow</a>
-                </article>
-
-                <article class="mock-card">
-                    <div class="mock-top">
+            <section class="product-shell" aria-label="Revue app preview">
+                <aside class="sidebar">
+                    <div class="mini-wordmark">Revue</div>
+                    <div class="profile-card">
+                        <span class="avatar">H</span>
                         <div>
-                            <div class="name">Trending now</div>
-                            <div class="muted">Popular with thoughtful reviewers</div>
+                            <strong>Harshit More</strong>
+                            <div class="tiny">View profile</div>
                         </div>
-                        <span class="stars">Live</span>
                     </div>
-                    <div class="trend-list">
-                        <div class="trend"><strong>The Midnight Library</strong><span class="muted">Book</span></div>
-                        <div class="trend"><strong>Past Lives</strong><span class="muted">Movie</span></div>
-                        <div class="trend"><strong>Atomic Habits</strong><span class="muted">Life</span></div>
+                    <div class="sidebar-nav">
+                        <span class="active">Home Feed</span>
+                        <span>Discover</span>
+                        <span>Friends</span>
+                        <span>Notifications</span>
                     </div>
-                </article>
-            </div>
+                </aside>
+
+                <main class="main-preview">
+                    <div class="preview-header">
+                        <h2>Home feed</h2>
+                        <div class="tiny">Reviews from friends, recent posts, and what is trending.</div>
+                    </div>
+
+                    <section class="panel composer">
+                        <div class="composer-title">What are you recommending today?</div>
+                        <div class="composer-grid">
+                            <div class="fake-field">Movie</div>
+                            <div class="fake-field">The Social Network</div>
+                            <div class="fake-field">out of 5</div>
+                        </div>
+                    </section>
+
+                    <section class="panel filters" aria-label="Feed filters">
+                        <span class="active">All</span>
+                        <span>Movies</span>
+                        <span>Books</span>
+                        <span>TV Shows</span>
+                        <span>Podcasts</span>
+                    </section>
+
+                    <article class="review-card">
+                        <header class="post-head">
+                            <span class="avatar">A</span>
+                            <div>
+                                <strong>Ankana Boruah</strong>
+                                <div class="tiny">posted on 1 june 2026</div>
+                            </div>
+                            <span class="rating">5/5</span>
+                        </header>
+                        <div class="post-body">
+                            <div class="poster">Brooklyn<br>Nine-Nine</div>
+                            <div>
+                                <div class="item-title">
+                                    <strong>Brooklyn Nine-Nine</strong>
+                                    <span class="tiny">Series</span>
+                                    <span class="rating">IMDb 8.4/10</span>
+                                </div>
+                                <div class="meta">2013 - Dan Goor, Michael Schur</div>
+                                <p class="quote">Good interesting.</p>
+                                <div class="review-actions">
+                                    <span>&#9825; 4</span>
+                                    <span>comment 2</span>
+                                    <span>Post your review</span>
+                                </div>
+                                <div class="item-actions" aria-label="Item actions">
+                                    <span>&hearts;</span>
+                                    <span>&#9825;</span>
+                                    <span>-&gt;</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </main>
+
+                <aside class="right-rail">
+                    <section class="rail-card">
+                        <h3>Trending</h3>
+                        <div class="rail-list">
+                            <div class="rail-row">
+                                <strong>Succession</strong>
+                                <span class="tiny">5/5 by Harshit</span>
+                            </div>
+                            <div class="rail-row">
+                                <strong>Atomic Habits</strong>
+                                <span class="tiny">Book</span>
+                            </div>
+                            <div class="rail-row">
+                                <strong>Fool Me Once</strong>
+                                <span class="tiny">Recommended today</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="rail-card">
+                        <h3>People</h3>
+                        <div class="rail-list">
+                            <div class="person-row">
+                                <span class="avatar">P</span>
+                                <strong>Priya</strong>
+                                <span class="follow">Follow</span>
+                            </div>
+                            <div class="person-row">
+                                <span class="avatar">R</span>
+                                <strong>Rohan</strong>
+                                <span class="follow">Follow</span>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
+            </section>
         </section>
 
-        <section class="feature-strip" aria-label="Revue features">
-            <article class="feature"><strong>Follow your circle</strong><span class="muted">See reviews from people whose taste you already understand.</span></article>
-            <article class="feature"><strong>Save what matters</strong><span class="muted">Build watchlists, readlists, saved reviews, and collections.</span></article>
-            <article class="feature"><strong>Find better picks</strong><span class="muted">Search across reviews, people, categories, and items.</span></article>
+        <section class="glance" aria-label="Revue in five seconds">
+            <article class="glance-card">
+                <strong>Follow taste</strong>
+                <span class="tiny">See what people you trust are watching and reading.</span>
+            </article>
+            <article class="glance-card">
+                <strong>Review once</strong>
+                <span class="tiny">Every post attaches to a real title, so reviews stay grouped.</span>
+            </article>
+            <article class="glance-card">
+                <strong>Recommend fast</strong>
+                <span class="tiny">Send a title to friends without leaving the feed.</span>
+            </article>
         </section>
     </main>
 </body>
