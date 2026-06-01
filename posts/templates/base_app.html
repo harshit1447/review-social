@@ -1602,7 +1602,8 @@
         }
 
         .recommend-panel.open {
-            display: block;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
         }
 
         .recommend-panel header {
@@ -1640,6 +1641,9 @@
         .recommend-form {
             display: grid;
             gap: 12px;
+            grid-template-rows: auto minmax(0, 1fr) auto auto;
+            min-height: 0;
+            overflow: hidden;
             padding: 14px 18px 18px;
         }
 
@@ -1655,10 +1659,11 @@
 
         .recommend-friend-list {
             display: grid;
+            align-content: start;
             gap: 8px;
-            max-height: 230px;
             overflow: auto;
-            padding-right: 4px;
+            padding: 0 4px 2px 0;
+            scrollbar-color: rgba(126, 67, 30, 0.32) transparent;
         }
 
         .recommend-friend {
@@ -2330,9 +2335,9 @@
 
         .profile-page .profile-avatar {
             border-width: 4px;
-            font-size: 1.45rem;
-            height: 72px;
-            width: 72px;
+            font-size: 2.15rem;
+            height: 108px;
+            width: 108px;
         }
 
         .profile-page .profile-info h1 {
@@ -3622,8 +3627,9 @@
             }
 
             .profile-page .profile-avatar {
-                height: 62px;
-                width: 62px;
+                font-size: 1.9rem;
+                height: 93px;
+                width: 93px;
             }
 
             .item-detail-page .item-facts {
@@ -3674,9 +3680,17 @@
                 border-radius: 22px 22px 0 0;
                 bottom: 0;
                 left: 0;
-                max-height: 78vh;
+                max-height: min(84vh, 680px);
                 right: 0;
                 width: 100%;
+            }
+
+            .recommend-panel header {
+                padding: 14px 16px 10px;
+            }
+
+            .recommend-form {
+                padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
             }
 
             .toast-stack {
