@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Revue{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'posts/images/revue-favicon.png' %}">
     <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=linkedin-font-1">
     <style>
         :root {
@@ -3935,6 +3937,280 @@
                 right: 12px;
             }
         }
+
+        @media (max-width: 820px) {
+            .friends-header {
+                align-items: start;
+                display: grid;
+                gap: 12px;
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .friends-header h1 {
+                font-size: clamp(2.4rem, 14vw, 3.25rem);
+            }
+
+            .friends-header .button {
+                align-self: center;
+                margin-top: 6px;
+            }
+
+            .friends-toolbar {
+                display: grid;
+                gap: 14px;
+                grid-template-columns: 1fr;
+            }
+
+            .friends-toolbar label {
+                display: none;
+            }
+
+            .friends-toolbar .search-row {
+                align-items: center;
+                display: grid;
+                gap: 8px;
+                grid-template-columns: minmax(0, 1fr) auto;
+                margin-top: 0;
+            }
+
+            .friends-toolbar .search-row input {
+                min-height: 44px;
+                min-width: 0;
+            }
+
+            .friends-toolbar .search-row button {
+                min-height: 44px;
+                padding-inline: 14px;
+            }
+
+            .friends-toolbar .filters {
+                display: flex;
+                gap: 8px;
+                margin: 0;
+                overflow-x: auto;
+                padding: 0 0 2px;
+            }
+
+            .friends-toolbar .filter-link {
+                min-height: 40px;
+                padding-inline: 14px;
+            }
+
+            .friends-recommendations-card,
+            .people-directory-card {
+                padding: 16px;
+            }
+
+            .person-row-card {
+                grid-template-columns: 42px minmax(0, 1fr);
+                padding: 12px;
+            }
+
+            .person-row-card form {
+                grid-column: 2;
+                justify-self: start;
+            }
+
+            .person-row-card button {
+                min-height: 36px;
+                min-width: 0;
+                padding: 7px 14px;
+            }
+
+            .item-detail-page .item-hero {
+                align-items: start;
+                display: grid !important;
+                gap: 16px;
+                grid-template-columns: 1fr !important;
+                overflow: hidden;
+                padding: 16px;
+            }
+
+            .item-detail-page .item-hero-poster {
+                align-self: auto;
+                grid-row: 1;
+                height: auto !important;
+                justify-self: center !important;
+                max-height: 300px;
+                max-width: min(48vw, 170px) !important;
+                min-height: 0 !important;
+                order: -1;
+                position: relative;
+                width: min(48vw, 170px) !important;
+                z-index: 0;
+            }
+
+            .item-detail-page .item-hero-poster img {
+                aspect-ratio: 2 / 3;
+                display: block;
+                height: auto !important;
+                max-height: 300px;
+                object-fit: cover;
+                position: static;
+                width: 100%;
+            }
+
+            .item-detail-page .item-hero-copy {
+                display: grid;
+                gap: 10px;
+                min-width: 0;
+                position: relative;
+                z-index: 1;
+            }
+
+            .item-detail-page .item-hero-copy h1 {
+                font-size: clamp(1.9rem, 9vw, 2.55rem);
+                letter-spacing: -0.045em;
+                line-height: 1;
+                margin: 0;
+            }
+
+            .item-detail-page .item-synopsis {
+                font-size: 0.92rem;
+                line-height: 1.45;
+            }
+
+            .item-detail-page .item-facts {
+                gap: 10px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                margin: 6px 0;
+            }
+
+            .item-detail-page .item-facts > div {
+                padding-top: 8px;
+            }
+
+            .item-hero-actions-row {
+                gap: 12px;
+                grid-template-columns: 1fr;
+                padding-top: 4px;
+            }
+
+            .item-hero-actions-row .form-actions {
+                justify-content: center;
+            }
+
+            .item-action-buttons {
+                justify-content: center;
+                margin-left: 0;
+            }
+
+            .item-reviews-heading h2 {
+                font-size: clamp(2rem, 12vw, 3rem);
+            }
+
+            .public-profile-page .profile-hero {
+                overflow: hidden;
+            }
+
+            .public-profile-page .profile-cover {
+                height: 116px;
+            }
+
+            .public-profile-page .profile-info {
+                align-items: center;
+                display: grid;
+                gap: 12px;
+                grid-template-columns: auto minmax(0, 1fr);
+                padding: 0 16px 18px;
+            }
+
+            .public-profile-page .profile-avatar,
+            .public-profile-page .profile-avatar.profile-photo-view-button {
+                font-size: 2rem;
+                height: 92px;
+                width: 92px;
+            }
+
+            .public-profile-page .profile-copy {
+                padding-top: 14px;
+            }
+
+            .public-profile-page .profile-copy h1 {
+                font-size: clamp(1.65rem, 8vw, 2.2rem);
+                line-height: 1;
+            }
+
+            .public-profile-page .profile-info form {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+
+            .public-profile-page .stat-grid {
+                display: grid;
+                gap: 10px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .public-profile-page .stat-card {
+                min-height: 76px;
+                padding: 13px 14px;
+            }
+
+            .public-profile-page .profile-compact-card {
+                padding: 16px;
+            }
+
+            .public-profile-page .profile-review-row {
+                grid-template-columns: 76px minmax(0, 1fr);
+            }
+
+            .public-profile-page .profile-review-poster {
+                height: 108px;
+                width: 76px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .main-content {
+                padding-inline: 10px;
+            }
+
+            .friends-header {
+                grid-template-columns: 1fr;
+            }
+
+            .friends-header .button {
+                justify-self: start;
+                margin-top: 0;
+            }
+
+            .friends-toolbar .search-row {
+                grid-template-columns: 1fr;
+            }
+
+            .friends-toolbar .search-row button {
+                justify-self: start;
+            }
+
+            .item-detail-page .item-hero-poster {
+                max-width: min(58vw, 175px) !important;
+                width: min(58vw, 175px) !important;
+            }
+
+            .item-detail-page .item-facts {
+                grid-template-columns: 1fr;
+            }
+
+            .item-hero-actions-row .form-actions {
+                align-items: center;
+                justify-content: center;
+            }
+
+            .public-profile-page .stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .public-profile-page .profile-review-row {
+                align-items: start;
+                grid-template-columns: 72px minmax(0, 1fr);
+            }
+
+            .public-profile-page .profile-review-poster {
+                height: 102px;
+                width: 72px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4004,9 +4280,9 @@
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and request.resolver_match.url_name == 'feed' %}
             <a class="mobile-create" href="#feed-composer">Post review</a>
-        {% else %}
+        {% elif not user.is_authenticated and request.resolver_match.url_name == 'landing' %}
             <a class="mobile-create" href="{% url 'signup' %}">Join Revue</a>
         {% endif %}
         <nav class="mobile-tabbar" aria-label="Mobile navigation">

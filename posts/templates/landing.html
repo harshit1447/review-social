@@ -1,9 +1,12 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Revue - Social reviews from people you trust</title>
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'posts/images/revue-favicon.png' %}">
     <style>
         :root {
             --bg: #f7f1e8;
@@ -195,6 +198,16 @@
             height: 100%;
             object-fit: cover;
             width: 100%;
+        }
+
+        .suggestion-poster-empty {
+            align-items: center;
+            color: #fff;
+            display: inline-flex;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            justify-content: center;
         }
 
         .suggestion-title {
@@ -839,7 +852,15 @@
             }
 
             if (!rows.length) {
-                suggestions.innerHTML = '<div class="suggestion-empty">No movie or series suggestions yet. Try another title.</div>';
+                suggestions.innerHTML = (
+                    '<button class="suggestion-row suggestion-create" type="button" data-first-review="1" data-title="' + escapeHtml(query) + '" data-type="Title" data-year="" data-image="">' +
+                        '<span class="suggestion-poster suggestion-poster-empty">R</span>' +
+                        '<span>' +
+                            '<span class="suggestion-title">Be the first person to review "' + escapeHtml(query) + '"</span>' +
+                            '<span class="suggestion-meta">Create a Revue account to start the page for this title.</span>' +
+                        '</span>' +
+                    '</button>'
+                );
                 suggestions.classList.add("is-open");
                 return;
             }
@@ -895,8 +916,13 @@
 
         function openJoinModal(row) {
             const title = row.title || "this title";
-            modalTitle.textContent = "Join Revue to see reviews for " + title;
-            modalCopy.textContent = "See friend reviews, save it to your list, and recommend it to people you trust.";
+            if (row.firstReview) {
+                modalTitle.textContent = "Join Revue to be the first to review " + title;
+                modalCopy.textContent = "Create your taste profile, add this title, and start the first review page for it.";
+            } else {
+                modalTitle.textContent = "Join Revue to see reviews for " + title;
+                modalCopy.textContent = "See friend reviews, save it to your list, and recommend it to people you trust.";
+            }
             modalPoster.innerHTML = row.image
                 ? '<img src="' + escapeHtml(row.image) + '" alt="">'
                 : "";
@@ -924,7 +950,8 @@
                 title: row.dataset.title,
                 type: row.dataset.type,
                 year: row.dataset.year,
-                image: row.dataset.image
+                image: row.dataset.image,
+                firstReview: row.dataset.firstReview === "1"
             });
             closeSuggestions();
         });
