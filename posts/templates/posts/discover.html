@@ -53,12 +53,12 @@
                                 <span class="rating">{{ review.rating }}/5</span>
                             </header>
                             <div class="post-item">
-                                <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                                <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item.title %}" aria-label="{{ review.item.title }}">
                                     <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
                                 </a>
                                 <div class="review-copy">
                                     <h3 class="item-title">
-                                        <a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a>
+                                        <a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a>
                                         <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
                                     </h3>
                                     <p class="meta">
@@ -86,19 +86,19 @@
                 <article class="card">
                     <h2 class="card-title">Popular Books</h2>
                     {% for item in popular_books %}
-                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.id %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
+                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.title %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
                     {% empty %}<p class="empty-state">No books yet.</p>{% endfor %}
                 </article>
                 <article class="card">
                     <h2 class="card-title">Popular Movies</h2>
                     {% for item in popular_movies %}
-                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.id %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
+                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.title %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
                     {% empty %}<p class="empty-state">No movies yet.</p>{% endfor %}
                 </article>
                 <article class="card">
                     <h2 class="card-title">Popular Shows</h2>
                     {% for item in popular_shows %}
-                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.id %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
+                        <div class="rail-item"><strong><a href="{% url 'item_reviews' item.title %}">{{ item.title }}</a></strong><div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div></div>
                     {% empty %}<p class="empty-state">No shows yet.</p>{% endfor %}
                 </article>
                 <article class="card">

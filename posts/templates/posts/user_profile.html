@@ -51,12 +51,12 @@
                 <div class="profile-review-list">
                     {% for review in reviews %}
                         <article class="profile-review-row">
-                            <a class="profile-review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item_id %}" aria-label="{{ review.item.title }}">
+                            <a class="profile-review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item.title %}" aria-label="{{ review.item.title }}">
                                 <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
                             </a>
                             <div>
                                 <div class="profile-review-topline">
-                                    <h3><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></h3>
+                                    <h3><a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a></h3>
                                     <span class="rating">{{ review.rating }}/5</span>
                                 </div>
                                 <p class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</p>
@@ -82,7 +82,7 @@
                     <div class="recommendation">
                         <strong>Watchlist</strong>
                         {% for saved in watchlist_items %}
-                            <p class="meta"><a href="{% url 'item_reviews' saved.item_id %}">{{ saved.item.title }}</a></p>
+                            <p class="meta"><a href="{% url 'item_reviews' saved.item.title %}">{{ saved.item.title }}</a></p>
                         {% empty %}
                             <p class="meta">No watchlist items yet.</p>
                         {% endfor %}
@@ -90,7 +90,7 @@
                     <div class="recommendation">
                         <strong>Readlist</strong>
                         {% for saved in readlist_items %}
-                            <p class="meta"><a href="{% url 'item_reviews' saved.item_id %}">{{ saved.item.title }}</a></p>
+                            <p class="meta"><a href="{% url 'item_reviews' saved.item.title %}">{{ saved.item.title }}</a></p>
                         {% empty %}
                             <p class="meta">No readlist items yet.</p>
                         {% endfor %}
@@ -98,7 +98,7 @@
                     <div class="recommendation">
                         <strong>Saved reviews</strong>
                         {% for saved in saved_reviews %}
-                            <p class="meta"><a href="{% url 'item_reviews' saved.review.item_id %}">{{ saved.review.item.title }}</a></p>
+                            <p class="meta"><a href="{% url 'item_reviews' saved.review.item.title %}">{{ saved.review.item.title }}</a></p>
                         {% empty %}
                             <p class="meta">No saved reviews yet.</p>
                         {% endfor %}

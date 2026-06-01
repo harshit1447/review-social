@@ -34,7 +34,7 @@
                     <h2 class="card-title">Items</h2>
                     {% for item in items %}
                         <div class="recommendation">
-                            <p><strong><a href="{% url 'item_reviews' item.id %}">{{ item.title }}</a></strong></p>
+                            <p><strong><a href="{% url 'item_reviews' item.title %}">{{ item.title }}</a></strong></p>
                             <p class="meta">{{ item.get_item_type_display }}</p>
                         </div>
                     {% empty %}
@@ -57,7 +57,7 @@
                     <h2 class="card-title">Reviews</h2>
                     {% for review in reviews %}
                         <div class="recommendation">
-                            <p><strong><a class="profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></strong> reviewed <strong><a href="{% url 'item_reviews' review.item_id %}">{{ review.item.title }}</a></strong></p>
+                            <p><strong><a class="profile-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></strong> reviewed <strong><a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a></strong></p>
                             <p class="meta">{{ review.review_text|truncatechars:140 }}</p>
                         </div>
                     {% empty %}

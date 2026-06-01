@@ -243,7 +243,7 @@
                     <h2 class="card-title">Trending</h2>
                     <div class="rail-list">
                         {% for review in popular_reviews %}
-                            <a class="rail-item" href="{% url 'item_reviews' review.item_id %}">
+                            <a class="rail-item" href="{% url 'item_reviews' review.item.title %}">
                                 <strong>{{ review.item.title }}</strong>
                                 <div class="meta">{{ review.rating }}/5 by {{ review.user.get_full_name|default:review.user.username }}</div>
                             </a>

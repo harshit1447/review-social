@@ -54,7 +54,7 @@
                             {% if activity.review %} &middot; {{ activity.review.item.get_item_type_display }}{% endif %}
                         </p>
                         {% if activity.review %}
-                            <a class="inline-link" href="{% url 'item_reviews' activity.review.item_id %}">View review</a>
+                            <a class="inline-link" href="{% url 'item_reviews' activity.review.item.title %}">View review</a>
                         {% endif %}
                     </div>
                 </article>

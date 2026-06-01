@@ -22,7 +22,7 @@
                     <div><strong><a class="profile-link" href="{% url 'user_profile' saved.review.user.username %}">{{ saved.review.user.get_full_name|default:saved.review.user.username }}</a></strong><div class="meta">Saved {{ saved.created_at|timesince }} ago</div></div>
                     <span class="rating">{{ saved.review.rating }}/5</span>
                 </header>
-                <h2 class="item-title"><a href="{% url 'item_reviews' saved.review.item_id %}">{{ saved.review.item.title }}</a></h2>
+                <h2 class="item-title"><a href="{% url 'item_reviews' saved.review.item.title %}">{{ saved.review.item.title }}</a></h2>
                 <p class="review-text">{{ saved.review.review_text }}</p>
             </article>
         {% empty %}

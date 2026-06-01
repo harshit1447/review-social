@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
-from urllib.parse import parse_qs, quote, urlencode, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 import json
 import os
@@ -1360,8 +1360,18 @@ def delete_profile_photo(request):
 
 
 @login_required
-def item_reviews(request, item_id):
+def item_reviews_by_id(request, item_id):
     item = get_object_or_404(Item, id=item_id)
+    return redirect("item_reviews", item_title=item.title)
+
+
+@login_required
+def item_reviews(request, item_title):
+    normalized_title = unquote(item_title).strip()
+    item = get_object_or_404(
+        Item.objects.annotate(review_total=Count("reviews")).order_by("-review_total", "id"),
+        title__iexact=normalized_title,
+    )
     _enrich_item_metadata(item)
     item.refresh_from_db()
     reviews = (
@@ -1535,7 +1545,7 @@ def toggle_saved_review(request, review_id):
 def add_comment(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     if request.method != "POST":
-        return redirect("item_reviews", item_id=review.item_id)
+        return redirect("item_reviews", item_title=review.item.title)
     form = CommentForm(request.POST)
     parent = None
     parent_id = request.POST.get("parent")
@@ -1562,17 +1572,17 @@ def add_comment(request, review_id):
             comment=comment,
         )
         messages.success(request, "Comment posted.")
-    return redirect("item_reviews", item_id=review.item_id)
+    return redirect("item_reviews", item_title=review.item.title)
 
 
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    item_id = comment.review.item_id
+    item_title = comment.review.item.title
     if request.method == "POST" and comment.user == request.user:
         comment.delete()
         messages.success(request, "Comment deleted.")
-    return redirect("item_reviews", item_id=item_id)
+    return redirect("item_reviews", item_title=item_title)
 
 
 @login_required
@@ -1583,7 +1593,7 @@ def like_comment(request, comment_id):
         like.delete()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "active": created, "count": comment.likes.count()})
-    return redirect("item_reviews", item_id=comment.review.item_id)
+    return redirect("item_reviews", item_title=comment.review.item.title)
 
 
 @login_required
