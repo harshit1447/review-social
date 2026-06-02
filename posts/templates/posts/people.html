@@ -1,0 +1,77 @@
+{% extends "base_app.html" %}
+
+{% block title %}People | Revue{% endblock %}
+
+{% block content %}
+<div class="page people-page">
+    <section class="feed-hero compact-product-hero">
+        <div>
+            <p class="eyebrow">Taste network</p>
+            <h1>People</h1>
+            <p>Find reviewers with similar taste, follow them, and let their recommendations shape your feed.</p>
+        </div>
+        <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Friend tools</a>
+    </section>
+
+    <section class="toolbar">
+        <form class="search-form" method="get">
+            <label for="people-search">Search people</label>
+            <div class="search-row">
+                <input id="people-search" type="search" name="q" value="{{ query }}" placeholder="Search by name, username, or email">
+                <button type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="people-match-grid">
+        {% for row in people_cards %}
+            <article class="card people-match-card">
+                <div class="person-name">
+                    <a class="avatar profile-link" href="{% url 'user_profile' row.user.username %}" aria-label="{{ row.user.get_full_name|default:row.user.username }} profile">
+                        {% if row.user.profile.profile_photo %}
+                            <img src="{{ row.user.profile.profile_photo.url }}" alt="">
+                        {% else %}
+                            {{ row.user.get_full_name|default:row.user.username|first }}
+                        {% endif %}
+                    </a>
+                    <div>
+                        <strong><a class="profile-link" href="{% url 'user_profile' row.user.username %}">{{ row.user.get_full_name|default:row.user.username }}</a></strong>
+                        <div class="meta">@{{ row.user.username }}</div>
+                    </div>
+                </div>
+                <div class="taste-match-score">{{ row.match }}% taste match</div>
+                <div>
+                    <p class="meta">Top favourites</p>
+                    <div class="taste-chip-row">
+                        {% for title in row.top_favourites %}
+                            <span class="taste-pill">{{ title }}</span>
+                        {% empty %}
+                            <span class="taste-pill">New reviewer</span>
+                            <span class="taste-pill">Building taste</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    {% if row.is_following %}
+                        <form method="post" action="{% url 'remove_friend' row.user.id %}" class="js-async-form">
+                            {% csrf_token %}
+                            <button type="submit" class="secondary" data-plain-button="1">Following</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'add_friend' row.user.id %}" class="js-async-form">
+                            {% csrf_token %}
+                            <button type="submit" data-plain-button="1">Follow</button>
+                        </form>
+                    {% endif %}
+                    <a class="button secondary" href="{% url 'user_profile' row.user.username %}">View profile</a>
+                </div>
+            </article>
+        {% empty %}
+            <section class="card empty-panel">
+                <h2>No people found</h2>
+                <p>Try another search, or invite friends to build your taste network.</p>
+            </section>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

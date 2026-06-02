@@ -1,0 +1,85 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ category_label }} | Revue{% endblock %}
+
+{% block content %}
+<div class="page category-page">
+    <section class="feed-hero compact-product-hero">
+        <div>
+            <p class="eyebrow">Browse by taste</p>
+            <h1>{{ category_label }}</h1>
+            <p>See what people are reviewing, what is rising, and what deserves your next rating.</p>
+        </div>
+        <a class="button" href="{% url 'feed' %}#feed-composer">Add review</a>
+    </section>
+
+    <div class="product-tabs">
+        <a class="filter-link {% if item_type == 'movie' %}active{% endif %}" href="{% url 'movies' %}">Movies</a>
+        <a class="filter-link {% if item_type == 'series' %}active{% endif %}" href="{% url 'series' %}">Series</a>
+        <a class="filter-link {% if item_type == 'book' %}active{% endif %}" href="{% url 'books' %}">Books</a>
+    </div>
+
+    <div class="social-layout">
+        <main class="social-center">
+            <section class="card">
+                <div class="section-heading">
+                    <h2>Recently reviewed</h2>
+                    <a class="inline-link" href="{% url 'feed' %}?type={{ item_type }}">View feed</a>
+                </div>
+                <div class="compact-review-list">
+                    {% for review in recently_reviewed %}
+                        <article class="compact-review-row">
+                            <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item.title %}" aria-label="{{ review.item.title }}">
+                                <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                            </a>
+                            <div>
+                                <div class="post-name-line">
+                                    <strong><a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a></strong>
+                                    <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                </div>
+                                <p class="meta">{{ review.rating }}/5 by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></p>
+                                <p class="review-text">{{ review.review_text|truncatechars:150 }}</p>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="empty-panel simple-empty">
+                            <h2>No {{ category_label|lower }} reviewed yet</h2>
+                            <p>Be the first to add one to Revue.</p>
+                            <a class="button" href="{% url 'feed' %}#feed-composer">Add review</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <aside class="right-rail">
+            <section class="card">
+                <h2 class="card-title">Top rated</h2>
+                <div class="rail-list">
+                    {% for item in top_rated %}
+                        <a class="rail-item" href="{% url 'item_reviews' item.title %}">
+                            <strong>{{ item.title }}</strong>
+                            <div class="meta">{{ item.average_rating|floatformat:1 }}/5 · {{ item.review_total }} review{{ item.review_total|pluralize }}</div>
+                        </a>
+                    {% empty %}
+                        <p class="empty-state">Top rated titles will appear here.</p>
+                    {% endfor %}
+                </div>
+            </section>
+            <section class="card">
+                <h2 class="card-title">Most active</h2>
+                <div class="rail-list">
+                    {% for item in active_items %}
+                        <a class="rail-item" href="{% url 'item_reviews' item.title %}">
+                            <strong>{{ item.title }}</strong>
+                            <div class="meta">{{ item.review_total }} review{{ item.review_total|pluralize }}</div>
+                        </a>
+                    {% empty %}
+                        <p class="empty-state">Activity will build as people post reviews.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+{% endblock %}

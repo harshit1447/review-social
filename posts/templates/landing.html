@@ -51,7 +51,7 @@
             align-items: center;
             display: grid;
             gap: 18px;
-            grid-template-columns: auto minmax(260px, 560px) auto;
+            grid-template-columns: auto auto minmax(260px, 520px) auto;
             position: relative;
             z-index: 12;
         }
@@ -68,6 +68,7 @@
         }
 
         .nav-actions,
+        .nav-links,
         .hero-actions,
         .taste-row,
         .social-row,
@@ -75,6 +76,23 @@
             align-items: center;
             display: flex;
             gap: 10px;
+        }
+
+        .nav-links {
+            justify-content: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: color 0.16s ease;
+            white-space: nowrap;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            color: var(--accent-dark);
         }
 
         .button {
@@ -610,6 +628,10 @@
             .nav-actions {
                 justify-content: flex-start;
             }
+
+            .nav-links {
+                justify-content: flex-start;
+            }
         }
 
         @media (max-width: 680px) {
@@ -624,6 +646,17 @@
 
             .nav-actions {
                 gap: 8px;
+            }
+
+            .nav-links {
+                gap: 12px;
+                overflow-x: auto;
+                padding-bottom: 2px;
+                scrollbar-width: none;
+            }
+
+            .nav-links::-webkit-scrollbar {
+                display: none;
             }
 
             .button {
@@ -657,6 +690,14 @@
         <nav class="nav" aria-label="Primary">
             <a class="wordmark" href="{% url 'landing' %}" aria-label="Revue home">Revue</a>
 
+            <div class="nav-links" aria-label="Explore Revue">
+                <a href="{% url 'movies' %}">Movies</a>
+                <a href="{% url 'series' %}">Series</a>
+                <a href="{% url 'books' %}">Books</a>
+                <a href="{% url 'account_login' %}?next={% url 'people' %}">People</a>
+                <a href="{% url 'account_login' %}?next={% url 'recommendations' %}">Recommendations</a>
+            </div>
+
             <div class="search-wrap">
                 <label class="landing-search" for="landing-search-input">
                     <span>Search</span>
@@ -674,17 +715,18 @@
         <section class="hero">
             <div class="hero-copy">
                 <p class="eyebrow">Your taste network</p>
-                <h1>Find what to watch next through people you trust.</h1>
-                <p class="subline">Search a title, follow friends, and see reviews that feel personal instead of random.</p>
+                <h1>Find what to watch, read, or recommend next — through people who share your taste.</h1>
+                <p class="subline">Rate movies, series, and books. Discover people with similar taste. Get better recommendations from a network that feels personal.</p>
                 <div class="hero-actions">
                     <a class="button primary" href="{% url 'signup' %}">Join Revue</a>
                     <a class="button" href="{% url 'account_login' %}">Log in</a>
                 </div>
                 <div class="taste-row" aria-label="Revue actions">
                     <span class="taste-pill">Reviews</span>
-                    <span class="taste-pill">Friends</span>
-                    <span class="taste-pill">Saved lists</span>
-                    <span class="taste-pill">Recommendations</span>
+                    <span class="taste-pill">Similar taste</span>
+                    <span class="taste-pill">Movies</span>
+                    <span class="taste-pill">Series</span>
+                    <span class="taste-pill">Books</span>
                 </div>
             </div>
 

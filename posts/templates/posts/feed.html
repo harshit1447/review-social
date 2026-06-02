@@ -13,6 +13,17 @@
 
         <div class="social-layout feed-layout-tidy">
             <main class="social-center">
+                {% if remaining_taste_reviews > 0 %}
+                    <section class="card onboarding-card">
+                        <div>
+                            <p class="eyebrow">Build your taste profile</p>
+                            <h2>Rate {{ remaining_taste_reviews }} more title{{ remaining_taste_reviews|pluralize }} to unlock better matches.</h2>
+                            <p class="meta">Add up to 10 movies, series, or books you already know. Revue will use that taste line to suggest people and recommendations.</p>
+                        </div>
+                        <a class="button" href="#feed-composer">Rate now</a>
+                    </section>
+                {% endif %}
+
                 <section id="feed-composer" class="card composer-panel tidy-composer-panel">
                     <div class="composer-title-row">
                         <div>

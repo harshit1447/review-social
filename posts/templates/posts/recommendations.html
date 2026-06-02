@@ -1,0 +1,69 @@
+{% extends "base_app.html" %}
+
+{% block title %}Recommendations | Revue{% endblock %}
+
+{% block content %}
+<div class="page recommendations-page">
+    <section class="feed-hero compact-product-hero">
+        <div>
+            <p class="eyebrow">Taste match</p>
+            <h1>Recommendations</h1>
+            <p>Enter a few movies, series, or books you liked. Revue will suggest what to try next.</p>
+        </div>
+        <a class="button secondary" href="{% url 'feed' %}#feed-composer">Rate more</a>
+    </section>
+
+    {% if needs_more_reviews %}
+        <section class="card onboarding-card">
+            <div>
+                <h2>Build your taste profile</h2>
+                <p class="meta">Rate 10 movies, series, or books so recommendations become sharper and more personal.</p>
+            </div>
+            <a class="button" href="{% url 'feed' %}#feed-composer">Start rating</a>
+        </section>
+    {% endif %}
+
+    <section class="card taste-input-card">
+        <form method="get" class="taste-form">
+            <label for="likes">What have you liked recently?</label>
+            <div class="taste-search-row">
+                <input id="likes" name="likes" type="text" value="{{ likes }}" placeholder="Stranger Things, Sherlock, Peaky Blinders, Friends">
+                <button type="submit">Find matches</button>
+            </div>
+            <p class="meta">Use commas between titles. This is a mock taste engine for now.</p>
+        </form>
+    </section>
+
+    <section class="recommendation-card-grid">
+        {% for row in recommendations %}
+            <article class="card recommendation-card">
+                <a class="recommendation-poster {% if row.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' row.item.title %}">
+                    <img src="{% if row.item.image_url %}{{ row.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                </a>
+                <div>
+                    <div class="post-name-line">
+                        <h2><a href="{% url 'item_reviews' row.item.title %}">{{ row.item.title }}</a></h2>
+                        <span class="item-type-inline">{{ row.item.get_item_type_display }}</span>
+                    </div>
+                    <p class="meta">{{ row.reason }}</p>
+                    <div class="form-actions compact-card-actions">
+                        <form method="post" action="{% if row.item.item_type == 'book' %}{% url 'toggle_saved_item' row.item.id 'readlist' %}{% else %}{% url 'toggle_saved_item' row.item.id 'watchlist' %}{% endif %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="secondary">Save</button>
+                        </form>
+                        <a class="button" href="{% url 'feed' %}#feed-composer">Review</a>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <section class="card empty-panel">
+                <span class="empty-orb">R</span>
+                <h2>No recommendations yet</h2>
+                <p>Post a few ratings or enter titles you already like, and Revue will start building matches.</p>
+                <a class="button" href="{% url 'feed' %}#feed-composer">Rate something</a>
+            </section>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

@@ -4211,6 +4211,175 @@
                 width: 72px;
             }
         }
+        .product-tabs {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: -4px 0 18px;
+        }
+
+        .compact-product-hero {
+            align-items: end;
+            gap: 18px;
+        }
+
+        .onboarding-card {
+            align-items: center;
+            display: flex;
+            gap: 18px;
+            justify-content: space-between;
+        }
+
+        .onboarding-card h2 {
+            font-size: 1.15rem;
+            margin: 3px 0 6px;
+        }
+
+        .compact-review-list,
+        .people-match-grid,
+        .recommendation-card-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .compact-review-row {
+            align-items: start;
+            border-bottom: 1px solid var(--line);
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 74px minmax(0, 1fr);
+            padding: 14px 0;
+        }
+
+        .compact-review-row:first-child {
+            padding-top: 0;
+        }
+
+        .compact-review-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .compact-review-row .review-poster {
+            height: 108px;
+            width: 74px;
+        }
+
+        .simple-empty {
+            box-shadow: none;
+            padding: 22px;
+        }
+
+        .taste-input-card {
+            margin-bottom: 18px;
+        }
+
+        .taste-form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .taste-form label {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .taste-search-row {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .recommendation-card-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .recommendation-card {
+            align-items: start;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 88px minmax(0, 1fr);
+        }
+
+        .recommendation-poster {
+            background: var(--accent-soft);
+            border-radius: 18px;
+            display: block;
+            height: 128px;
+            overflow: hidden;
+            width: 88px;
+        }
+
+        .recommendation-poster img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .compact-card-actions {
+            margin-top: 14px;
+        }
+
+        .people-match-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .people-match-card {
+            display: grid;
+            gap: 16px;
+        }
+
+        .taste-match-score {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-weight: 700;
+            justify-self: start;
+            padding: 7px 12px;
+        }
+
+        .taste-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .taste-chip-row .taste-pill {
+            font-size: 0.82rem;
+            padding: 7px 10px;
+        }
+
+        @media (max-width: 1180px) {
+            .people-match-grid,
+            .recommendation-card-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .onboarding-card,
+            .compact-product-hero {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .taste-search-row,
+            .people-match-grid,
+            .recommendation-card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recommendation-card {
+                grid-template-columns: 74px minmax(0, 1fr);
+            }
+
+            .recommendation-poster {
+                height: 108px;
+                width: 74px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4250,7 +4419,12 @@
                 <p class="sidebar-section-title">Navigation</p>
                 {% if user.is_authenticated %}
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
+                <a href="{% url 'movies' %}" class="sidebar-link {% if request.resolver_match.url_name == 'movies' %}active{% endif %}">Movies</a>
+                <a href="{% url 'series' %}" class="sidebar-link {% if request.resolver_match.url_name == 'series' %}active{% endif %}">Series</a>
+                <a href="{% url 'books' %}" class="sidebar-link {% if request.resolver_match.url_name == 'books' %}active{% endif %}">Books</a>
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
+                <a href="{% url 'people' %}" class="sidebar-link {% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
+                <a href="{% url 'recommendations' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">Recommendations</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
                 <a href="{% url 'notifications' %}" class="sidebar-link has-badge {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
                     <span>Notifications</span>
@@ -4260,6 +4434,9 @@
                 </a>
                 {% else %}
                     <a href="{% url 'landing' %}" class="sidebar-link {% if request.resolver_match.url_name == 'landing' %}active{% endif %}">Home</a>
+                    <a href="{% url 'movies' %}" class="sidebar-link {% if request.resolver_match.url_name == 'movies' %}active{% endif %}">Movies</a>
+                    <a href="{% url 'series' %}" class="sidebar-link {% if request.resolver_match.url_name == 'series' %}active{% endif %}">Series</a>
+                    <a href="{% url 'books' %}" class="sidebar-link {% if request.resolver_match.url_name == 'books' %}active{% endif %}">Books</a>
                     <a href="{% url 'account_login' %}" class="sidebar-link {% if request.resolver_match.url_name == 'account_login' %}active{% endif %}">Log in</a>
                     <a href="{% url 'signup' %}" class="sidebar-link {% if request.resolver_match.url_name == 'signup' %}active{% endif %}">Sign up</a>
                 {% endif %}

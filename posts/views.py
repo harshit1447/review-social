@@ -3,7 +3,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.cache import cache
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -99,6 +99,143 @@ def landing(request):
     if request.user.is_authenticated:
         return redirect("feed")
     return render(request, "landing.html")
+
+
+def _item_queryset_for_type(item_type):
+    return Item.objects.filter(item_type=item_type).annotate(
+        review_total=Count("reviews", distinct=True),
+        average_rating=Avg("reviews__rating"),
+    )
+
+
+def _category_label(item_type):
+    labels = {
+        "movie": "Movies",
+        "series": "Series",
+        "book": "Books",
+    }
+    return labels.get(item_type, "Items")
+
+
+def category_page(request, item_type):
+    if item_type not in {"movie", "series", "book"}:
+        return redirect("discover")
+
+    items = _item_queryset_for_type(item_type).select_related()
+    recently_reviewed = (
+        Review.objects.filter(item__item_type=item_type)
+        .select_related("user", "user__profile", "item")
+        .order_by("-created_at")[:8]
+    )
+    top_rated = items.filter(review_total__gt=0).order_by("-average_rating", "-review_total", "title")[:8]
+    active_items = items.filter(review_total__gt=0).order_by("-review_total", "title")[:8]
+
+    return render(
+        request,
+        "posts/category_page.html",
+        {
+            "item_type": item_type,
+            "category_label": _category_label(item_type),
+            "recently_reviewed": recently_reviewed,
+            "top_rated": top_rated,
+            "active_items": active_items,
+        },
+    )
+
+
+@login_required
+def people_discovery(request):
+    query = request.GET.get("q", "").strip()
+    followed_ids = _followed_user_ids(request.user)
+    people = User.objects.select_related("profile").exclude(id=request.user.id)
+    if query:
+        people = people.filter(
+            Q(first_name__icontains=query)
+            | Q(last_name__icontains=query)
+            | Q(username__icontains=query)
+            | Q(email__icontains=query)
+        )
+    people = people.annotate(review_total=Count("review", distinct=True)).order_by("-review_total", "first_name", "username")[:30]
+
+    current_types = set(
+        Review.objects.filter(user=request.user).values_list("item__item_type", flat=True)
+    )
+    people_cards = []
+    for index, person in enumerate(people):
+        person_types = set(Review.objects.filter(user=person).values_list("item__item_type", flat=True))
+        overlap = len(current_types & person_types)
+        base_match = 58 + min(overlap * 12, 30) + min(getattr(person, "review_total", 0), 10)
+        top_favourites = (
+            Review.objects.filter(user=person)
+            .select_related("item")
+            .order_by("-rating", "-created_at")
+            .values_list("item__title", flat=True)[:3]
+        )
+        people_cards.append(
+            {
+                "user": person,
+                "match": min(base_match + (index % 4) * 2, 96),
+                "top_favourites": list(top_favourites),
+                "is_following": person.id in followed_ids,
+            }
+        )
+
+    return render(
+        request,
+        "posts/people.html",
+        {
+            "query": query,
+            "people_cards": people_cards,
+        },
+    )
+
+
+@login_required
+def recommendations_page(request):
+    raw_likes = request.GET.get("likes", "").strip()
+    liked_terms = [term.strip() for term in raw_likes.replace("\n", ",").split(",") if term.strip()]
+
+    user_types = list(
+        Review.objects.filter(user=request.user)
+        .values("item__item_type")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+        .values_list("item__item_type", flat=True)
+    )
+    preferred_types = user_types or ["series", "movie", "book"]
+    exclude_titles = {term.lower() for term in liked_terms}
+    exclude_ids = set(Review.objects.filter(user=request.user).values_list("item_id", flat=True))
+    candidate_items = (
+        Item.objects.filter(item_type__in=preferred_types)
+        .exclude(id__in=exclude_ids)
+        .annotate(review_total=Count("reviews", distinct=True), average_rating=Avg("reviews__rating"))
+        .order_by("-review_total", "-average_rating", "title")[:30]
+    )
+
+    recommendations = []
+    for item in candidate_items:
+        if item.title.lower() in exclude_titles:
+            continue
+        if liked_terms:
+            reason = f"Because you liked {liked_terms[0]}, this fits your {item.get_item_type_display().lower()} taste profile."
+        elif item.review_total:
+            reason = f"{item.review_total} Revue review{'' if item.review_total == 1 else 's'} make this a good next title to explore."
+        else:
+            reason = "A useful starter pick while Revue learns your taste."
+        recommendations.append({"item": item, "reason": reason})
+        if len(recommendations) >= 8:
+            break
+
+    return render(
+        request,
+        "posts/recommendations.html",
+        {
+            "likes": raw_likes,
+            "liked_terms": liked_terms,
+            "recommendations": recommendations,
+            "needs_more_reviews": Review.objects.filter(user=request.user).count() < 10,
+        },
+    )
 
 
 def landing_suggest_items(request):
@@ -776,6 +913,7 @@ def feed(request, review_form=None):
     notifications_preview = Notification.objects.filter(
         recipient=request.user
     ).select_related("actor").order_by("-created_at")[:5]
+    user_review_count = Review.objects.filter(user=request.user).count()
 
     return render(
         request,
@@ -799,6 +937,8 @@ def feed(request, review_form=None):
             "popular_reviews": popular_reviews,
             "suggested_users": suggested_users,
             "notifications_preview": notifications_preview,
+            "user_review_count": user_review_count,
+            "remaining_taste_reviews": max(10 - user_review_count, 0),
         },
     )
 
@@ -1376,6 +1516,9 @@ def profile(request):
     recent_reviews = Review.objects.filter(
         user=request.user
     ).select_related("user", "user__profile", "item").order_by("-created_at")[:5]
+    top_rated_reviews = Review.objects.filter(
+        user=request.user
+    ).select_related("item").order_by("-rating", "-created_at")[:5]
     top_types = Review.objects.filter(user=request.user).values(
         "item__item_type"
     ).annotate(
@@ -1402,6 +1545,7 @@ def profile(request):
             "likes_received": likes_received,
             "recommendation_count": recommendation_count,
             "recent_reviews": recent_reviews,
+            "top_rated_reviews": top_rated_reviews,
             "top_types": top_types,
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
