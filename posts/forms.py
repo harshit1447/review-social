@@ -103,6 +103,7 @@ class ReviewForm(forms.Form):
             "wikidata:",
             "podcast:",
             "experience:",
+            "preview:",
         )
         if not selected_item_key.startswith(valid_prefixes):
             raise forms.ValidationError("Invalid item selection. Please pick again.")

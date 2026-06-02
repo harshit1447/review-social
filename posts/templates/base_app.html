@@ -4253,6 +4253,73 @@
             background-repeat: no-repeat;
         }
 
+        .discover-title-search {
+            position: relative;
+        }
+
+        .discover-title-suggestions {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 22px 58px rgba(73, 48, 28, 0.14);
+            display: grid;
+            gap: 8px;
+            left: 0;
+            max-height: 360px;
+            overflow: auto;
+            padding: 10px;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 20;
+        }
+
+        .discover-suggestion-row {
+            align-items: center;
+            border-radius: 14px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 46px minmax(0, 1fr);
+            padding: 8px;
+            transition: background 0.16s ease, transform 0.16s ease;
+        }
+
+        .discover-suggestion-row:hover,
+        .discover-suggestion-row:focus-visible {
+            background: var(--accent-soft);
+            transform: translateY(-1px);
+        }
+
+        .discover-suggestion-row img {
+            background: var(--accent-soft);
+            border-radius: 9px;
+            height: 62px;
+            object-fit: cover;
+            width: 46px;
+        }
+
+        .discover-suggestion-row span {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .discover-suggestion-row strong,
+        .discover-suggestion-row small {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .discover-suggestion-row small,
+        .discover-suggestion-empty {
+            color: var(--muted);
+        }
+
+        .discover-suggestion-empty {
+            padding: 14px;
+        }
+
         .movie-genre-browser {
             display: grid;
             gap: 14px;

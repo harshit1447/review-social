@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.core.cache import cache
 from django.db.models import Avg, Count, Q
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
@@ -809,17 +809,23 @@ def _enrich_item_metadata(item: Item):
 
 
 def _metadata_from_payload(payload):
-    item_type = (payload.get("item_type") or "movie").strip().lower()
+    def first_value(key, default=""):
+        value = payload.get(key, default)
+        if isinstance(value, (list, tuple)):
+            value = value[0] if value else default
+        return (value or default)
+
+    item_type = first_value("item_type", "movie").strip().lower()
     if item_type not in {"movie", "series", "book"}:
         item_type = "movie"
     return {
-        "title": (payload.get("title") or payload.get("item_title") or "").strip(),
+        "title": (first_value("title") or first_value("item_title")).strip(),
         "item_type": item_type,
-        "release_year": (payload.get("year") or payload.get("release_year") or "").strip(),
-        "creator_name": (payload.get("creator") or payload.get("creator_name") or "").strip(),
-        "image_url": (payload.get("image_url") or "").strip(),
-        "external_source": (payload.get("external_source") or "").strip(),
-        "external_id": (payload.get("external_id") or "").strip(),
+        "release_year": (first_value("year") or first_value("release_year")).strip(),
+        "creator_name": (first_value("creator") or first_value("creator_name")).strip(),
+        "image_url": first_value("image_url").strip(),
+        "external_source": first_value("external_source").strip(),
+        "external_id": first_value("external_id").strip(),
     }
 
 
@@ -883,10 +889,46 @@ def suggest_items(request):
     item_type = request.GET.get("item_type", "").strip().lower()
     if item_type in {"podcast", "experience"}:
         return JsonResponse({"results": [], "error": ""})
-    if item_type not in {"movie", "series", "book"}:
+    if item_type not in {"movie", "series", "book", "all"}:
         return JsonResponse({"results": [], "error": "Please choose movie, series, book, podcast, or experience."})
     if len(query) < 2:
         return JsonResponse({"results": [], "error": ""})
+
+    if item_type == "all":
+        merged = []
+        seen_keys = set()
+        error_message = ""
+        for row_type in ("movie", "series", "book"):
+            sub_request = request.GET.copy()
+            sub_request["item_type"] = row_type
+            if row_type == "book":
+                external_results = _google_books_suggestions(query) or _openlibrary_suggestions(query) or _wikidata_suggestions(query, row_type)
+            else:
+                external_results = _omdb_fast_suggestions(query, row_type) or _wikidata_suggestions(query, row_type)
+            existing_rows = Item.objects.filter(title__icontains=query, item_type=row_type).order_by("title").values(
+                "id", "title", "item_type", "release_year", "creator_name", "image_url"
+            )
+            rows = [
+                {
+                    "key": f"item:{item_row['id']}",
+                    "title": item_row["title"],
+                    "item_type": item_row["item_type"],
+                    "year": item_row["release_year"],
+                    "creator": item_row["creator_name"],
+                    "image_url": item_row["image_url"],
+                    "external_source": "",
+                    "external_id": "",
+                    "source": "existing",
+                }
+                for item_row in existing_rows
+            ] + external_results
+            for row in rows:
+                key = f"{row.get('title', '').lower()}:{row.get('item_type', '')}:{row.get('year', '')}:{row.get('external_id', '')}"
+                if not row.get("title") or key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                merged.append(row)
+        return JsonResponse({"results": merged, "error": error_message})
 
     existing = list(
         Item.objects.filter(
@@ -1048,6 +1090,28 @@ def feed(request, review_form=None):
     ).select_related("actor").order_by("-created_at")[:5]
     user_review_count = Review.objects.filter(user=request.user).count()
 
+    review_form_instance = review_form
+    if review_form_instance is None:
+        initial = {}
+        if request.GET.get("item_title") or request.GET.get("title"):
+            item_payload = _metadata_from_payload(request.GET)
+            item_title = item_payload["title"]
+            item_type = item_payload["item_type"]
+            external_source = item_payload["external_source"]
+            external_id = item_payload["external_id"]
+            initial = {
+                "item_title": item_title,
+                "item_type": item_type,
+                "selected_item_title": item_title,
+                "selected_item_year": item_payload["release_year"],
+                "selected_item_creator": item_payload["creator_name"],
+                "selected_item_image_url": item_payload["image_url"],
+                "selected_item_external_source": external_source,
+                "selected_item_external_id": external_id,
+                "selected_item_key": f"{external_source}:{external_id}" if external_source and external_id else f"preview:{item_title}",
+            }
+        review_form_instance = ReviewForm(initial=initial)
+
     return render(
         request,
         "posts/feed.html",
@@ -1064,7 +1128,7 @@ def feed(request, review_form=None):
             "saved_review_ids": saved_review_ids,
             "recommended_item_ids": recommended_item_ids,
             "review_liked_ids": review_liked_ids,
-            "review_form": review_form or ReviewForm(),
+            "review_form": review_form_instance,
             "activities": activities[:12],
             "followed_activities": followed_activities[:6],
             "popular_reviews": popular_reviews,
@@ -1716,14 +1780,38 @@ def item_reviews_by_id(request, item_id):
 
 def item_reviews(request, item_title):
     normalized_title = unquote(item_title).strip()
-    item = get_object_or_404(
-        Item.objects.annotate(review_total=Count("reviews")).order_by("-review_total", "id"),
-        title__iexact=normalized_title,
+    item = (
+        Item.objects.annotate(review_total=Count("reviews"))
+        .order_by("-review_total", "id")
+        .filter(title__iexact=normalized_title)
+        .first()
     )
-    _enrich_item_metadata(item)
-    item.refresh_from_db()
+    is_preview_item = False
+    preview_query = ""
+    if item:
+        _enrich_item_metadata(item)
+        item.refresh_from_db()
+    elif request.GET.get("preview") or request.GET.get("item_type") or request.GET.get("external_id"):
+        is_preview_item = True
+        payload = _metadata_from_payload({**request.GET, "title": normalized_title})
+        item = Item(
+            title=payload["title"] or normalized_title,
+            item_type=payload["item_type"],
+            release_year=payload["release_year"],
+            creator_name=payload["creator_name"],
+            image_url=payload["image_url"],
+            external_source=payload["external_source"],
+            external_id=payload["external_id"],
+        )
+        _apply_external_metadata_to_unsaved_item(item)
+        preview_query = _preview_query_for_item(item)
+    else:
+        raise Http404("No item found.")
     reviews = (
-        Review.objects.filter(item=item)
+        Review.objects.filter(item=item) if item.pk else Review.objects.none()
+    )
+    reviews = (
+        reviews
         .select_related("user", "user__profile")
         .annotate(
             review_like_total=Count("likes", distinct=True),
@@ -1739,9 +1827,9 @@ def item_reviews(request, item_title):
         "save_active": False,
         "recommended_active": False,
     }
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and item.pk:
         item_state = _item_action_state(request.user, item)
-    item_like_count = SavedItem.objects.filter(item=item, list_type="favorites").count()
+    item_like_count = SavedItem.objects.filter(item=item, list_type="favorites").count() if item.pk else 0
     review_liked_ids = set()
     friend_ids = set()
     if request.user.is_authenticated:
@@ -1753,7 +1841,10 @@ def item_reviews(request, item_title):
         )
         friend_ids = _followed_user_ids(request.user)
     popular_reviews = (
-        Review.objects.exclude(item=item)
+        Review.objects.exclude(item=item) if item.pk else Review.objects.all()
+    )
+    popular_reviews = (
+        popular_reviews
         .select_related("item", "user", "user__profile")
         .annotate(
             likes_total=Count(
@@ -1768,10 +1859,13 @@ def item_reviews(request, item_title):
     if request.user.is_authenticated:
         suggested_users = suggested_users.exclude(id=request.user.id).exclude(id__in=friend_ids)
     suggested_users = suggested_users.order_by("first_name", "username")[:3]
-    top_level_comments = Comment.objects.filter(
-        review__item=item,
-        parent__isnull=True,
-    ).select_related("user", "user__profile", "review").prefetch_related("replies", "likes")[:20]
+    if item.pk:
+        top_level_comments = Comment.objects.filter(
+            review__item=item,
+            parent__isnull=True,
+        ).select_related("user", "user__profile", "review").prefetch_related("replies", "likes")[:20]
+    else:
+        top_level_comments = Comment.objects.none()
     return render(
         request,
         "posts/item_reviews.html",
@@ -1789,8 +1883,35 @@ def item_reviews(request, item_title):
             "review_liked_ids": review_liked_ids,
             "popular_reviews": popular_reviews,
             "suggested_users": suggested_users,
+            "is_preview_item": is_preview_item,
+            "preview_query": preview_query,
+            "open_recommend_on_load": request.GET.get("open_recommend") == "1",
         },
     )
+
+
+@login_required
+def preview_item_action(request, action):
+    if request.method != "POST":
+        return redirect("discover")
+    if action not in {"favorites", "watchlist", "readlist", "recommend"}:
+        return redirect("discover")
+    item = _materialize_item_from_payload(request.POST)
+    if not item:
+        messages.error(request, "Choose a valid title first.")
+        return redirect("discover")
+
+    if action in {"favorites", "watchlist", "readlist"}:
+        SavedItem.objects.get_or_create(user=request.user, item=item, list_type=action)
+        if action == "favorites":
+            _create_activity(
+                request.user,
+                Activity.REVIEW_LIKED,
+                f"{_display_name(request.user)} liked {item.title}",
+            )
+        return redirect("item_reviews", item_title=item.title)
+
+    return redirect(f"{reverse('item_reviews', kwargs={'item_title': item.title})}?open_recommend=1")
 
 
 @login_required

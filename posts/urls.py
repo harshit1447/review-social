@@ -34,6 +34,7 @@ urlpatterns = [
     path("comments/<int:comment_id>/delete/", views.delete_comment, name="delete_comment"),
     path("comments/<int:comment_id>/like/", views.like_comment, name="like_comment"),
     path("items/<int:item_id>/save/<str:list_type>/", views.toggle_saved_item, name="toggle_saved_item"),
+    path("preview-items/<str:action>/", views.preview_item_action, name="preview_item_action"),
     path("recommend/", views.recommend, name="recommend"),
     path("profile/", views.profile, name="profile"),
     path("profile/photo/delete/", views.delete_profile_photo, name="delete_profile_photo"),

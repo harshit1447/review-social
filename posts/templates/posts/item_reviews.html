@@ -58,7 +58,11 @@
                 <div class="item-hero-actions-row">
                     <div class="form-actions">
                         {% if user.is_authenticated %}
-                            <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
+                            {% if is_preview_item %}
+                                <a class="button" href="{% url 'feed' %}?item_title={{ item.title|urlencode }}&{{ preview_query }}#feed-composer">Post your review</a>
+                            {% else %}
+                                <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Post your review</a>
+                            {% endif %}
                             <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
                         {% else %}
                             <a class="button" href="{% url 'signup' %}">Join to review</a>
@@ -67,28 +71,63 @@
                     </div>
                     <div class="feed-actions compact-actions item-action-buttons" aria-label="Item actions">
                         {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'toggle_saved_item' item.id 'favorites' %}" class="js-async-form">
+                        <form method="post" action="{% if is_preview_item %}{% url 'preview_item_action' 'favorites' %}{% else %}{% url 'toggle_saved_item' item.id 'favorites' %}{% endif %}" class="{% if not is_preview_item %}js-async-form{% endif %}">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <input type="hidden" name="label_context" value="like">
-                            <button type="submit" class="icon-button item-like-button has-count {% if liked_item_active %}active liked{% endif %}" data-icon-button="1" data-item-action="like" data-item-id="{{ item.id }}" data-like-action="1" aria-label="Like" title="Like">
+                            {% if is_preview_item %}
+                                <input type="hidden" name="title" value="{{ item.title }}">
+                                <input type="hidden" name="item_type" value="{{ item.item_type }}">
+                                <input type="hidden" name="year" value="{{ item.release_year }}">
+                                <input type="hidden" name="creator" value="{{ item.creator_name }}">
+                                <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                <input type="hidden" name="external_source" value="{{ item.external_source }}">
+                                <input type="hidden" name="external_id" value="{{ item.external_id }}">
+                            {% endif %}
+                            <button type="submit" class="icon-button item-like-button has-count {% if liked_item_active %}active liked{% endif %}" data-icon-button="1" data-item-action="like" {% if item.id %}data-item-id="{{ item.id }}"{% endif %} data-like-action="1" aria-label="Like" title="Like">
                                 <span class="icon-count">{{ item_like_count|default:0 }}</span>
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
                                 <span class="sr-only">Like</span>
                             </button>
                         </form>
-                        <form method="post" action="{% url 'toggle_saved_item' item.id item_save_list_type %}" class="js-async-form">
+                        <form method="post" action="{% if is_preview_item %}{% url 'preview_item_action' item_save_list_type %}{% else %}{% url 'toggle_saved_item' item.id item_save_list_type %}{% endif %}" class="{% if not is_preview_item %}js-async-form{% endif %}">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                            <button type="submit" class="icon-button {% if saved_item_active %}active{% endif %}" data-icon-button="1" data-item-action="save" data-item-id="{{ item.id }}" aria-label="Save" title="Save">
+                            {% if is_preview_item %}
+                                <input type="hidden" name="title" value="{{ item.title }}">
+                                <input type="hidden" name="item_type" value="{{ item.item_type }}">
+                                <input type="hidden" name="year" value="{{ item.release_year }}">
+                                <input type="hidden" name="creator" value="{{ item.creator_name }}">
+                                <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                <input type="hidden" name="external_source" value="{{ item.external_source }}">
+                                <input type="hidden" name="external_id" value="{{ item.external_id }}">
+                            {% endif %}
+                            <button type="submit" class="icon-button {% if saved_item_active %}active{% endif %}" data-icon-button="1" data-item-action="save" {% if item.id %}data-item-id="{{ item.id }}"{% endif %} aria-label="Save" title="Save">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
                                 <span class="sr-only">Save</span>
                             </button>
                         </form>
-                        <button type="button" class="icon-button recommend-button js-open-recommend {% if recommended_item_active %}active{% endif %}" data-item-action="recommend" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}" aria-label="Recommend" title="Recommend">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
-                            <span class="sr-only">Recommend</span>
-                        </button>
+                        {% if is_preview_item %}
+                            <form method="post" action="{% url 'preview_item_action' 'recommend' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="title" value="{{ item.title }}">
+                                <input type="hidden" name="item_type" value="{{ item.item_type }}">
+                                <input type="hidden" name="year" value="{{ item.release_year }}">
+                                <input type="hidden" name="creator" value="{{ item.creator_name }}">
+                                <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                <input type="hidden" name="external_source" value="{{ item.external_source }}">
+                                <input type="hidden" name="external_id" value="{{ item.external_id }}">
+                                <button type="submit" class="icon-button recommend-button" data-item-action="recommend" aria-label="Recommend" title="Recommend">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
+                                    <span class="sr-only">Recommend</span>
+                                </button>
+                            </form>
+                        {% else %}
+                            <button type="button" class="icon-button recommend-button js-open-recommend {% if recommended_item_active %}active{% endif %}" data-item-action="recommend" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}" aria-label="Recommend" title="Recommend">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
+                                <span class="sr-only">Recommend</span>
+                            </button>
+                        {% endif %}
                         {% else %}
                             <a class="icon-button item-like-button has-count" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like" title="Log in to like">
                                 <span class="icon-count">{{ item_like_count|default:0 }}</span>
@@ -187,7 +226,11 @@
                     <p class="empty-state">No reviews posted yet for this item.</p>
                     <div class="form-actions">
                         {% if user.is_authenticated %}
-                            <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Be the first to review</a>
+                            {% if is_preview_item %}
+                                <a class="button" href="{% url 'feed' %}?item_title={{ item.title|urlencode }}&{{ preview_query }}#feed-composer">Be the first to review</a>
+                            {% else %}
+                                <a class="button" href="{% url 'new_review' %}?item={{ item.id }}">Be the first to review</a>
+                            {% endif %}
                         {% else %}
                             <a class="button" href="{% url 'signup' %}">Join to review</a>
                         {% endif %}
@@ -329,4 +372,12 @@
             </aside>
         </div>
     </div>
+    {% if open_recommend_on_load and user.is_authenticated and not is_preview_item %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var button = document.querySelector(".js-open-recommend[data-item-id='{{ item.id }}']");
+                if (button) button.click();
+            });
+        </script>
+    {% endif %}
 {% endblock %}

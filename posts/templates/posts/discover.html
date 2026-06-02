@@ -13,14 +13,15 @@
     </section>
 
     <section class="toolbar">
-        <form class="search-form" method="get">
+        <form class="search-form discover-title-search" method="get" autocomplete="off">
             <input type="hidden" name="chip" value="{{ chip }}">
             <input type="hidden" name="sort" value="{{ sort }}">
-            <label for="discover-search">Search discover</label>
+            <label for="discover-search">Search movies, series, or books</label>
             <div class="search-row">
-                <input id="discover-search" type="search" name="q" value="{{ query }}" placeholder="Search reviews, titles, people">
+                <input id="discover-search" type="search" name="q" value="" placeholder="Search a title to open its page">
                 <button type="submit">Search</button>
             </div>
+            <div id="discover-title-suggestions" class="discover-title-suggestions" hidden></div>
         </form>
         <div class="filters">
             <a class="filter-link {% if chip == 'for-you' %}active{% endif %}" href="{% url 'discover' %}?chip=for-you&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">For you</a>
@@ -181,4 +182,105 @@
         </aside>
     </div>
 </div>
+<script>
+    (function () {
+        var form = document.querySelector(".discover-title-search");
+        var input = document.getElementById("discover-search");
+        var list = document.getElementById("discover-title-suggestions");
+        var debounceTimer = null;
+        var activeRequest = null;
+        if (!form || !input || !list) return;
+
+        function hideList() {
+            list.hidden = true;
+            list.innerHTML = "";
+        }
+
+        function previewUrl(row) {
+            var params = new URLSearchParams();
+            params.set("preview", "1");
+            params.set("item_type", row.item_type || "movie");
+            if (row.year) params.set("year", row.year);
+            if (row.creator) params.set("creator", row.creator);
+            if (row.image_url) params.set("image_url", row.image_url);
+            if (row.external_source) params.set("external_source", row.external_source);
+            if (row.external_id) params.set("external_id", row.external_id);
+            return "/review/" + encodeURIComponent(row.title || input.value.trim()) + "/?" + params.toString();
+        }
+
+        function renderRows(rows) {
+            if (!rows.length) {
+                list.innerHTML = '<div class="discover-suggestion-empty">No title suggestions yet. Try another movie, series, or book.</div>';
+                list.hidden = false;
+                return;
+            }
+            list.innerHTML = "";
+            rows.forEach(function (row) {
+                var link = document.createElement("a");
+                link.className = "discover-suggestion-row";
+                link.href = previewUrl(row);
+                var image = document.createElement("img");
+                image.src = row.image_url || "/static/posts/images/revue-layouts.png";
+                image.alt = "";
+                image.onerror = function () {
+                    image.src = "/static/posts/images/revue-layouts.png";
+                };
+                var copy = document.createElement("span");
+                var title = document.createElement("strong");
+                var meta = document.createElement("small");
+                title.textContent = row.title;
+                meta.textContent = [row.item_type, row.year, row.creator].filter(Boolean).join(" · ");
+                copy.appendChild(title);
+                copy.appendChild(meta);
+                link.appendChild(image);
+                link.appendChild(copy);
+                list.appendChild(link);
+            });
+            list.hidden = false;
+        }
+
+        async function fetchTitles() {
+            var query = input.value.trim();
+            if (query.length < 2) {
+                hideList();
+                return;
+            }
+            if (activeRequest) activeRequest.abort();
+            activeRequest = new AbortController();
+            list.innerHTML = '<div class="discover-suggestion-empty">Searching titles...</div>';
+            list.hidden = false;
+            try {
+                var response = await fetch("{% url 'suggest_items' %}?item_type=all&q=" + encodeURIComponent(query), {
+                    signal: activeRequest.signal
+                });
+                if (!response.ok) {
+                    hideList();
+                    return;
+                }
+                var data = await response.json();
+                renderRows(data.results || []);
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                hideList();
+            }
+        }
+
+        input.addEventListener("input", function () {
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(fetchTitles, 120);
+        });
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            var first = list.querySelector("a");
+            if (first) {
+                window.location.href = first.href;
+            } else {
+                fetchTitles();
+            }
+        });
+        document.addEventListener("click", function (event) {
+            if (!form.contains(event.target)) hideList();
+        });
+    })();
+</script>
 {% endblock %}
