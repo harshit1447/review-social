@@ -157,6 +157,7 @@
                                     <h2 class="item-title">
                                         <a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a>
                                         <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                        {% if review.inferred_genre_label %}<span class="item-type-inline genre-inline">{{ review.inferred_genre_label }}</span>{% endif %}
                                     </h2>
                                     <p class="review-text">{{ review.review_text }}</p>
                                 </div>

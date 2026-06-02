@@ -9,7 +9,7 @@
         <section class="item-hero card">
             <div class="item-hero-copy">
                 <p class="meta">{{ item.get_item_type_display }}{% if item.release_year %} &middot; {{ item.release_year }}{% endif %}</p>
-                <h1>{{ item.title }}</h1>
+                <h1>{{ item.title }}{% if item_genre_label %}<span class="item-type-inline title-genre-chip">{{ item_genre_label }}</span>{% endif %}</h1>
                 {% if item.description %}
                     <p class="item-synopsis">{{ item.description }}</p>
                 {% else %}

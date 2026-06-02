@@ -161,6 +161,7 @@
                                     <h2 class="item-title">
                                         <a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a>
                                         <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                        {% if review.inferred_genre_label %}<span class="item-type-inline genre-inline">{{ review.inferred_genre_label }}</span>{% endif %}
                                         {% if review.item.imdb_rating %}<span class="inline-rating-chip">IMDb {{ review.item.imdb_rating }}/10</span>{% endif %}
                                         {% if review.item.rotten_tomatoes_rating %}<span class="inline-rating-chip">RT {{ review.item.rotten_tomatoes_rating }}</span>{% endif %}
                                         {% if review.item.book_rating %}<span class="inline-rating-chip">{{ review.item.book_rating_source|default:"Google Books" }} {{ review.item.book_rating }}/5</span>{% endif %}

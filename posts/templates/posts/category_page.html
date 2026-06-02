@@ -36,6 +36,7 @@
                                 <div class="post-name-line">
                                     <strong><a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a></strong>
                                     <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
+                                    {% if review.inferred_genre_label %}<span class="item-type-inline genre-inline">{{ review.inferred_genre_label }}</span>{% endif %}
                                 </div>
                                 <p class="meta">{{ review.rating }}/5 by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></p>
                                 <p class="review-text">{{ review.review_text|truncatechars:150 }}</p>

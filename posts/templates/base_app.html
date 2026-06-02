@@ -577,6 +577,18 @@
             white-space: nowrap;
         }
 
+        .genre-inline,
+        .title-genre-chip {
+            color: var(--accent-dark);
+        }
+
+        .title-genre-chip {
+            display: inline-flex;
+            font-size: 0.95rem;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+
         .inline-rating-chip {
             border: 1px solid rgba(126, 67, 30, 0.14);
             border-radius: 999px;
@@ -3159,6 +3171,113 @@
             padding: 16px;
         }
 
+        .explore-hero h1 {
+            letter-spacing: -0.04em;
+        }
+
+        .explore-toolbar {
+            gap: 12px;
+        }
+
+        .explore-title-board {
+            display: grid;
+            gap: 18px;
+            padding: 20px;
+        }
+
+        .explore-title-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .explore-title-card {
+            align-items: stretch;
+            background: rgba(255, 253, 249, 0.76);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            color: var(--text);
+            display: grid;
+            grid-template-columns: 78px minmax(0, 1fr);
+            min-height: 126px;
+            overflow: hidden;
+            text-decoration: none;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+
+        .explore-title-card:hover,
+        .explore-title-card:focus-visible {
+            border-color: rgba(189, 111, 49, 0.34);
+            box-shadow: 0 16px 36px rgba(73, 48, 28, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .explore-title-poster {
+            background: var(--accent-soft);
+            display: block;
+            height: 126px;
+            overflow: hidden;
+            width: 78px;
+        }
+
+        .explore-title-poster img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .explore-title-copy {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            padding: 12px;
+        }
+
+        .explore-title-copy strong,
+        .explore-title-copy small {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .explore-title-copy strong {
+            font-size: 0.98rem;
+            line-height: 1.22;
+        }
+
+        .explore-title-copy small {
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.35;
+        }
+
+        .explore-title-stats {
+            align-items: center;
+            align-self: end;
+            color: var(--accent-dark);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .explore-title-stats span {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            padding: 4px 8px;
+        }
+
+        .explore-empty {
+            grid-column: 1 / -1;
+        }
+
+        .explore-empty span {
+            color: var(--muted);
+            display: block;
+            margin-top: 5px;
+        }
+
         .discover-review-list {
             display: grid;
             gap: 18px;
@@ -3686,6 +3805,24 @@
             .composer-title-row h2,
             .section-heading h2 {
                 font-size: 1.08rem;
+            }
+
+            .explore-title-board {
+                padding: 14px;
+            }
+
+            .explore-title-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .explore-title-card {
+                grid-template-columns: 74px minmax(0, 1fr);
+                min-height: 112px;
+            }
+
+            .explore-title-poster {
+                height: 112px;
+                width: 74px;
             }
 
             .feed-quick-filters,
@@ -4226,6 +4363,18 @@
             margin-top: 12px;
         }
 
+        .genre-filter-strip {
+            border-top: 1px solid var(--line);
+            margin-top: 10px;
+            padding-top: 12px;
+        }
+
+        .filter-link.compact {
+            font-size: 0.9rem;
+            min-height: 36px;
+            padding: 8px 14px;
+        }
+
         .discover-category-menu span {
             color: var(--muted);
             font-size: 0.86rem;
@@ -4346,6 +4495,16 @@
         .movie-genre-heading h3 {
             font-size: 1rem;
             margin: 0;
+        }
+
+        .genre-heading-link {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .genre-heading-link:hover {
+            color: var(--accent-dark);
+            text-decoration: underline;
         }
 
         .movie-genre-cards {

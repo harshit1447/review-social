@@ -62,6 +62,7 @@
                                 <p class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</p>
                                 <p class="meta">
                                     {{ review.item.get_item_type_display }}
+                                    {% if review.inferred_genre_label %} &middot; {{ review.inferred_genre_label }}{% endif %}
                                     {% if review.item.release_year %} &middot; {{ review.item.release_year }}{% endif %}
                                     {% if review.item.creator_name %} &middot; {{ review.item.creator_name }}{% endif %}
                                 </p>

@@ -117,11 +117,11 @@ def _category_label(item_type):
     return labels.get(item_type, "Items")
 
 
-MOVIE_GENRE_BUCKETS = [
+CONTENT_GENRE_BUCKETS = [
     {
         "slug": "rom-com",
         "label": "Rom-com",
-        "keywords": ("romance", "romantic", "love", "wedding", "date", "couple", "comedy"),
+        "keywords": ("rom-com", "romance", "romantic", "love", "wedding", "date", "couple"),
     },
     {
         "slug": "thriller",
@@ -143,26 +143,83 @@ MOVIE_GENRE_BUCKETS = [
         "label": "Drama",
         "keywords": ("drama", "family", "coming", "biography", "true story", "college", "friend"),
     },
+    {
+        "slug": "comedy",
+        "label": "Comedy",
+        "keywords": ("comedy", "funny", "satire", "sitcom", "humor", "laugh"),
+    },
+    {
+        "slug": "fantasy",
+        "label": "Fantasy",
+        "keywords": ("fantasy", "magic", "wizard", "kingdom", "myth", "dragon", "supernatural"),
+    },
+    {
+        "slug": "horror",
+        "label": "Horror",
+        "keywords": ("horror", "scary", "ghost", "haunted", "monster", "slasher"),
+    },
+    {
+        "slug": "crime",
+        "label": "Crime",
+        "keywords": ("crime", "police", "court", "law", "legal", "gangster", "mafia"),
+    },
 ]
 
 
-def _movie_genre_sections(reviews):
+def _genre_haystack(item, extra_text=""):
+    return " ".join(
+        [
+            item.title or "",
+            item.description or "",
+            item.creator_name or "",
+            item.cast_names or "",
+            extra_text or "",
+        ]
+    ).lower()
+
+
+def _infer_content_genre(item, extra_text=""):
+    if not item or item.item_type not in {"movie", "series"}:
+        return None
+    haystack = _genre_haystack(item, extra_text)
+    for bucket in CONTENT_GENRE_BUCKETS:
+        if any(keyword in haystack for keyword in bucket["keywords"]):
+            return {"slug": bucket["slug"], "label": bucket["label"]}
+    return None
+
+
+def _attach_genres_to_reviews(reviews):
+    for review in reviews:
+        genre = _infer_content_genre(review.item, review.review_text)
+        review.inferred_genre_slug = genre["slug"] if genre else ""
+        review.inferred_genre_label = genre["label"] if genre else ""
+    return reviews
+
+
+def _filter_reviews_by_genre(reviews, genre_slug):
+    if not genre_slug:
+        return list(reviews)
+    rows = []
+    for review in reviews:
+        genre = _infer_content_genre(review.item, review.review_text)
+        if genre and genre["slug"] == genre_slug:
+            review.inferred_genre_slug = genre["slug"]
+            review.inferred_genre_label = genre["label"]
+            rows.append(review)
+    return rows
+
+
+def _content_genre_sections(reviews):
     sections = []
     assigned_review_ids = set()
     review_rows = list(reviews)
-    for bucket in MOVIE_GENRE_BUCKETS:
+    for bucket in CONTENT_GENRE_BUCKETS:
         rows = []
         for review in review_rows:
-            item = review.item
-            haystack = " ".join(
-                [
-                    item.title or "",
-                    item.description or "",
-                    item.creator_name or "",
-                    review.review_text or "",
-                ]
-            ).lower()
-            if any(keyword in haystack for keyword in bucket["keywords"]):
+            genre = _infer_content_genre(review.item, review.review_text)
+            if genre and genre["slug"] == bucket["slug"]:
+                review.inferred_genre_slug = genre["slug"]
+                review.inferred_genre_label = genre["label"]
                 rows.append(review)
                 assigned_review_ids.add(review.id)
             if len(rows) == 3:
@@ -186,11 +243,12 @@ def category_page(request, item_type):
         return redirect("discover")
 
     items = _item_queryset_for_type(item_type).select_related()
-    recently_reviewed = (
+    recently_reviewed = list(
         Review.objects.filter(item__item_type=item_type)
         .select_related("user", "user__profile", "item")
         .order_by("-created_at")[:8]
     )
+    _attach_genres_to_reviews(recently_reviewed)
     top_rated = items.filter(review_total__gt=0).order_by("-average_rating", "-review_total", "title")[:8]
     active_items = items.filter(review_total__gt=0).order_by("-review_total", "title")[:8]
 
@@ -302,19 +360,60 @@ def recommendations_page(request):
     )
 
 
+FALLBACK_TITLE_SUGGESTIONS = [
+        {"title": "Inception", "item_type": "movie", "year": "2010", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "Interstellar", "item_type": "movie", "year": "2014", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "The Social Network", "item_type": "movie", "year": "2010", "creator": "David Fincher", "image_url": ""},
+        {"title": "3 Idiots", "item_type": "movie", "year": "2009", "creator": "Rajkumar Hirani", "image_url": ""},
+        {"title": "Shutter Island", "item_type": "movie", "year": "2010", "creator": "Martin Scorsese", "image_url": ""},
+        {"title": "The Dark Knight", "item_type": "movie", "year": "2008", "creator": "Christopher Nolan", "image_url": ""},
+        {"title": "Dune: Part Two", "item_type": "movie", "year": "2024", "creator": "Denis Villeneuve", "image_url": ""},
+        {"title": "Parasite", "item_type": "movie", "year": "2019", "creator": "Bong Joon Ho", "image_url": ""},
+        {"title": "Succession", "item_type": "series", "year": "2018", "creator": "Jesse Armstrong", "image_url": ""},
+        {"title": "Brooklyn Nine-Nine", "item_type": "series", "year": "2013", "creator": "Dan Goor, Michael Schur", "image_url": ""},
+        {"title": "Fool Me Once", "item_type": "series", "year": "2024", "creator": "Harlan Coben", "image_url": ""},
+        {"title": "Maamla Legal Hai", "item_type": "series", "year": "2024", "creator": "Sameer Saxena", "image_url": ""},
+        {"title": "Suits", "item_type": "series", "year": "2011", "creator": "Aaron Korsh", "image_url": ""},
+        {"title": "Silo", "item_type": "series", "year": "2023", "creator": "Graham Yost", "image_url": ""},
+        {"title": "Severance", "item_type": "series", "year": "2022", "creator": "Dan Erickson", "image_url": ""},
+        {"title": "Modern Family", "item_type": "series", "year": "2009", "creator": "Christopher Lloyd, Steven Levitan", "image_url": ""},
+        {"title": "Stranger Things", "item_type": "series", "year": "2016", "creator": "The Duffer Brothers", "image_url": ""},
+        {"title": "Sherlock", "item_type": "series", "year": "2010", "creator": "Mark Gatiss, Steven Moffat", "image_url": ""},
+        {"title": "Peaky Blinders", "item_type": "series", "year": "2013", "creator": "Steven Knight", "image_url": ""},
+        {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "image_url": ""},
+        {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "image_url": ""},
+        {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "image_url": ""},
+    ]
+
+
+def _fallback_title_suggestions(query, item_types=None):
+    normalized_query = query.lower().strip()
+    compact_query = normalized_query.replace(" ", "")
+    allowed_types = set(item_types or ["movie", "series", "book"])
+    results = []
+    for row in FALLBACK_TITLE_SUGGESTIONS:
+        if row["item_type"] not in allowed_types:
+            continue
+        title = row["title"]
+        compact_title = title.lower().replace(" ", "")
+        if normalized_query not in title.lower() and compact_query not in compact_title:
+            continue
+        results.append({**row, "key": f"fallback:{row['item_type']}:{title.lower()}", "external_source": "", "external_id": "", "source": "fallback"})
+    return results
+
+
 def landing_suggest_items(request):
     query = request.GET.get("q", "").strip()
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    cache_key = f"landing_suggest:v3:{query.lower()}"
+    cache_key = f"landing_suggest:v4:{query.lower()}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse({"results": cached})
 
     results = []
     seen = set()
-    normalized_query = query.lower()
 
     existing = Item.objects.filter(
         title__icontains=query,
@@ -336,33 +435,11 @@ def landing_suggest_items(request):
             }
         )
 
-    fallback_titles = [
-        {"title": "Inception", "item_type": "movie", "year": "2010", "creator": "Christopher Nolan", "image_url": ""},
-        {"title": "Interstellar", "item_type": "movie", "year": "2014", "creator": "Christopher Nolan", "image_url": ""},
-        {"title": "The Social Network", "item_type": "movie", "year": "2010", "creator": "David Fincher", "image_url": ""},
-        {"title": "3 Idiots", "item_type": "movie", "year": "2009", "creator": "Rajkumar Hirani", "image_url": ""},
-        {"title": "Shutter Island", "item_type": "movie", "year": "2010", "creator": "Martin Scorsese", "image_url": ""},
-        {"title": "The Dark Knight", "item_type": "movie", "year": "2008", "creator": "Christopher Nolan", "image_url": ""},
-        {"title": "Dune: Part Two", "item_type": "movie", "year": "2024", "creator": "Denis Villeneuve", "image_url": ""},
-        {"title": "Parasite", "item_type": "movie", "year": "2019", "creator": "Bong Joon Ho", "image_url": ""},
-        {"title": "Succession", "item_type": "series", "year": "2018", "creator": "Jesse Armstrong", "image_url": ""},
-        {"title": "Brooklyn Nine-Nine", "item_type": "series", "year": "2013", "creator": "Dan Goor, Michael Schur", "image_url": ""},
-        {"title": "Fool Me Once", "item_type": "series", "year": "2024", "creator": "Harlan Coben", "image_url": ""},
-        {"title": "Maamla Legal Hai", "item_type": "series", "year": "2024", "creator": "Sameer Saxena", "image_url": ""},
-        {"title": "Suits", "item_type": "series", "year": "2011", "creator": "Aaron Korsh", "image_url": ""},
-        {"title": "Silo", "item_type": "series", "year": "2023", "creator": "Graham Yost", "image_url": ""},
-        {"title": "Severance", "item_type": "series", "year": "2022", "creator": "Dan Erickson", "image_url": ""},
-    ]
-    for row in fallback_titles:
-        title = row["title"]
-        compact_title = title.lower().replace(" ", "")
-        if normalized_query not in title.lower() and normalized_query not in compact_title:
-            continue
-        key = f"{title.lower()}:{row.get('year', '')}:{row.get('item_type', '')}"
-        if key in seen:
-            continue
-        seen.add(key)
-        results.append(row)
+    for row in _fallback_title_suggestions(query, ["movie", "series"]):
+        key = f"{row['title'].lower()}:{row.get('year', '')}:{row.get('item_type', '')}"
+        if key not in seen:
+            seen.add(key)
+            results.append(row)
 
     cache.set(cache_key, results, 300)
     return JsonResponse({"results": results})
@@ -895,16 +972,23 @@ def suggest_items(request):
         return JsonResponse({"results": [], "error": ""})
 
     if item_type == "all":
+        cache_key = f"suggest_items:all:v2:{query.lower()}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return JsonResponse({"results": cached, "error": ""})
         merged = []
         seen_keys = set()
         error_message = ""
+
+        def add_rows(rows):
+            for row in rows:
+                key = f"{row.get('title', '').lower()}:{row.get('item_type', '')}:{row.get('year', '')}:{row.get('external_id', '')}"
+                if not row.get("title") or key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                merged.append(row)
+
         for row_type in ("movie", "series", "book"):
-            sub_request = request.GET.copy()
-            sub_request["item_type"] = row_type
-            if row_type == "book":
-                external_results = _google_books_suggestions(query) or _openlibrary_suggestions(query) or _wikidata_suggestions(query, row_type)
-            else:
-                external_results = _omdb_fast_suggestions(query, row_type) or _wikidata_suggestions(query, row_type)
             existing_rows = Item.objects.filter(title__icontains=query, item_type=row_type).order_by("title").values(
                 "id", "title", "item_type", "release_year", "creator_name", "image_url"
             )
@@ -921,13 +1005,17 @@ def suggest_items(request):
                     "source": "existing",
                 }
                 for item_row in existing_rows
-            ] + external_results
-            for row in rows:
-                key = f"{row.get('title', '').lower()}:{row.get('item_type', '')}:{row.get('year', '')}:{row.get('external_id', '')}"
-                if not row.get("title") or key in seen_keys:
-                    continue
-                seen_keys.add(key)
-                merged.append(row)
+            ]
+            add_rows(rows)
+            add_rows(_fallback_title_suggestions(query, [row_type]))
+
+        for row_type in ("movie", "series", "book"):
+            if row_type == "book":
+                external_results = _google_books_suggestions(query) or _openlibrary_suggestions(query)
+            else:
+                external_results = _omdb_fast_suggestions(query, row_type)
+            add_rows(external_results)
+        cache.set(cache_key, merged, 300)
         return JsonResponse({"results": merged, "error": error_message})
 
     existing = list(
@@ -954,6 +1042,13 @@ def suggest_items(request):
     ]
 
     existing_titles = {row["title"].strip().lower() for row in results}
+    for row in _fallback_title_suggestions(query, [item_type]):
+        normalized = row["title"].lower()
+        if normalized in existing_titles:
+            continue
+        existing_titles.add(normalized)
+        results.append(row)
+
     external_results = []
     error_message = ""
     if item_type == "book":
@@ -1027,6 +1122,7 @@ def feed(request, review_form=None):
     paginator = Paginator(reviews, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
     page_reviews = list(page_obj.object_list)
+    _attach_genres_to_reviews(page_reviews)
     page_item_ids = [review.item_id for review in page_reviews]
     page_review_ids = [review.id for review in page_reviews]
     watchlist_item_ids = set()
@@ -1145,6 +1241,10 @@ def discover(request):
     query = request.GET.get("q", "").strip()
     chip = request.GET.get("chip", "for-you")
     sort = request.GET.get("sort", "newest")
+    genre_filter = request.GET.get("genre", "").strip().lower()
+    valid_genres = {bucket["slug"] for bucket in CONTENT_GENRE_BUCKETS}
+    if genre_filter not in valid_genres:
+        genre_filter = ""
     friend_ids = _followed_user_ids(request.user)
 
     trending_reviews = Review.objects.select_related("item", "user", "user__profile")
@@ -1202,14 +1302,52 @@ def discover(request):
         friend_favorites = friend_favorites.order_by("-created_at")
         recent_reviews = recent_reviews.order_by("-created_at")
 
+    if genre_filter:
+        trending_reviews = _filter_reviews_by_genre(trending_reviews[:240], genre_filter)
+        friend_favorites = _filter_reviews_by_genre(friend_favorites[:240], genre_filter)
+        recent_reviews = _filter_reviews_by_genre(recent_reviews[:240], genre_filter)
+
     trending_page = Paginator(trending_reviews, 6).get_page(request.GET.get("trending_page"))
     friends_page = Paginator(friend_favorites, 6).get_page(request.GET.get("friends_page"))
     recent_page = Paginator(recent_reviews, 6).get_page(request.GET.get("recent_page"))
-    movie_reviews_for_genres = (
-        Review.objects.filter(item__item_type="movie")
+    trending_review_rows = list(trending_page.object_list)
+    friend_favorite_rows = list(friends_page.object_list)
+    recent_review_rows = list(recent_page.object_list)
+    _attach_genres_to_reviews(trending_review_rows)
+    _attach_genres_to_reviews(friend_favorite_rows)
+    _attach_genres_to_reviews(recent_review_rows)
+    content_reviews_for_genres = (
+        Review.objects.filter(item__item_type__in=["movie", "series"])
         .select_related("item", "user", "user__profile")
         .order_by("-created_at")[:60]
     )
+    explore_items = Item.objects.filter(item_type__in=["movie", "series", "book"]).annotate(
+        review_total=Count("reviews", distinct=True),
+        average_rating=Avg("reviews__rating"),
+        saved_total=Count(
+            "saved_entries",
+            filter=Q(saved_entries__list_type__in=["favorites", "watchlist", "readlist"]),
+            distinct=True,
+        ),
+    )
+    if query:
+        explore_items = explore_items.filter(
+            Q(title__icontains=query)
+            | Q(description__icontains=query)
+            | Q(creator_name__icontains=query)
+            | Q(cast_names__icontains=query)
+        )
+    explore_items = list(explore_items.order_by("-review_total", "-saved_total", "title")[:90])
+    if genre_filter:
+        explore_items = [
+            item for item in explore_items
+            if (genre := _infer_content_genre(item)) and genre["slug"] == genre_filter
+        ]
+    for item in explore_items:
+        genre = _infer_content_genre(item)
+        item.inferred_genre_slug = genre["slug"] if genre else ""
+        item.inferred_genre_label = genre["label"] if genre else ""
+    explore_items = explore_items[:18]
 
     return render(
         request,
@@ -1218,14 +1356,17 @@ def discover(request):
             "query": query,
             "chip": chip,
             "sort": sort,
-            "trending_reviews": trending_page.object_list,
-            "friend_favorites": friends_page.object_list,
-            "recent_reviews": recent_page.object_list,
+            "genre_filter": genre_filter,
+            "genre_options": CONTENT_GENRE_BUCKETS,
+            "trending_reviews": trending_review_rows,
+            "friend_favorites": friend_favorite_rows,
+            "recent_reviews": recent_review_rows,
+            "explore_items": explore_items,
             "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:6],
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
-            "movie_genre_sections": _movie_genre_sections(movie_reviews_for_genres),
+            "movie_genre_sections": _content_genre_sections(content_reviews_for_genres),
             "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
@@ -1716,9 +1857,10 @@ def profile(request):
     friend_count = Follow.objects.filter(follower=request.user).count() or Friendship.objects.filter(from_user=request.user).count()
     review_count = Review.objects.filter(user=request.user).count()
     recommendation_count = Recommendation.objects.filter(to_user=request.user).count()
-    recent_reviews = Review.objects.filter(
+    recent_reviews = list(Review.objects.filter(
         user=request.user
-    ).select_related("user", "user__profile", "item").order_by("-created_at")[:5]
+    ).select_related("user", "user__profile", "item").order_by("-created_at")[:5])
+    _attach_genres_to_reviews(recent_reviews)
     top_rated_reviews = Review.objects.filter(
         user=request.user
     ).select_related("item").order_by("-rating", "-created_at")[:5]
@@ -1821,6 +1963,9 @@ def item_reviews(request, item_title):
     )
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
     page_reviews = list(page_obj.object_list)
+    _attach_genres_to_reviews(page_reviews)
+    item_genre_text = " ".join([review.review_text for review in page_reviews[:6]]) if page_reviews else ""
+    item_genre = _infer_content_genre(item, item_genre_text)
     item_state = {
         "save_list_type": _save_list_type_for_item(item),
         "like_active": False,
@@ -1871,6 +2016,8 @@ def item_reviews(request, item_title):
         "posts/item_reviews.html",
         {
             "item": item,
+            "item_genre_label": item_genre["label"] if item_genre else "",
+            "item_genre_slug": item_genre["slug"] if item_genre else "",
             "reviews": page_reviews,
             "page_obj": page_obj,
             "comment_form": CommentForm(),
@@ -2108,7 +2255,8 @@ def user_profile(request, username):
     follower_ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True))
     my_following_ids = _followed_user_ids(request.user)
     mutual_count = len(follower_ids & my_following_ids)
-    reviews = Review.objects.filter(user=viewed_user).select_related("user", "user__profile", "item").order_by("-created_at")[:10]
+    reviews = list(Review.objects.filter(user=viewed_user).select_related("user", "user__profile", "item").order_by("-created_at")[:10])
+    _attach_genres_to_reviews(reviews)
     watchlist_items = SavedItem.objects.filter(
         user=viewed_user,
         list_type="watchlist",
