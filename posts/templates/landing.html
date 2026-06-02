@@ -51,7 +51,7 @@
             align-items: center;
             display: grid;
             gap: 18px;
-            grid-template-columns: auto auto minmax(260px, 520px) auto;
+            grid-template-columns: auto minmax(260px, 560px) auto;
             position: relative;
             z-index: 12;
         }
@@ -68,7 +68,6 @@
         }
 
         .nav-actions,
-        .nav-links,
         .hero-actions,
         .taste-row,
         .social-row,
@@ -76,23 +75,6 @@
             align-items: center;
             display: flex;
             gap: 10px;
-        }
-
-        .nav-links {
-            justify-content: center;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            font-size: 0.9rem;
-            font-weight: 700;
-            transition: color 0.16s ease;
-            white-space: nowrap;
-        }
-
-        .nav-links a:hover,
-        .nav-links a:focus-visible {
-            color: var(--accent-dark);
         }
 
         .button {
@@ -629,9 +611,6 @@
                 justify-content: flex-start;
             }
 
-            .nav-links {
-                justify-content: flex-start;
-            }
         }
 
         @media (max-width: 680px) {
@@ -646,17 +625,6 @@
 
             .nav-actions {
                 gap: 8px;
-            }
-
-            .nav-links {
-                gap: 12px;
-                overflow-x: auto;
-                padding-bottom: 2px;
-                scrollbar-width: none;
-            }
-
-            .nav-links::-webkit-scrollbar {
-                display: none;
             }
 
             .button {
@@ -689,14 +657,6 @@
     <main class="landing">
         <nav class="nav" aria-label="Primary">
             <a class="wordmark" href="{% url 'landing' %}" aria-label="Revue home">Revue</a>
-
-            <div class="nav-links" aria-label="Explore Revue">
-                <a href="{% url 'movies' %}">Movies</a>
-                <a href="{% url 'series' %}">Series</a>
-                <a href="{% url 'books' %}">Books</a>
-                <a href="{% url 'account_login' %}?next={% url 'people' %}">People</a>
-                <a href="{% url 'account_login' %}?next={% url 'recommendations' %}">Recommendations</a>
-            </div>
 
             <div class="search-wrap">
                 <label class="landing-search" for="landing-search-input">

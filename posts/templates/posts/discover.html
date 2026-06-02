@@ -27,6 +27,15 @@
             <a class="filter-link {% if chip == 'trending' %}active{% endif %}" href="{% url 'discover' %}?chip=trending&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">Trending</a>
             <a class="filter-link {% if chip == 'new-releases' %}active{% endif %}" href="{% url 'discover' %}?chip=new-releases&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">New releases</a>
         </div>
+        <label class="discover-category-menu" for="discover-category">
+            <span>Browse</span>
+            <select id="discover-category" onchange="if (this.value) window.location.href = this.value;">
+                <option value="">Movies, Series, Books</option>
+                <option value="{% url 'movies' %}">Movies</option>
+                <option value="{% url 'series' %}">Series</option>
+                <option value="{% url 'books' %}">Books</option>
+            </select>
+        </label>
     </section>
 
     <div class="social-layout">
@@ -78,6 +87,39 @@
                         </article>
                     {% empty %}
                         <p class="empty-state">No trending reviews yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="card movie-genre-browser">
+                <div class="section-heading">
+                    <h2>Movie types</h2>
+                    <a class="inline-link" href="{% url 'movies' %}">See all movies</a>
+                </div>
+                <p class="meta">Browse reviewed movies by mood. These are inferred from titles and review details for now.</p>
+                <div class="movie-genre-stack">
+                    {% for section in movie_genre_sections %}
+                        <section class="movie-genre-row">
+                            <div class="movie-genre-heading">
+                                <h3>{{ section.label }}</h3>
+                            </div>
+                            <div class="movie-genre-cards">
+                                {% for review in section.reviews %}
+                                    <a class="genre-review-card" href="{% url 'item_reviews' review.item.title %}">
+                                        <span class="genre-poster">
+                                            <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                                        </span>
+                                        <span class="genre-card-copy">
+                                            <strong>{{ review.item.title }}</strong>
+                                            <small>{{ review.rating }}/5 by {{ review.user.get_full_name|default:review.user.username }}</small>
+                                            <em>{{ review.review_text|truncatechars:72 }}</em>
+                                        </span>
+                                    </a>
+                                {% empty %}
+                                    <div class="genre-empty">No {{ section.label|lower }} reviews yet.</div>
+                                {% endfor %}
+                            </div>
+                        </section>
                     {% endfor %}
                 </div>
             </section>

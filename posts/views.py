@@ -117,6 +117,70 @@ def _category_label(item_type):
     return labels.get(item_type, "Items")
 
 
+MOVIE_GENRE_BUCKETS = [
+    {
+        "slug": "rom-com",
+        "label": "Rom-com",
+        "keywords": ("romance", "romantic", "love", "wedding", "date", "couple", "comedy"),
+    },
+    {
+        "slug": "thriller",
+        "label": "Thriller",
+        "keywords": ("thriller", "mystery", "crime", "murder", "spy", "suspense", "detective"),
+    },
+    {
+        "slug": "action",
+        "label": "Action",
+        "keywords": ("action", "revenge", "war", "fight", "mission", "agent", "heist", "superhero"),
+    },
+    {
+        "slug": "sci-fi",
+        "label": "Sci-fi",
+        "keywords": ("sci-fi", "science fiction", "space", "future", "alien", "robot", "time"),
+    },
+    {
+        "slug": "drama",
+        "label": "Drama",
+        "keywords": ("drama", "family", "coming", "biography", "true story", "college", "friend"),
+    },
+]
+
+
+def _movie_genre_sections(reviews):
+    sections = []
+    assigned_review_ids = set()
+    review_rows = list(reviews)
+    for bucket in MOVIE_GENRE_BUCKETS:
+        rows = []
+        for review in review_rows:
+            item = review.item
+            haystack = " ".join(
+                [
+                    item.title or "",
+                    item.description or "",
+                    item.creator_name or "",
+                    review.review_text or "",
+                ]
+            ).lower()
+            if any(keyword in haystack for keyword in bucket["keywords"]):
+                rows.append(review)
+                assigned_review_ids.add(review.id)
+            if len(rows) == 3:
+                break
+        sections.append({**bucket, "reviews": rows})
+
+    remaining = [review for review in review_rows if review.id not in assigned_review_ids][:3]
+    sections.append(
+        {
+            "slug": "hidden-gems",
+            "label": "Hidden gems",
+            "keywords": (),
+            "reviews": remaining,
+        }
+    )
+    return sections
+
+
 def category_page(request, item_type):
     if item_type not in {"movie", "series", "book"}:
         return redirect("discover")
@@ -744,6 +808,75 @@ def _enrich_item_metadata(item: Item):
         item.save(update_fields=changed)
 
 
+def _metadata_from_payload(payload):
+    item_type = (payload.get("item_type") or "movie").strip().lower()
+    if item_type not in {"movie", "series", "book"}:
+        item_type = "movie"
+    return {
+        "title": (payload.get("title") or payload.get("item_title") or "").strip(),
+        "item_type": item_type,
+        "release_year": (payload.get("year") or payload.get("release_year") or "").strip(),
+        "creator_name": (payload.get("creator") or payload.get("creator_name") or "").strip(),
+        "image_url": (payload.get("image_url") or "").strip(),
+        "external_source": (payload.get("external_source") or "").strip(),
+        "external_id": (payload.get("external_id") or "").strip(),
+    }
+
+
+def _apply_external_metadata_to_unsaved_item(item):
+    metadata = {}
+    if item.item_type in {"movie", "series"} and item.external_source == "omdb" and item.external_id:
+        metadata = _omdb_details(item.external_id)
+    elif item.item_type in {"movie", "series"}:
+        metadata = _omdb_best_match(item.title, item.item_type)
+    elif item.item_type == "book":
+        volume_id = item.external_id if item.external_source == "googlebooks" else ""
+        metadata = _google_book_rating(volume_id, item.title, item.creator_name)
+    for field, value in metadata.items():
+        value = (value or "").strip()
+        if value and not getattr(item, field):
+            setattr(item, field, value)
+
+
+def _materialize_item_from_payload(payload):
+    data = _metadata_from_payload(payload)
+    if not data["title"]:
+        return None
+    item = (
+        Item.objects.filter(title__iexact=data["title"], item_type=data["item_type"])
+        .order_by("id")
+        .first()
+    )
+    if item:
+        _enrich_item_metadata(item)
+        return item
+
+    item = Item.objects.create(
+        title=data["title"],
+        item_type=data["item_type"],
+        release_year=data["release_year"],
+        creator_name=data["creator_name"],
+        image_url=data["image_url"],
+        external_source=data["external_source"],
+        external_id=data["external_id"],
+    )
+    _enrich_item_metadata(item)
+    return item
+
+
+def _preview_query_for_item(item):
+    params = {
+        "preview": "1",
+        "item_type": item.item_type,
+        "year": item.release_year or "",
+        "creator": item.creator_name or "",
+        "image_url": item.image_url or "",
+        "external_source": item.external_source or "",
+        "external_id": item.external_id or "",
+    }
+    return urlencode({key: value for key, value in params.items() if value})
+
+
 @login_required
 def suggest_items(request):
     query = request.GET.get("q", "").strip()
@@ -1008,6 +1141,11 @@ def discover(request):
     trending_page = Paginator(trending_reviews, 6).get_page(request.GET.get("trending_page"))
     friends_page = Paginator(friend_favorites, 6).get_page(request.GET.get("friends_page"))
     recent_page = Paginator(recent_reviews, 6).get_page(request.GET.get("recent_page"))
+    movie_reviews_for_genres = (
+        Review.objects.filter(item__item_type="movie")
+        .select_related("item", "user", "user__profile")
+        .order_by("-created_at")[:60]
+    )
 
     return render(
         request,
@@ -1023,6 +1161,7 @@ def discover(request):
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
+            "movie_genre_sections": _movie_genre_sections(movie_reviews_for_genres),
             "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,

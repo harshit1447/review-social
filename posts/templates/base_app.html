@@ -4219,6 +4219,145 @@
             margin: -4px 0 18px;
         }
 
+        .discover-category-menu {
+            align-items: center;
+            display: inline-flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .discover-category-menu span {
+            color: var(--muted);
+            font-size: 0.86rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .discover-category-menu select {
+            appearance: none;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 700;
+            min-height: 42px;
+            padding: 0 40px 0 16px;
+            background-image:
+                linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
+                linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
+            background-position:
+                calc(100% - 20px) 17px,
+                calc(100% - 14px) 17px;
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+        }
+
+        .movie-genre-browser {
+            display: grid;
+            gap: 14px;
+        }
+
+        .movie-genre-stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .movie-genre-row {
+            border-top: 1px solid var(--line);
+            display: grid;
+            gap: 12px;
+            padding-top: 16px;
+        }
+
+        .movie-genre-heading {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .movie-genre-heading h3 {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .movie-genre-cards {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .genre-review-card {
+            align-items: center;
+            background: rgba(255, 253, 249, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 58px minmax(0, 1fr);
+            min-height: 104px;
+            padding: 10px;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+
+        .genre-review-card:hover,
+        .genre-review-card:focus-visible {
+            border-color: rgba(189, 111, 49, 0.34);
+            box-shadow: 0 12px 28px rgba(73, 48, 28, 0.09);
+            transform: translateY(-1px);
+        }
+
+        .genre-poster {
+            background: var(--accent-soft);
+            border-radius: 12px;
+            display: block;
+            height: 82px;
+            overflow: hidden;
+            width: 58px;
+        }
+
+        .genre-poster img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .genre-card-copy {
+            display: grid;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .genre-card-copy strong,
+        .genre-card-copy small,
+        .genre-card-copy em {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .genre-card-copy strong {
+            white-space: nowrap;
+        }
+
+        .genre-card-copy small {
+            color: var(--muted);
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .genre-card-copy em {
+            color: var(--text);
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .genre-empty {
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+            color: var(--muted);
+            padding: 18px;
+        }
+
         .compact-product-hero {
             align-items: end;
             gap: 18px;
@@ -4353,7 +4492,8 @@
 
         @media (max-width: 1180px) {
             .people-match-grid,
-            .recommendation-card-grid {
+            .recommendation-card-grid,
+            .movie-genre-cards {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
@@ -4367,7 +4507,8 @@
 
             .taste-search-row,
             .people-match-grid,
-            .recommendation-card-grid {
+            .recommendation-card-grid,
+            .movie-genre-cards {
                 grid-template-columns: 1fr;
             }
 
@@ -4419,12 +4560,7 @@
                 <p class="sidebar-section-title">Navigation</p>
                 {% if user.is_authenticated %}
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
-                <a href="{% url 'movies' %}" class="sidebar-link {% if request.resolver_match.url_name == 'movies' %}active{% endif %}">Movies</a>
-                <a href="{% url 'series' %}" class="sidebar-link {% if request.resolver_match.url_name == 'series' %}active{% endif %}">Series</a>
-                <a href="{% url 'books' %}" class="sidebar-link {% if request.resolver_match.url_name == 'books' %}active{% endif %}">Books</a>
                 <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
-                <a href="{% url 'people' %}" class="sidebar-link {% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
-                <a href="{% url 'recommendations' %}" class="sidebar-link {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">Recommendations</a>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
                 <a href="{% url 'notifications' %}" class="sidebar-link has-badge {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
                     <span>Notifications</span>
@@ -4434,9 +4570,6 @@
                 </a>
                 {% else %}
                     <a href="{% url 'landing' %}" class="sidebar-link {% if request.resolver_match.url_name == 'landing' %}active{% endif %}">Home</a>
-                    <a href="{% url 'movies' %}" class="sidebar-link {% if request.resolver_match.url_name == 'movies' %}active{% endif %}">Movies</a>
-                    <a href="{% url 'series' %}" class="sidebar-link {% if request.resolver_match.url_name == 'series' %}active{% endif %}">Series</a>
-                    <a href="{% url 'books' %}" class="sidebar-link {% if request.resolver_match.url_name == 'books' %}active{% endif %}">Books</a>
                     <a href="{% url 'account_login' %}" class="sidebar-link {% if request.resolver_match.url_name == 'account_login' %}active{% endif %}">Log in</a>
                     <a href="{% url 'signup' %}" class="sidebar-link {% if request.resolver_match.url_name == 'signup' %}active{% endif %}">Sign up</a>
                 {% endif %}
