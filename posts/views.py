@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 import json
 import os
+import re
 
 from .forms import CollectionForm, CommentForm, ProfileForm, RecommendationForm, ReviewEditForm, ReviewForm, SignUpForm
 from .models import (
@@ -32,6 +33,10 @@ from .models import (
     SavedItem,
     SavedReview,
 )
+
+
+def _cache_slug(value):
+    return re.sub(r"[^a-z0-9:_-]+", "-", (value or "").lower()).strip("-")
 
 
 def _followed_user_ids(user):
@@ -380,9 +385,17 @@ FALLBACK_TITLE_SUGGESTIONS = [
         {"title": "Stranger Things", "item_type": "series", "year": "2016", "creator": "The Duffer Brothers", "image_url": ""},
         {"title": "Sherlock", "item_type": "series", "year": "2010", "creator": "Mark Gatiss, Steven Moffat", "image_url": ""},
         {"title": "Peaky Blinders", "item_type": "series", "year": "2013", "creator": "Steven Knight", "image_url": ""},
-        {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "image_url": ""},
-        {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "image_url": ""},
-        {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "image_url": ""},
+        {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "image_url": "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg"},
+        {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "image_url": "https://covers.openlibrary.org/b/isbn/9781541762879-L.jpg"},
+        {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "image_url": "https://covers.openlibrary.org/b/isbn/9780525559474-L.jpg"},
+        {"title": "The Fault in Our Stars", "item_type": "book", "year": "2012", "creator": "John Green", "image_url": "https://covers.openlibrary.org/b/isbn/9780525478812-L.jpg"},
+        {"title": "Looking for Alaska", "item_type": "book", "year": "2005", "creator": "John Green", "image_url": "https://covers.openlibrary.org/b/isbn/9780142402511-L.jpg"},
+        {"title": "The Alchemist", "item_type": "book", "year": "1988", "creator": "Paulo Coelho", "image_url": "https://covers.openlibrary.org/b/isbn/9780061122415-L.jpg"},
+        {"title": "The Psychology of Money", "item_type": "book", "year": "2020", "creator": "Morgan Housel", "image_url": "https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg"},
+        {"title": "Sapiens: A Brief History of Humankind", "item_type": "book", "year": "2011", "creator": "Yuval Noah Harari", "image_url": "https://covers.openlibrary.org/b/isbn/9780062316097-L.jpg"},
+        {"title": "Ikigai", "item_type": "book", "year": "2016", "creator": "Hector Garcia, Francesc Miralles", "image_url": "https://covers.openlibrary.org/b/isbn/9780143130727-L.jpg"},
+        {"title": "The Kite Runner", "item_type": "book", "year": "2003", "creator": "Khaled Hosseini", "image_url": "https://covers.openlibrary.org/b/isbn/9781594631931-L.jpg"},
+        {"title": "A Thousand Splendid Suns", "item_type": "book", "year": "2007", "creator": "Khaled Hosseini", "image_url": "https://covers.openlibrary.org/b/isbn/9781594483851-L.jpg"},
     ]
 
 
@@ -426,11 +439,11 @@ DISCOVER_RAIL_SECTIONS = [
         "title": "Books people keep recommending",
         "kicker": "Fast starts for your reading list",
         "items": [
-            {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "tag": "Book", "description": "A practical guide to improving systems and habits."},
-            {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "tag": "Book", "description": "Clear thinking on inequality, growth, and policy."},
-            {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "tag": "Book", "description": "A warm novel about regret, choices, and possible lives."},
-            {"title": "Project Hail Mary", "item_type": "book", "year": "2021", "creator": "Andy Weir", "tag": "Book", "description": "A funny, puzzle-like survival story in deep space."},
-            {"title": "Tomorrow, and Tomorrow, and Tomorrow", "item_type": "book", "year": "2022", "creator": "Gabrielle Zevin", "tag": "Book", "description": "A novel about games, friendship, ambition, and art."},
+            {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "tag": "Book", "description": "A practical guide to improving systems and habits.", "image_url": "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg"},
+            {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "tag": "Book", "description": "Clear thinking on inequality, growth, and policy.", "image_url": "https://covers.openlibrary.org/b/isbn/9781541762879-L.jpg"},
+            {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "tag": "Book", "description": "A warm novel about regret, choices, and possible lives.", "image_url": "https://covers.openlibrary.org/b/isbn/9780525559474-L.jpg"},
+            {"title": "Project Hail Mary", "item_type": "book", "year": "2021", "creator": "Andy Weir", "tag": "Book", "description": "A funny, puzzle-like survival story in deep space.", "image_url": "https://covers.openlibrary.org/b/isbn/9780593135204-L.jpg"},
+            {"title": "Tomorrow, and Tomorrow, and Tomorrow", "item_type": "book", "year": "2022", "creator": "Gabrielle Zevin", "tag": "Book", "description": "A novel about games, friendship, ambition, and art.", "image_url": "https://covers.openlibrary.org/b/isbn/9780593321201-L.jpg"},
         ],
     },
 ]
@@ -465,7 +478,7 @@ def _catalog_suggestions(query, item_types=None):
             {
                 **row,
                 "key": key,
-                "image_url": "",
+                "image_url": row.get("image_url", ""),
                 "external_source": "catalog",
                 "external_id": key,
                 "source": "catalog",
@@ -504,7 +517,7 @@ def _discover_rail_sections():
             item = local_by_key.get((seed["title"].lower(), seed["item_type"]))
             row = {
                 **seed,
-                "image_url": item.image_url if item and item.image_url else "",
+                "image_url": item.image_url if item and item.image_url else seed.get("image_url", ""),
                 "review_total": item.reviews.count() if item and item.pk else 0,
                 "external_source": item.external_source if item and item.external_source else "catalog",
                 "external_id": item.external_id if item and item.external_id else f"catalog:{seed['item_type']}:{seed['title'].lower()}",
@@ -644,7 +657,7 @@ def _tmdb_suggestions(query: str, item_type: str):
         return []
 
     tmdb_kind = "movie" if item_type == "movie" else "tv"
-    cache_key = f"tmdb_suggestions:v1:{item_type}:{query.lower()}"
+    cache_key = f"tmdb_suggestions:v2:{item_type}:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -958,15 +971,19 @@ def _wikidata_suggestions(query: str, item_type: str):
 def _google_books_suggestions(query: str):
     if not query:
         return []
+    cache_key = f"google_books_suggestions:v3:{_cache_slug(query)}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         params = urlencode(
             {
                 "q": query,
                 "printType": "books",
-                "maxResults": 40,
+                "maxResults": 12,
             }
         )
-        payload = _json_get(f"https://www.googleapis.com/books/v1/volumes?{params}")
+        payload = _json_get(f"https://www.googleapis.com/books/v1/volumes?{params}", timeout=2)
     except Exception:
         return []
     items = payload.get("items", [])
@@ -1000,18 +1017,24 @@ def _google_books_suggestions(query: str):
                 "source": "google",
             }
         )
+    cache.set(cache_key, results, 3600)
     return results
 
 
 def _openlibrary_suggestions(query: str):
+    cache_key = f"openlibrary_suggestions:v3:{_cache_slug(query)}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         params = urlencode(
             {
                 "q": query,
                 "fields": "key,title,author_name,first_publish_year,cover_i",
+                "limit": 12,
             }
         )
-        payload = _json_get(f"https://openlibrary.org/search.json?{params}")
+        payload = _json_get(f"https://openlibrary.org/search.json?{params}", timeout=2)
     except Exception:
         return []
 
@@ -1036,6 +1059,7 @@ def _openlibrary_suggestions(query: str):
                 "source": "openlibrary",
             }
         )
+    cache.set(cache_key, results, 3600)
     return results
 
 
@@ -1337,7 +1361,7 @@ def suggest_items(request):
         return JsonResponse({"results": [], "error": ""})
 
     if item_type == "all":
-        cache_key = f"suggest_items:all:v4:{query.lower()}"
+        cache_key = f"suggest_items:all:v6:{_cache_slug(query)}"
         cached = cache.get(cache_key)
         if cached is not None:
             return JsonResponse({"results": cached, "error": ""})
@@ -1413,10 +1437,6 @@ def suggest_items(request):
     error_message = ""
     if item_type == "book":
         external_results = _google_books_suggestions(query)
-        if not external_results:
-            external_results = _openlibrary_suggestions(query)
-        if not external_results:
-            external_results = _wikidata_suggestions(query, item_type)
     elif item_type in {"movie", "series"}:
         external_results = _tmdb_suggestions(query, item_type)
         if not external_results:
@@ -2531,7 +2551,7 @@ def add_comment(request, review_id):
             comment=comment,
         )
         messages.success(request, "Comment posted.")
-    return redirect("item_reviews", item_title=review.item.title)
+    return redirect(f"{reverse('item_reviews', kwargs={'item_title': review.item.title})}#review-{review.id}")
 
 
 @login_required
@@ -2626,7 +2646,13 @@ def user_profile(request, username):
 
 @login_required
 def notifications(request):
-    rows = Notification.objects.filter(recipient=request.user).select_related("actor", "actor__profile", "review").order_by("-created_at")
+    rows = Notification.objects.filter(recipient=request.user).select_related(
+        "actor",
+        "actor__profile",
+        "review",
+        "review__item",
+        "comment",
+    ).order_by("-created_at")
     if request.method == "POST":
         rows.update(is_read=True)
         messages.success(request, "Notifications marked as read.")

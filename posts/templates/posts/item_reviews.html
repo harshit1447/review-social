@@ -154,7 +154,7 @@
 
         <section class="item-review-stack">
             {% for review in reviews %}
-                <article class="card item-review-card">
+                <article class="card item-review-card" id="review-{{ review.id }}">
                     <header class="item-review-header">
                         <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
                             {% if review.user.profile.profile_photo %}

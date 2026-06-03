@@ -419,7 +419,7 @@
 
             function scheduleSuggestions() {
                 window.clearTimeout(debounceTimer);
-                debounceTimer = window.setTimeout(fetchSuggestions, 250);
+                debounceTimer = window.setTimeout(fetchSuggestions, 120);
             }
 
             titleInput.addEventListener("input", function () {

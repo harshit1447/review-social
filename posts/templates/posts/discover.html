@@ -14,8 +14,6 @@
 
     <section class="toolbar explore-toolbar">
         <form class="search-form discover-title-search" method="get" autocomplete="off">
-            <input type="hidden" name="chip" value="{{ chip }}">
-            <input type="hidden" name="sort" value="{{ sort }}">
             <input type="hidden" name="genre" value="{{ genre_filter }}">
             <label for="discover-search">Search movies, series, or books</label>
             <div class="search-row">
@@ -24,33 +22,34 @@
             </div>
             <div id="discover-title-suggestions" class="discover-title-suggestions" hidden></div>
         </form>
-        <div class="filters">
-            <a class="filter-link {% if chip == 'for-you' %}active{% endif %}" href="{% url 'discover' %}?chip=for-you&sort={{ sort }}{% if genre_filter %}&genre={{ genre_filter }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">For you</a>
-            <a class="filter-link {% if chip == 'trending' %}active{% endif %}" href="{% url 'discover' %}?chip=trending&sort={{ sort }}{% if genre_filter %}&genre={{ genre_filter }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">Trending</a>
-            <a class="filter-link {% if chip == 'new-releases' %}active{% endif %}" href="{% url 'discover' %}?chip=new-releases&sort={{ sort }}{% if genre_filter %}&genre={{ genre_filter }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">New releases</a>
+        <div class="discover-dropdown-row">
+            <label class="discover-category-menu" for="discover-screen-types">
+                <span>Movies &amp; Series</span>
+                <select id="discover-screen-types" onchange="if (this.value) window.location.href = this.value;">
+                    <option value="{% url 'discover' %}" {% if not genre_filter %}selected{% endif %}>All types</option>
+                    {% for option in genre_options %}
+                        <option value="{% url 'discover' %}?genre={{ option.slug }}" {% if genre_filter == option.slug %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                    <option value="{% url 'movies' %}">All movies</option>
+                    <option value="{% url 'series' %}">All series</option>
+                </select>
+            </label>
+            <label class="discover-category-menu" for="discover-book-types">
+                <span>Books</span>
+                <select id="discover-book-types" onchange="if (this.value) window.location.href = this.value;">
+                    <option value="">Browse books</option>
+                    <option value="{% url 'books' %}">All books</option>
+                    <option value="{% url 'discover' %}#books">Books people recommend</option>
+                </select>
+            </label>
         </div>
-        <div class="filters genre-filter-strip" aria-label="Filter by movie or series type">
-            <a class="filter-link compact {% if not genre_filter %}active{% endif %}" href="{% url 'discover' %}?chip={{ chip }}&sort={{ sort }}{% if query %}&q={{ query|urlencode }}{% endif %}">All types</a>
-            {% for option in genre_options %}
-                <a class="filter-link compact {% if genre_filter == option.slug %}active{% endif %}" href="{% url 'discover' %}?chip={{ chip }}&sort={{ sort }}&genre={{ option.slug }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ option.label }}</a>
-            {% endfor %}
-        </div>
-        <label class="discover-category-menu" for="discover-category">
-            <span>Browse</span>
-            <select id="discover-category" onchange="if (this.value) window.location.href = this.value;">
-                <option value="">Movies, Series, Books</option>
-                <option value="{% url 'movies' %}">Movies</option>
-                <option value="{% url 'series' %}">Series</option>
-                <option value="{% url 'books' %}">Books</option>
-            </select>
-        </label>
     </section>
 
     <div class="social-layout">
         <main class="social-center">
             <section class="discover-rail-stack">
                 {% for section in discover_rails %}
-                    <section class="card discover-poster-rail">
+                    <section class="card discover-poster-rail" {% if section.title == "Books people keep recommending" %}id="books"{% endif %}>
                         <div class="section-heading">
                             <div>
                                 <h2>{{ section.title }}</h2>

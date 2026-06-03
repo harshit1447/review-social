@@ -3090,7 +3090,14 @@
             padding: 8px 0 8px 12px;
         }
 
+        .reply-card strong {
+            font-size: 0.96rem;
+        }
+
         .reply-card p {
+            color: #2d2823;
+            font-size: 0.95rem;
+            line-height: 1.48;
             margin: 4px 0 0;
         }
 
@@ -4491,6 +4498,20 @@
             margin-top: 12px;
         }
 
+        .discover-dropdown-row {
+            align-items: end;
+            border-top: 1px solid var(--line);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 16px;
+            padding-top: 16px;
+        }
+
+        .discover-dropdown-row .discover-category-menu {
+            margin-top: 0;
+        }
+
         .genre-filter-strip {
             border-top: 1px solid var(--line);
             margin-top: 10px;
@@ -4549,6 +4570,10 @@
             right: 0;
             top: calc(100% + 8px);
             z-index: 20;
+        }
+
+        .discover-title-suggestions[hidden] {
+            display: none;
         }
 
         .discover-suggestion-row {

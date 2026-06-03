@@ -27,7 +27,24 @@
                         {% endif %}
                     </a>
                     <div>
-                        <strong>{{ notification.message }}</strong>
+                        <strong class="notification-message">
+                            <a class="profile-link" href="{% url 'user_profile' notification.actor.username %}">{{ notification.actor.get_full_name|default:notification.actor.username }}</a>
+                            {% if notification.review %}
+                                {% if notification.notification_type == "like" %}
+                                    liked <a class="inline-link" href="{% url 'item_reviews' notification.review.item.title %}#review-{{ notification.review.id }}">your review of {{ notification.review.item.title }}</a>.
+                                {% elif notification.notification_type == "comment" %}
+                                    commented on <a class="inline-link" href="{% url 'item_reviews' notification.review.item.title %}#review-{{ notification.review.id }}">your review of {{ notification.review.item.title }}</a>.
+                                {% elif notification.notification_type == "reply" %}
+                                    replied to <a class="inline-link" href="{% url 'item_reviews' notification.review.item.title %}#review-{{ notification.review.id }}">your review of {{ notification.review.item.title }}</a>.
+                                {% else %}
+                                    <a class="inline-link" href="{% url 'item_reviews' notification.review.item.title %}#review-{{ notification.review.id }}">{{ notification.message }}</a>
+                                {% endif %}
+                            {% elif notification.notification_type == "follow" %}
+                                followed you.
+                            {% else %}
+                                {{ notification.message }}
+                            {% endif %}
+                        </strong>
                         <p class="meta">posted on {{ notification.created_at|date:"j F Y"|lower }}{% if not notification.is_read %} - unread{% endif %}</p>
                     </div>
                 </article>
