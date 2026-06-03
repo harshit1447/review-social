@@ -20,10 +20,12 @@
                 <h1>{{ viewed_user.get_full_name|default:viewed_user.username }}</h1>
                 <p class="meta">@{{ viewed_user.username }}</p>
                 {% if viewed_user.profile.bio %}<p class="page-subtitle">{{ viewed_user.profile.bio }}</p>{% endif %}
-                <p class="meta">
-                    {% if viewed_user.profile.location %}{{ viewed_user.profile.location }}{% endif %}
-                    {% if viewed_user.profile.website %} - <a href="{{ viewed_user.profile.website }}">{{ viewed_user.profile.website }}</a>{% endif %}
-                </p>
+                {% if viewed_user.profile.location or viewed_user.profile.website %}
+                    <p class="meta">
+                        {% if viewed_user.profile.location %}{{ viewed_user.profile.location }}{% endif %}
+                        {% if viewed_user.profile.website %} - <a href="{{ viewed_user.profile.website }}">{{ viewed_user.profile.website }}</a>{% endif %}
+                    </p>
+                {% endif %}
             </div>
             {% if viewed_user != user %}
                 <form method="post" action="{% if is_following %}{% url 'remove_friend' viewed_user.id %}{% else %}{% url 'add_friend' viewed_user.id %}{% endif %}" class="js-async-form">
@@ -44,49 +46,70 @@
             <section class="card profile-compact-card">
                 <h2 class="card-title">Mutual followers</h2>
                 <p class="meta">{{ mutual_count }} mutual connection{{ mutual_count|pluralize }}</p>
-            </section>
-
-            <section class="card profile-compact-card">
-                <h2 class="card-title">Reviews</h2>
-                <div class="profile-review-list">
-                    {% for review in reviews %}
-                        {% include "posts/partials/review_card.html" %}
-                    {% empty %}
-                        <p class="empty-state">This profile has not posted reviews yet.</p>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <section class="card profile-compact-card">
-                <h2 class="card-title">Likes</h2>
-                <div class="profile-review-list">
-                    {% for liked in liked_items %}
-                        <article class="profile-review-row">
-                            <a class="profile-review-poster {% if liked.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' liked.item.title %}" aria-label="{{ liked.item.title }}">
-                                <img src="{% if liked.item.image_url %}{{ liked.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                {% if mutual_users %}
+                    <div class="mutual-user-list" aria-label="Mutual followers">
+                        {% for mutual in mutual_users %}
+                            <a class="mutual-user-pill" href="{% url 'user_profile' mutual.username %}">
+                                <span class="avatar small-avatar">
+                                    {% if mutual.profile.profile_photo %}
+                                        <img src="{{ mutual.profile.profile_photo.url }}" alt="">
+                                    {% else %}
+                                        {{ mutual.get_full_name|default:mutual.username|first }}
+                                    {% endif %}
+                                </span>
+                                <span>{{ mutual.get_full_name|default:mutual.username }}</span>
                             </a>
-                            <div>
-                                <div class="profile-review-topline">
-                                    <h3><a href="{% url 'item_reviews' liked.item.title %}">{{ liked.item.title }}</a></h3>
-                                    <span class="meta">Liked</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+
+            <section class="card profile-compact-card profile-tabs-card">
+                <div class="tabs profile-toggle-tabs" aria-label="Profile activity">
+                    <button type="button" class="tab active" data-profile-tab="reviews">Reviews</button>
+                    <button type="button" class="tab" data-profile-tab="likes">Likes</button>
+                </div>
+
+                <div class="profile-tab-panel active" data-profile-panel="reviews">
+                    <div class="profile-review-list">
+                        {% for review in reviews %}
+                            {% include "posts/partials/review_card.html" %}
+                        {% empty %}
+                            <p class="empty-state">This profile has not posted reviews yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="profile-tab-panel" data-profile-panel="likes" hidden>
+                    <div class="profile-review-list">
+                        {% for liked in liked_items %}
+                            <article class="profile-review-row liked-item-row">
+                                <a class="profile-review-poster" href="{% url 'item_reviews' liked.item.title %}" aria-label="{{ liked.item.title }}">
+                                    <img src="{% if liked.item.image_url %}{{ liked.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                                </a>
+                                <div>
+                                    <div class="profile-review-topline">
+                                        <h3><a href="{% url 'item_reviews' liked.item.title %}">{{ liked.item.title }}</a></h3>
+                                        <span class="meta">Liked</span>
+                                    </div>
+                                    <p class="post-meta">liked on {{ liked.created_at|date:"j F Y"|lower }}</p>
+                                    <p class="meta">
+                                        {{ liked.item.get_item_type_display }}
+                                        {% if liked.item.release_year %} &middot; {{ liked.item.release_year }}{% endif %}
+                                        {% if liked.item.creator_name %} &middot; {{ liked.item.creator_name }}{% endif %}
+                                    </p>
                                 </div>
-                                <p class="post-meta">liked on {{ liked.created_at|date:"j F Y"|lower }}</p>
-                                <p class="meta">
-                                    {{ liked.item.get_item_type_display }}
-                                    {% if liked.item.release_year %} &middot; {{ liked.item.release_year }}{% endif %}
-                                    {% if liked.item.creator_name %} &middot; {{ liked.item.creator_name }}{% endif %}
-                                </p>
-                            </div>
-                        </article>
-                    {% endfor %}
+                            </article>
+                        {% endfor %}
 
-                    {% for liked in liked_reviews %}
-                        {% include "posts/partials/review_card.html" with review=liked.review show_post_review_link=False %}
-                    {% endfor %}
+                        {% for liked in liked_reviews %}
+                            {% include "posts/partials/review_card.html" with review=liked.review show_post_review_link=False %}
+                        {% endfor %}
 
-                    {% if not liked_items and not liked_reviews %}
-                        <p class="empty-state">No likes yet.</p>
-                    {% endif %}
+                        {% if not liked_items and not liked_reviews %}
+                            <p class="empty-state">No likes yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </section>
         </main>
@@ -138,4 +161,25 @@
         </aside>
     </div>
 </div>
+<script>
+    (function () {
+        var tabs = document.querySelectorAll("[data-profile-tab]");
+        var panels = document.querySelectorAll("[data-profile-panel]");
+        if (!tabs.length || !panels.length) return;
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                var target = tab.getAttribute("data-profile-tab");
+                tabs.forEach(function (item) {
+                    item.classList.toggle("active", item === tab);
+                });
+                panels.forEach(function (panel) {
+                    var active = panel.getAttribute("data-profile-panel") === target;
+                    panel.classList.toggle("active", active);
+                    panel.hidden = !active;
+                });
+            });
+        });
+    })();
+</script>
 {% endblock %}

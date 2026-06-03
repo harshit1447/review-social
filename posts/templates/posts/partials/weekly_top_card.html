@@ -1,0 +1,46 @@
+<section class="card weekly-top-card">
+    <div class="weekly-top-heading">
+        <div>
+            <h2 class="card-title">Weekly Top 10</h2>
+            <p class="meta">Switch between movies, series, and books people are opening, liking, and reviewing.</p>
+        </div>
+        <label class="sr-only" for="weekly-top-type">Choose list</label>
+        <select id="weekly-top-type" class="weekly-top-select" data-weekly-top-select>
+            <option value="movie">Movies</option>
+            <option value="series">Series</option>
+            <option value="book">Books</option>
+        </select>
+    </div>
+
+    {% for key, section in weekly_top_sections.items %}
+        <div class="weekly-top-list {% if key == 'movie' %}active{% endif %}" data-weekly-top-list="{{ key }}" {% if key != 'movie' %}hidden{% endif %}>
+            {% for row in section.rows %}
+                <a class="weekly-top-row" href="{{ row.url }}">
+                    <span class="weekly-rank">{{ row.rank }}</span>
+                    <span class="weekly-copy">
+                        <strong>{{ row.title }}</strong>
+                        <small>{{ row.meta }}</small>
+                    </span>
+                    <span class="weekly-score">{{ row.score }}</span>
+                </a>
+            {% empty %}
+                <p class="empty-state">No {{ section.label|lower }} yet.</p>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</section>
+
+<script>
+    (function () {
+        var select = document.querySelector("[data-weekly-top-select]");
+        var lists = document.querySelectorAll("[data-weekly-top-list]");
+        if (!select || !lists.length) return;
+        select.addEventListener("change", function () {
+            lists.forEach(function (list) {
+                var isActive = list.getAttribute("data-weekly-top-list") === select.value;
+                list.hidden = !isActive;
+                list.classList.toggle("active", isActive);
+            });
+        });
+    })();
+</script>

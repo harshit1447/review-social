@@ -87,7 +87,7 @@
             list.innerHTML = '<div class="discover-suggestion-empty">Searching titles...</div>';
             list.hidden = false;
             try {
-                var response = await fetch("{% url 'suggest_items' %}?item_type=all&q=" + encodeURIComponent(query), {
+                var response = await fetch("{% url 'suggest_items' %}?item_type=all&types=" + encodeURIComponent(allowedTypes.join(",")) + "&q=" + encodeURIComponent(query), {
                     signal: controller.signal
                 });
                 if (activeRequest !== controller) return [];

@@ -681,7 +681,7 @@ def _discover_rail_sections():
 
 
 def _book_discover_sections():
-    cache_key = "book_discover_sections:v1"
+    cache_key = "book_discover_sections:v2"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -749,10 +749,45 @@ def _book_discover_sections():
     for section in curated_book_sections:
         for row in section["items"]:
             row.setdefault("url", _preview_url_for_payload(row))
+    fallback_book_rows = []
+    fallback_seen = set()
+    for row in FALLBACK_TITLE_SUGGESTIONS + _catalog_rows():
+        if row.get("item_type") != "book":
+            continue
+        title = (row.get("title") or "").strip()
+        if not title or title.lower() in fallback_seen:
+            continue
+        fallback_seen.add(title.lower())
+        payload = {
+            **row,
+            "item_type": "book",
+            "tag": "Book",
+            "external_source": row.get("external_source") or "catalog",
+            "external_id": row.get("external_id") or f"catalog:book:{title.lower()}",
+        }
+        payload["url"] = _preview_url_for_payload(payload)
+        fallback_book_rows.append(payload)
+
     if len(sections) < 2:
         sections.extend(curated_book_sections)
     else:
         sections.extend(curated_book_sections[:1])
+    if fallback_book_rows and not any(section.get("title") == "Books people keep recommending" for section in sections):
+        sections.append(
+            {
+                "title": "Books people keep recommending",
+                "kicker": "Reliable starts for your reading list",
+                "items": fallback_book_rows[:12],
+            }
+        )
+    if not sections and fallback_book_rows:
+        sections.append(
+            {
+                "title": "Books people keep recommending",
+                "kicker": "Reliable starts for your reading list",
+                "items": fallback_book_rows[:12],
+            }
+        )
 
     cache.set(cache_key, sections, 21600)
     return sections
@@ -1342,7 +1377,7 @@ def _book_genre_discover_rows(genre_slug: str, limit: int = 24):
     bucket = next((row for row in BOOK_GENRE_BUCKETS if row["slug"] == genre_slug), None)
     if not bucket:
         return []
-    cache_key = f"book_genre_discover:v1:{genre_slug}:{limit}"
+    cache_key = f"book_genre_discover:v2:{genre_slug}:{limit}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -1396,6 +1431,25 @@ def _book_genre_discover_rows(genre_slug: str, limit: int = 24):
                 },
                 score_index=review.rating,
             )
+            if len(rows) >= limit:
+                break
+
+    if len(rows) < 5:
+        keywords = bucket["keywords"]
+        for seed in FALLBACK_TITLE_SUGGESTIONS + _catalog_rows():
+            if seed.get("item_type") != "book":
+                continue
+            haystack = " ".join(
+                [
+                    seed.get("title", ""),
+                    seed.get("description", ""),
+                    seed.get("creator", ""),
+                    bucket["label"],
+                ]
+            ).lower()
+            if not any(keyword in haystack for keyword in keywords):
+                continue
+            add_row(seed)
             if len(rows) >= limit:
                 break
 
@@ -1699,7 +1753,14 @@ def suggest_items(request):
         return JsonResponse({"results": [], "error": ""})
 
     if item_type == "all":
-        cache_key = f"suggest_items:all:v7:{_cache_slug(query)}"
+        requested_types = {
+            value.strip()
+            for value in request.GET.get("types", "").split(",")
+            if value.strip() in {"movie", "series", "book"}
+        }
+        if not requested_types:
+            requested_types = {"movie", "series", "book"}
+        cache_key = f"suggest_items:all:v8:{'-'.join(sorted(requested_types))}:{_cache_slug(query)}"
         cached = cache.get(cache_key)
         if cached is not None:
             return JsonResponse({"results": cached, "error": ""})
@@ -1716,6 +1777,8 @@ def suggest_items(request):
                 merged.append(row)
 
         for row_type in ("movie", "series", "book"):
+            if row_type not in requested_types:
+                continue
             existing_rows = Item.objects.filter(title__icontains=query, item_type=row_type).order_by("title").values(
                 "id", "title", "item_type", "release_year", "creator_name", "image_url"
             )
@@ -1737,10 +1800,15 @@ def suggest_items(request):
             add_rows(_fallback_title_suggestions(query, [row_type]))
             if len(query) >= 3 and row_type in {"movie", "series"}:
                 add_rows(_tmdb_suggestions(query, row_type))
+            if len(query) >= 3 and row_type == "book":
+                book_rows = _google_books_suggestions(query, max_results=10)
+                if len(book_rows) < 5:
+                    book_rows += _openlibrary_suggestions(query)
+                add_rows(book_rows)
         cache.set(cache_key, merged, 300)
         return JsonResponse({"results": merged, "error": error_message})
 
-    cache_key = f"suggest_items:{item_type}:v7:{_cache_slug(query)}"
+    cache_key = f"suggest_items:{item_type}:v8:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse(cached)
@@ -1780,6 +1848,8 @@ def suggest_items(request):
     error_message = ""
     if item_type == "book" and len(query) >= 3:
         external_results = _google_books_suggestions(query)
+        if len(external_results) < 5:
+            external_results += _openlibrary_suggestions(query)
     elif item_type in {"movie", "series"} and len(query) >= 3:
         external_results = _tmdb_suggestions(query, item_type)
         if not external_results:
@@ -1982,6 +2052,73 @@ def _discover_sections_for_types(item_types):
     return sections
 
 
+def _weekly_top_sections():
+    sections = {}
+    specs = (
+        ("movie", "Movies", "Movie"),
+        ("series", "Series", "Series"),
+        ("book", "Books", "Book"),
+    )
+    catalog_rows = _catalog_rows()
+    for item_type, label, singular_label in specs:
+        ranked_items = list(
+            Item.objects.filter(item_type=item_type)
+            .annotate(
+                review_total=Count("reviews", distinct=True),
+                average_rating=Avg("reviews__rating"),
+                like_total=Count("saved_entries", filter=Q(saved_entries__list_type="favorites"), distinct=True),
+            )
+            .filter(Q(review_total__gt=0) | Q(like_total__gt=0))
+            .order_by("-average_rating", "-like_total", "-review_total", "title")[:10]
+        )
+        rows = []
+        for index, item in enumerate(ranked_items, start=1):
+            meta_parts = [item.get_item_type_display()]
+            if item.release_year:
+                meta_parts.append(str(item.release_year))
+            score = (
+                f"{item.average_rating:.1f}/5"
+                if item.average_rating
+                else f"{item.like_total} like{'' if item.like_total == 1 else 's'}"
+            )
+            rows.append(
+                {
+                    "rank": index,
+                    "title": item.title,
+                    "meta": " - ".join(meta_parts),
+                    "score": score,
+                    "url": reverse("item_reviews", args=[item.title]),
+                }
+            )
+
+        if len(rows) < 10:
+            used_titles = {row["title"].lower() for row in rows}
+            for seed in catalog_rows:
+                if seed.get("item_type") != item_type:
+                    continue
+                title = seed.get("title", "").strip()
+                if not title or title.lower() in used_titles:
+                    continue
+                seed_year = seed.get("year", "")
+                meta_parts = [singular_label]
+                if seed_year:
+                    meta_parts.append(str(seed_year))
+                rows.append(
+                    {
+                        "rank": len(rows) + 1,
+                        "title": title,
+                        "meta": " - ".join(meta_parts),
+                        "score": "New",
+                        "url": _preview_url_for_payload(seed),
+                    }
+                )
+                used_titles.add(title.lower())
+                if len(rows) >= 10:
+                    break
+        sections[item_type] = {"label": label, "rows": rows}
+    return sections
+
+
 @login_required
 def discover_media(request):
     query = request.GET.get("q", "").strip()
@@ -2083,11 +2220,10 @@ def discover_media(request):
             "recent_reviews": recent_review_rows,
             "discover_rails": _discover_sections_for_types(["movie", "series"]),
             "genre_rows": _tmdb_genre_discover_rows(genre_filter, 24) if genre_filter else [],
-            "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:6],
+            "weekly_top_sections": _weekly_top_sections(),
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
-            "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
@@ -2126,8 +2262,7 @@ def discover_books(request):
             "genre_rows": _book_genre_discover_rows(genre_filter, 24) if genre_filter else [],
             "book_reviews": book_reviews,
             "discover_rails": _discover_sections_for_types(["book"]),
-            "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:8],
-            "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
+            "weekly_top_sections": _weekly_top_sections(),
             **review_card_context,
         },
     )
@@ -3017,7 +3152,11 @@ def user_profile(request, username):
     ).exists()
     follower_ids = set(Follow.objects.filter(following=viewed_user).values_list("follower_id", flat=True))
     my_following_ids = _followed_user_ids(request.user)
-    mutual_count = len(follower_ids & my_following_ids)
+    mutual_ids = follower_ids & my_following_ids
+    mutual_count = len(mutual_ids)
+    mutual_users = list(User.objects.filter(id__in=mutual_ids).select_related("profile").order_by("first_name", "username")[:6])
+    for mutual_user in mutual_users:
+        Profile.objects.get_or_create(user=mutual_user)
     reviews = list(Review.objects.filter(user=viewed_user).select_related("user", "user__profile", "item").order_by("-created_at")[:10])
     _attach_genres_to_reviews(reviews)
     watchlist_items = SavedItem.objects.filter(
@@ -3060,6 +3199,7 @@ def user_profile(request, username):
             ).distinct().count(),
             "is_following": is_following,
             "mutual_count": mutual_count,
+            "mutual_users": mutual_users,
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
             "saved_reviews": saved_reviews,

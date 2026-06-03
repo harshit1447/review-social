@@ -2607,35 +2607,46 @@
 
         .profile-page .profile-cover {
             border-radius: 12px 12px 0 0;
-            height: 132px;
+            height: 158px;
         }
 
         .profile-page .profile-info {
-            align-items: start;
-            gap: 18px;
-            padding: 0 22px 22px;
+            align-items: end;
+            gap: 22px;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            padding: 0 26px 30px;
         }
 
-        .profile-page .profile-avatar {
+        .profile-page .profile-avatar,
+        .profile-page .profile-avatar.profile-photo-view-button {
             border: 0;
-            font-size: 2.15rem;
-            height: 108px;
-            width: 108px;
+            font-size: 2.85rem;
+            height: 132px;
+            width: 132px;
         }
 
-        .profile-page .profile-avatar-wrap {
-            margin-top: -28px;
-            min-width: 108px;
-            transform: translateY(10px);
+        .profile-page .profile-avatar-wrap,
+        .profile-page .profile-info > .profile-avatar {
+            margin-top: -10px;
+            min-width: 132px;
+            transform: none;
         }
 
         .profile-page .profile-copy {
-            padding-top: 34px;
+            align-self: end;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+            min-height: 132px;
+            padding: 0 0 12px;
         }
 
-        .profile-page .profile-info > .button {
-            align-self: center;
-            margin-top: 34px;
+        .profile-page .profile-info > .button,
+        .profile-page .profile-info > form {
+            align-self: start;
+            justify-self: end;
+            margin-top: 0;
+            transform: translateY(0);
         }
 
         .profile-page .profile-info h1 {
@@ -2659,6 +2670,10 @@
         .profile-info .button {
             min-height: 38px;
             padding: 8px 14px;
+        }
+
+        .public-profile-page .profile-copy {
+            padding-bottom: 0;
         }
 
         .profile-detail-grid {
@@ -2732,6 +2747,59 @@
         .profile-review-row .review-text {
             font-size: 0.92rem;
             margin: 8px 0 0;
+        }
+
+        .mutual-user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .mutual-user-pill {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 999px;
+            color: var(--ink);
+            display: inline-flex;
+            font-size: 0.9rem;
+            font-weight: 600;
+            gap: 8px;
+            max-width: 100%;
+            padding: 6px 10px 6px 6px;
+        }
+
+        .small-avatar {
+            font-size: 0.78rem;
+            height: 28px;
+            min-width: 28px;
+            width: 28px;
+        }
+
+        .profile-tabs-card {
+            padding: 0;
+        }
+
+        .profile-toggle-tabs {
+            border-bottom: 1px solid rgba(126, 67, 30, 0.12);
+            margin: 0;
+            padding: 14px 16px 0;
+        }
+
+        .profile-toggle-tabs .tab {
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .profile-tab-panel {
+            padding: 16px;
+        }
+
+        .profile-tab-panel[hidden] {
+            display: none;
         }
 
         .collection-title-row,
@@ -3557,6 +3625,109 @@
         .discover-review-list {
             display: grid;
             gap: 18px;
+        }
+
+        .weekly-top-card {
+            display: grid;
+            gap: 14px;
+        }
+
+        .weekly-top-heading {
+            display: grid;
+            gap: 12px;
+        }
+
+        .weekly-top-heading .card-title {
+            margin: 0 0 4px;
+        }
+
+        .weekly-top-select {
+            appearance: none;
+            background:
+                linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+                linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
+                rgba(255, 253, 249, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 750;
+            min-height: 42px;
+            padding: 0 38px 0 16px;
+            width: 100%;
+        }
+
+        .weekly-top-select:focus {
+            border-color: rgba(179, 106, 50, 0.5);
+            box-shadow: 0 0 0 4px rgba(179, 106, 50, 0.12);
+            outline: 0;
+        }
+
+        .weekly-top-list {
+            display: grid;
+        }
+
+        .weekly-top-list[hidden] {
+            display: none;
+        }
+
+        .weekly-top-row {
+            align-items: center;
+            border-top: 1px solid var(--line);
+            color: var(--text);
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 32px minmax(0, 1fr) auto;
+            padding: 12px 0;
+            transition: transform 0.16s ease, color 0.16s ease;
+        }
+
+        .weekly-top-row:first-child {
+            border-top: 0;
+        }
+
+        .weekly-top-row:hover,
+        .weekly-top-row:focus-visible {
+            color: var(--accent-dark);
+            transform: translateX(2px);
+        }
+
+        .weekly-rank {
+            align-items: center;
+            background: var(--accent-soft);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 0.82rem;
+            font-weight: 800;
+            height: 28px;
+            justify-content: center;
+            width: 28px;
+        }
+
+        .weekly-copy {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .weekly-copy strong {
+            color: inherit;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .weekly-copy small {
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .weekly-score {
+            color: var(--accent-dark);
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
         }
 
         .discover-review-row {

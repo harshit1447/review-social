@@ -3,7 +3,6 @@ from django.contrib.auth import authenticate
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
-from unittest.mock import patch
 
 from .models import Friendship, Item, Recommendation, Review, SavedItem
 
@@ -236,18 +235,11 @@ class SocialReviewTests(TestCase):
         self.assertContains(response, "composer-error")
         self.assertFalse(Review.objects.filter(review_text="This should stay on the feed.").exists())
 
-    @patch("posts.views._podcast_metadata_from_url")
-    def test_podcast_review_uses_link_as_input_and_metadata_title(self, metadata):
-        metadata.return_value = {
-            "title": "Smart Podcast Episode",
-            "external_source": "youtube",
-            "external_id": "https://youtu.be/abc123",
-            "image_url": "https://img.youtube.com/vi/abc123/hqdefault.jpg",
-        }
+    def test_podcast_review_type_is_not_accepted(self):
         self.client.login(username="alex", password="pass")
 
         response = self.client.post(
-            reverse("new_review"),
+            reverse("feed"),
             {
                 "item_title": "https://youtu.be/abc123",
                 "item_type": "podcast",
@@ -256,11 +248,10 @@ class SocialReviewTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse("feed"))
-        item = Item.objects.get(item_type="podcast")
-        self.assertEqual(item.title, "Smart Podcast Episode")
-        self.assertEqual(item.image_url, "https://img.youtube.com/vi/abc123/hqdefault.jpg")
-        self.assertEqual(Review.objects.get(item=item).review_text, "Worth listening.")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Select a valid choice")
+        self.assertFalse(Item.objects.filter(item_type="podcast").exists())
+        self.assertFalse(Review.objects.filter(review_text="Worth listening.").exists())
 
     def test_item_like_save_response_returns_centralized_item_state(self):
         self.client.login(username="alex", password="pass")
