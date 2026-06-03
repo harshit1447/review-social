@@ -173,6 +173,60 @@
             width: 4px;
         }
 
+        .sidebar-discovery {
+            display: grid;
+            gap: 4px;
+        }
+
+        .sidebar-discovery summary {
+            list-style: none;
+        }
+
+        .sidebar-discovery summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .sidebar-discovery summary.sidebar-link {
+            justify-content: space-between;
+        }
+
+        .sidebar-discovery summary.sidebar-link::after {
+            border: solid currentColor;
+            border-width: 0 2px 2px 0;
+            content: "";
+            height: 7px;
+            margin-left: auto;
+            transform: rotate(45deg);
+            transition: transform 0.18s ease;
+            width: 7px;
+        }
+
+        .sidebar-discovery[open] summary.sidebar-link::after {
+            transform: rotate(225deg);
+        }
+
+        .sidebar-subnav {
+            display: grid;
+            gap: 3px;
+            padding: 0 0 2px 14px;
+        }
+
+        .sidebar-sublink {
+            border-radius: 12px;
+            color: var(--muted);
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 750;
+            padding: 7px 10px;
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+
+        .sidebar-sublink:hover,
+        .sidebar-sublink.active {
+            background: rgba(179, 106, 50, 0.09);
+            color: var(--accent-dark);
+        }
+
         .sidebar-link.has-badge {
             justify-content: space-between;
         }
@@ -3410,6 +3464,7 @@
             display: grid;
             overflow: hidden;
             place-items: center;
+            position: relative;
             transition: transform 0.16s ease, box-shadow 0.16s ease;
             width: 100%;
         }
@@ -3432,6 +3487,48 @@
             color: rgba(255, 250, 244, 0.86);
             font-size: 3rem;
             font-weight: 700;
+        }
+
+        .discover-dark-rail {
+            background:
+                radial-gradient(circle at 8% 0%, rgba(121, 88, 192, 0.2), transparent 25%),
+                radial-gradient(circle at 92% 12%, rgba(189, 111, 49, 0.22), transparent 28%),
+                linear-gradient(135deg, #171513 0%, #070706 100%);
+        }
+
+        .genre-poster-grid {
+            display: grid;
+            gap: 28px 26px;
+            grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+            padding: 4px 2px 8px;
+        }
+
+        .genre-poster-grid .discover-poster-card {
+            max-width: 180px;
+        }
+
+        .genre-score-chip {
+            background: rgba(23, 21, 19, 0.54);
+            border-radius: 999px;
+            color: #fff;
+            font-style: normal;
+            font-weight: 900;
+            padding: 4px 9px;
+            position: absolute;
+            right: 8px;
+            top: 8px;
+        }
+
+        .rail-link {
+            color: rgba(255, 250, 244, 0.74);
+            font-size: 0.78rem;
+            font-weight: 750;
+        }
+
+        .rail-link:hover {
+            color: #fff;
+            text-decoration: underline;
+            text-underline-offset: 3px;
         }
 
         .discover-poster-card strong,
@@ -4566,6 +4663,16 @@
             margin-top: 0;
         }
 
+        .discover-dropdown-row.compact {
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .discover-control-card {
+            position: relative;
+            z-index: 3;
+        }
+
         .genre-filter-strip {
             border-top: 1px solid var(--line);
             margin-top: 10px;
@@ -4993,7 +5100,13 @@
                 <p class="sidebar-section-title">Navigation</p>
                 {% if user.is_authenticated %}
                 <a href="{% url 'feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">Home Feed</a>
-                <a href="{% url 'discover' %}" class="sidebar-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover</a>
+                <details class="sidebar-discovery" {% if request.resolver_match.url_name == 'discover' or request.resolver_match.url_name == 'discover_media' or request.resolver_match.url_name == 'discover_books' %}open{% endif %}>
+                    <summary class="sidebar-link {% if request.resolver_match.url_name == 'discover' or request.resolver_match.url_name == 'discover_media' or request.resolver_match.url_name == 'discover_books' %}active{% endif %}">Discover</summary>
+                    <div class="sidebar-subnav">
+                        <a href="{% url 'discover_media' %}" class="sidebar-sublink {% if request.resolver_match.url_name == 'discover' or request.resolver_match.url_name == 'discover_media' %}active{% endif %}">Movies &amp; Series</a>
+                        <a href="{% url 'discover_books' %}" class="sidebar-sublink {% if request.resolver_match.url_name == 'discover_books' %}active{% endif %}">Books</a>
+                    </div>
+                </details>
                 <a href="{% url 'friends' %}" class="sidebar-link {% if request.resolver_match.url_name == 'friends' %}active{% endif %}">Friends</a>
                 <a href="{% url 'notifications' %}" class="sidebar-link has-badge {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
                     <span>Notifications</span>
@@ -5034,7 +5147,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>
                 <span>Feed</span>
             </a>
-            <a href="{% url 'discover' %}" class="{% if request.resolver_match.url_name == 'discover' %}active{% endif %}">
+            <a href="{% url 'discover_media' %}" class="{% if request.resolver_match.url_name == 'discover' or request.resolver_match.url_name == 'discover_media' or request.resolver_match.url_name == 'discover_books' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 9.5-2 5-5 2 2-5 5-2Z"/><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/></svg>
                 <span>Discover</span>
             </a>
