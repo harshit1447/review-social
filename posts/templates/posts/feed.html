@@ -59,9 +59,6 @@
                                 <p id="item-suggestion-message" class="meta suggestion-message"></p>
                                 <div id="item-suggestions" class="item-suggestions" hidden></div>
                             </div>
-                            <label for="{{ review_form.podcast_url.id_for_label }}" class="podcast-link-field" hidden>Podcast link
-                                {{ review_form.podcast_url }}
-                            </label>
                             <label for="{{ review_form.rating.id_for_label }}">Rating
                                 {{ review_form.rating }}
                             </label>
@@ -91,8 +88,6 @@
                         <a class="filter-link {% if type_filter == 'movie' %}active{% endif %}" href="{% url 'feed' %}?type=movie{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Movies</a>
                         <a class="filter-link {% if type_filter == 'book' %}active{% endif %}" href="{% url 'feed' %}?type=book{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Books</a>
                         <a class="filter-link {% if type_filter == 'series' %}active{% endif %}" href="{% url 'feed' %}?type=series{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">TV Shows</a>
-                        <a class="filter-link {% if type_filter == 'podcast' %}active{% endif %}" href="{% url 'feed' %}?type=podcast{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Podcasts</a>
-                        <a class="filter-link {% if type_filter == 'experience' %}active{% endif %}" href="{% url 'feed' %}?type=experience{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Experiences</a>
                     </div>
 
                     <div class="filters">
@@ -185,8 +180,6 @@
         (function () {
             var titleInput = document.getElementById("id_item_title");
             var typeInput = document.getElementById("id_item_type");
-            var podcastUrlInput = document.getElementById("id_podcast_url");
-            var podcastField = document.querySelector(".podcast-link-field");
             var titleLabel = document.getElementById("item-title-label");
             var keyInput = document.getElementById("id_selected_item_key");
             var selectedTitleInput = document.getElementById("id_selected_item_title");
@@ -206,22 +199,9 @@
             if (!titleInput || !typeInput || !keyInput || !selectedTitleInput || !list) return;
 
             function updateTypeMode() {
-                var type = typeInput.value;
-                if (podcastField) podcastField.hidden = true;
-                if (podcastUrlInput) {
-                    podcastUrlInput.required = false;
-                    if (type === "podcast") podcastUrlInput.value = titleInput.value.trim();
-                }
-                if (type === "podcast" || type === "experience") {
-                    hideList();
-                    if (titleLabel) titleLabel.textContent = type === "podcast" ? "Podcast link" : "Title";
-                    titleInput.setAttribute("placeholder", type === "podcast" ? "Paste YouTube or Spotify link here" : defaultTitlePlaceholder);
-                    setMessage(type === "podcast" ? "Paste a YouTube or Spotify link here. Revue will fetch the episode title and thumbnail when you post." : "Experience posting is a simple note for now.");
-                } else {
-                    if (titleLabel) titleLabel.textContent = "Title";
-                    titleInput.setAttribute("placeholder", defaultTitlePlaceholder);
-                    setMessage("");
-                }
+                if (titleLabel) titleLabel.textContent = "Title";
+                titleInput.setAttribute("placeholder", defaultTitlePlaceholder);
+                setMessage("");
             }
 
             function clearSelection() {
@@ -295,11 +275,6 @@
 
             async function fetchSuggestions() {
                 var q = titleInput.value.trim();
-                if (typeInput.value === "podcast" || typeInput.value === "experience") {
-                    hideList();
-                    updateTypeMode();
-                    return;
-                }
                 if (q.length < 2) {
                     hideList();
                     setMessage("");
@@ -344,7 +319,6 @@
 
             titleInput.addEventListener("input", function () {
                 clearSelection();
-                if (typeInput.value === "podcast" && podcastUrlInput) podcastUrlInput.value = titleInput.value.trim();
                 scheduleSuggestions();
             });
             typeInput.addEventListener("change", function () {
@@ -353,13 +327,6 @@
                 scheduleSuggestions();
             });
             updateTypeMode();
-            if (reviewForm) {
-                reviewForm.addEventListener("submit", function () {
-                    if (typeInput.value === "podcast" && podcastUrlInput) {
-                        podcastUrlInput.value = titleInput.value.trim();
-                    }
-                });
-            }
             document.addEventListener("click", function (event) {
                 if (!list.contains(event.target) && event.target !== titleInput) hideList();
             });

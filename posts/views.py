@@ -1693,10 +1693,8 @@ def _preview_query_for_item(item):
 def suggest_items(request):
     query = request.GET.get("q", "").strip()
     item_type = request.GET.get("item_type", "").strip().lower()
-    if item_type in {"podcast", "experience"}:
-        return JsonResponse({"results": [], "error": ""})
     if item_type not in {"movie", "series", "book", "all"}:
-        return JsonResponse({"results": [], "error": "Please choose movie, series, book, podcast, or experience."})
+        return JsonResponse({"results": [], "error": "Please choose movie, series, or book."})
     if len(query) < 2:
         return JsonResponse({"results": [], "error": ""})
 
@@ -1811,14 +1809,16 @@ def feed(request, review_form=None):
     query = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "newest")
     type_filter = request.GET.get("type", "").strip().lower()
-    if type_filter not in {"movie", "book", "series", "podcast", "experience"}:
+    if type_filter not in {"movie", "book", "series"}:
         type_filter = ""
     friend_ids = []
 
     if request.user.is_authenticated:
         friend_ids = _followed_user_ids(request.user)
 
-    reviews = Review.objects.select_related("user", "user__profile", "item")
+    reviews = Review.objects.select_related("user", "user__profile", "item").filter(
+        item__item_type__in=["movie", "book", "series"]
+    )
 
     if friends_only and request.user.is_authenticated:
         reviews = reviews.filter(user_id__in=friend_ids)

@@ -5,6 +5,13 @@ from django.contrib.auth.models import User
 from .models import Collection, Comment, Item, Profile, Recommendation, Review
 
 
+REVIEW_ITEM_TYPE_CHOICES = (
+    ("movie", "Movie"),
+    ("series", "Series"),
+    ("book", "Book"),
+)
+
+
 class SignUpForm(UserCreationForm):
     first_name = forms.CharField(label="Name", max_length=150)
     email = forms.EmailField(label="Email")
@@ -66,16 +73,7 @@ class SignUpForm(UserCreationForm):
 
 class ReviewForm(forms.Form):
     item_title = forms.CharField(max_length=255)
-    item_type = forms.ChoiceField(choices=Item.TYPE_CHOICES)
-    podcast_url = forms.URLField(
-        required=False,
-        label="Podcast link",
-        widget=forms.URLInput(
-            attrs={
-                "placeholder": "Paste a YouTube or Spotify link",
-            }
-        ),
-    )
+    item_type = forms.ChoiceField(choices=REVIEW_ITEM_TYPE_CHOICES)
     selected_item_key = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_title = forms.CharField(widget=forms.HiddenInput(), required=False)
     selected_item_year = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -95,33 +93,6 @@ class ReviewForm(forms.Form):
         selected_item_key = (cleaned_data.get("selected_item_key") or "").strip()
         selected_item_title = (cleaned_data.get("selected_item_title") or "").strip()
         typed_title = (cleaned_data.get("item_title") or "").strip()
-        item_type = cleaned_data.get("item_type")
-        podcast_url = (cleaned_data.get("podcast_url") or "").strip()
-
-        if item_type == "podcast":
-            podcast_url = podcast_url or typed_title
-            parsed_host = ""
-            if podcast_url:
-                from urllib.parse import urlparse
-
-                parsed_host = urlparse(podcast_url).netloc.lower().replace("www.", "")
-            if not podcast_url:
-                raise forms.ValidationError("Please paste a YouTube or Spotify link for podcasts.")
-            if not (
-                parsed_host == "youtu.be"
-                or parsed_host.endswith("youtube.com")
-                or parsed_host.endswith("spotify.com")
-            ):
-                raise forms.ValidationError("Podcast reviews need a YouTube or Spotify link.")
-            cleaned_data["podcast_url"] = podcast_url
-            cleaned_data["selected_item_title"] = typed_title
-            cleaned_data["selected_item_key"] = "podcast:manual"
-            return cleaned_data
-
-        if item_type == "experience":
-            cleaned_data["selected_item_title"] = typed_title
-            cleaned_data["selected_item_key"] = "experience:manual"
-            return cleaned_data
 
         if not selected_item_key or not selected_item_title:
             raise forms.ValidationError("Please choose an item from the suggestions before posting.")
@@ -135,9 +106,10 @@ class ReviewForm(forms.Form):
             "googlebooks:",
             "openlibrary:",
             "omdb:",
+            "tmdb:",
+            "catalog:",
+            "fallback:",
             "wikidata:",
-            "podcast:",
-            "experience:",
             "preview:",
         )
         if not selected_item_key.startswith(valid_prefixes):
