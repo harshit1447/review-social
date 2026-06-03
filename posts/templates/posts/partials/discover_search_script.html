@@ -1,0 +1,116 @@
+<script>
+    (function () {
+        var form = document.querySelector(".discover-title-search");
+        var input = document.getElementById("discover-search");
+        var list = document.getElementById("discover-title-suggestions");
+        var debounceTimer = null;
+        var activeRequest = null;
+        if (!form || !input || !list) return;
+
+        var allowedTypes = (form.getAttribute("data-allowed-types") || "movie,series,book")
+            .split(",")
+            .map(function (value) { return value.trim(); })
+            .filter(Boolean);
+
+        function hideList() {
+            list.hidden = true;
+            list.innerHTML = "";
+        }
+
+        function previewUrl(row) {
+            var params = new URLSearchParams();
+            params.set("preview", "1");
+            params.set("item_type", row.item_type || "movie");
+            if (row.year) params.set("year", row.year);
+            if (row.creator) params.set("creator", row.creator);
+            if (row.description) params.set("description", row.description);
+            if (row.image_url) params.set("image_url", row.image_url);
+            if (row.external_source) params.set("external_source", row.external_source);
+            if (row.external_id) params.set("external_id", row.external_id);
+            return "/review/" + encodeURIComponent(row.title || input.value.trim()) + "/?" + params.toString();
+        }
+
+        function renderRows(rows) {
+            rows = rows.filter(function (row) {
+                return allowedTypes.indexOf(row.item_type) !== -1;
+            });
+            if (!rows.length) {
+                list.innerHTML = '<div class="discover-suggestion-empty">No suggestions yet. Try another title.</div>';
+                list.hidden = false;
+                return;
+            }
+            list.innerHTML = "";
+            rows.forEach(function (row) {
+                var link = document.createElement("a");
+                link.className = "discover-suggestion-row";
+                link.href = previewUrl(row);
+                var image = document.createElement("img");
+                image.src = row.image_url || "/static/posts/images/revue-favicon.png";
+                image.alt = "";
+                image.onerror = function () {
+                    image.src = "/static/posts/images/revue-favicon.png";
+                };
+                var copy = document.createElement("span");
+                var title = document.createElement("strong");
+                var meta = document.createElement("small");
+                title.textContent = row.title;
+                meta.textContent = [row.item_type, row.year, row.creator].filter(Boolean).join(" | ");
+                copy.appendChild(title);
+                copy.appendChild(meta);
+                link.appendChild(image);
+                link.appendChild(copy);
+                list.appendChild(link);
+            });
+            list.hidden = false;
+        }
+
+        async function fetchTitles(openFirst) {
+            var query = input.value.trim();
+            if (query.length < 2) {
+                hideList();
+                return [];
+            }
+            if (activeRequest) activeRequest.abort();
+            var controller = new AbortController();
+            activeRequest = controller;
+            list.innerHTML = '<div class="discover-suggestion-empty">Searching titles...</div>';
+            list.hidden = false;
+            try {
+                var response = await fetch("{% url 'suggest_items' %}?item_type=all&q=" + encodeURIComponent(query), {
+                    signal: controller.signal
+                });
+                if (activeRequest !== controller) return [];
+                if (!response.ok) throw new Error("Search failed");
+                var data = await response.json();
+                renderRows(data.results || []);
+                if (openFirst) {
+                    var first = list.querySelector("a");
+                    if (first) window.location.href = first.href;
+                }
+                return data.results || [];
+            } catch (error) {
+                if (error.name === "AbortError" && activeRequest !== controller) return [];
+                list.innerHTML = '<div class="discover-suggestion-empty">Search is taking too long. Try one more time.</div>';
+                list.hidden = false;
+                return [];
+            }
+        }
+
+        input.addEventListener("input", function () {
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(function () { fetchTitles(false); }, 120);
+        });
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            var first = list.querySelector("a");
+            if (first) {
+                window.location.href = first.href;
+            } else {
+                fetchTitles(true);
+            }
+        });
+        document.addEventListener("click", function (event) {
+            if (!form.contains(event.target)) hideList();
+        });
+    })();
+</script>

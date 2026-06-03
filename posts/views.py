@@ -1752,6 +1752,21 @@ def feed(request, review_form=None):
 
 @login_required
 def discover(request):
+    return redirect("discover_media")
+
+
+def _discover_sections_for_types(item_types):
+    allowed_types = set(item_types)
+    sections = []
+    for section in _discover_rail_sections():
+        rows = [row for row in section.get("items", []) if row.get("item_type") in allowed_types]
+        if rows:
+            sections.append({**section, "items": rows})
+    return sections
+
+
+@login_required
+def discover_media(request):
     query = request.GET.get("q", "").strip()
     chip = request.GET.get("chip", "for-you")
     sort = request.GET.get("sort", "newest")
@@ -1833,19 +1848,24 @@ def discover(request):
     discover_card_reviews = trending_review_rows + friend_favorite_rows + recent_review_rows
     _hydrate_review_card_counts(discover_card_reviews)
     review_card_context = _review_card_action_context(request.user, discover_card_reviews)
+    selected_genre_label = ""
+    if genre_filter:
+        selected_genre_label = next((bucket["label"] for bucket in CONTENT_GENRE_BUCKETS if bucket["slug"] == genre_filter), "")
     return render(
         request,
-        "posts/discover.html",
+        "posts/discover_media.html",
         {
             "query": query,
             "chip": chip,
             "sort": sort,
             "genre_filter": genre_filter,
+            "selected_genre_label": selected_genre_label,
             "genre_options": CONTENT_GENRE_BUCKETS,
             "trending_reviews": trending_review_rows,
             "friend_favorites": friend_favorite_rows,
             "recent_reviews": recent_review_rows,
-            "discover_rails": _discover_rail_sections(),
+            "discover_rails": _discover_sections_for_types(["movie", "series"]),
+            "genre_rows": _tmdb_genre_discover_rows(genre_filter, 24) if genre_filter else [],
             "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:6],
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
@@ -1854,6 +1874,32 @@ def discover(request):
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
+            **review_card_context,
+        },
+    )
+
+
+@login_required
+def discover_books(request):
+    friend_ids = _followed_user_ids(request.user)
+    book_reviews = (
+        Review.objects.select_related("item", "user", "user__profile")
+        .filter(item__item_type="book")
+        .order_by("-created_at")[:12]
+    )
+    book_reviews = list(book_reviews)
+    _attach_genres_to_reviews(book_reviews)
+    _hydrate_review_card_counts(book_reviews)
+    review_card_context = _review_card_action_context(request.user, book_reviews)
+    return render(
+        request,
+        "posts/discover_books.html",
+        {
+            "query": request.GET.get("q", "").strip(),
+            "book_reviews": book_reviews,
+            "discover_rails": _discover_sections_for_types(["book"]),
+            "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:8],
+            "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             **review_card_context,
         },
     )

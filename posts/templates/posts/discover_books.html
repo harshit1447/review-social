@@ -1,0 +1,119 @@
+{% extends "base_app.html" %}
+
+{% block title %}Books | Revue{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="feed-hero explore-hero">
+        <div>
+            <h1>Books</h1>
+            <p>Find books people keep recommending and open a title page before you review it.</p>
+        </div>
+        <a class="button" href="{% url 'feed' %}#feed-composer">Post review</a>
+    </section>
+
+    <section class="toolbar explore-toolbar discover-control-card">
+        <form class="search-form discover-title-search" method="get" autocomplete="off" data-allowed-types="book">
+            <label for="discover-search">Search books</label>
+            <div class="search-row">
+                <input id="discover-search" type="search" name="q" value="" placeholder="Search a book to open its page">
+                <button type="submit">Search</button>
+            </div>
+            <div id="discover-title-suggestions" class="discover-title-suggestions" hidden></div>
+        </form>
+        <div class="discover-dropdown-row compact">
+            <label class="discover-category-menu" for="discover-library">
+                <span>Browse</span>
+                <select id="discover-library" onchange="if (this.value) window.location.href = this.value;">
+                    <option value="{% url 'discover_media' %}">Movies &amp; Series</option>
+                    <option value="{% url 'discover_books' %}" selected>Books</option>
+                </select>
+            </label>
+        </div>
+    </section>
+
+    <div class="social-layout">
+        <main class="social-center">
+            <section class="discover-rail-stack">
+                {% for section in discover_rails %}
+                    <section class="card discover-poster-rail discover-dark-rail">
+                        <div class="section-heading">
+                            <div>
+                                <h2>{{ section.title }}</h2>
+                                <p class="meta">{{ section.kicker }}</p>
+                            </div>
+                        </div>
+                        <div class="poster-rail-scroll">
+                            {% for row in section.items %}
+                                <a class="discover-poster-card" href="{{ row.url }}">
+                                    <span class="discover-poster-frame {% if not row.image_url %}poster-placeholder{% endif %}">
+                                        {% if row.image_url %}
+                                            <img src="{{ row.image_url }}" alt="">
+                                        {% else %}
+                                            <span>{{ row.title|slice:":1" }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <strong>{{ row.title }}</strong>
+                                    <small>Book{% if row.year %} &middot; {{ row.year }}{% endif %}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
+            </section>
+
+            <section class="card discover-trending-card">
+                <h2 class="card-title">Recent book reviews</h2>
+                <div class="discover-review-list">
+                    {% for review in book_reviews %}
+                        {% include "posts/partials/review_card.html" %}
+                    {% empty %}
+                        <p class="empty-state">No book reviews yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <aside class="right-rail">
+            <section class="card">
+                <h2 class="card-title">Trending Users</h2>
+                <div class="scroll-list trending-user-list">
+                    {% for person in trending_users %}
+                        <div class="person-row">
+                            <div class="person-name">
+                                <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">
+                                    {% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}
+                                </a>
+                                <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                            </div>
+                            <a class="button secondary" href="{% url 'user_profile' person.username %}">View</a>
+                        </div>
+                    {% empty %}
+                        <p class="empty-state">No users yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+            <section class="card">
+                <h2 class="card-title">People You May Know</h2>
+                {% for person in suggested_users %}
+                    <div class="person-row">
+                        <div class="person-name">
+                            <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">
+                                {% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}
+                            </a>
+                            <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
+                        </div>
+                        <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
+                            {% csrf_token %}
+                            <button type="submit" class="button secondary" data-plain-button="1">Follow</button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">No suggestions yet.</p>
+                {% endfor %}
+            </section>
+        </aside>
+    </div>
+</div>
+{% include "posts/partials/discover_search_script.html" %}
+{% endblock %}
