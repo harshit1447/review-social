@@ -680,6 +680,84 @@ def _discover_rail_sections():
     return sections
 
 
+def _book_discover_sections():
+    cache_key = "book_discover_sections:v1"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    section_specs = [
+        {
+            "title": "Latest books",
+            "kicker": "Fresh titles to open and review",
+            "query": "subject:fiction",
+            "order_by": "newest",
+        },
+        {
+            "title": "Books people keep recommending",
+            "kicker": "Reliable starts for your reading list",
+            "query": "popular books",
+            "order_by": "relevance",
+        },
+        {
+            "title": "Useful non-fiction",
+            "kicker": "Ideas, business, behaviour, and better thinking",
+            "query": "subject:business subject:psychology",
+            "order_by": "relevance",
+        },
+        {
+            "title": "Fiction worth browsing",
+            "kicker": "Stories people can build a taste profile around",
+            "query": "subject:literary fiction",
+            "order_by": "relevance",
+        },
+    ]
+    sections = []
+    seen_titles = set()
+
+    for spec in section_specs:
+        rows = []
+        sources = _google_books_suggestions(spec["query"], max_results=18, order_by=spec["order_by"])
+        if len(sources) < 8:
+            sources += _openlibrary_suggestions(spec["query"])
+        for row in sources:
+            title = (row.get("title") or "").strip()
+            if not title:
+                continue
+            dedupe_key = f"{spec['title']}:{title.lower()}"
+            if dedupe_key in seen_titles:
+                continue
+            seen_titles.add(dedupe_key)
+            row = {
+                **row,
+                "item_type": "book",
+                "tag": "Book",
+                "external_source": row.get("external_source") or row.get("source") or "googlebooks",
+            }
+            row["url"] = _preview_url_for_payload(row)
+            rows.append(row)
+            if len(rows) >= 12:
+                break
+        if rows:
+            sections.append({"title": spec["title"], "kicker": spec["kicker"], "items": rows})
+
+    curated_book_sections = [
+        {**section, "items": [row for row in section.get("items", []) if row.get("item_type") == "book"]}
+        for section in _discover_rail_sections()
+    ]
+    curated_book_sections = [section for section in curated_book_sections if section["items"]]
+    for section in curated_book_sections:
+        for row in section["items"]:
+            row.setdefault("url", _preview_url_for_payload(row))
+    if len(sections) < 2:
+        sections.extend(curated_book_sections)
+    else:
+        sections.extend(curated_book_sections[:1])
+
+    cache.set(cache_key, sections, 21600)
+    return sections
+
+
 def _book_matches_genre(item, genre_slug, extra_text=""):
     bucket = next((row for row in BOOK_GENRE_BUCKETS if row["slug"] == genre_slug), None)
     if not bucket or not item:
@@ -1162,10 +1240,12 @@ def _wikidata_suggestions(query: str, item_type: str):
     return results
 
 
-def _google_books_suggestions(query: str):
+def _google_books_suggestions(query: str, max_results: int = 12, order_by: str = "relevance"):
     if not query:
         return []
-    cache_key = f"google_books_suggestions:v3:{_cache_slug(query)}"
+    max_results = max(1, min(int(max_results or 12), 40))
+    order_by = order_by if order_by in {"relevance", "newest"} else "relevance"
+    cache_key = f"google_books_suggestions:v4:{_cache_slug(query)}:{max_results}:{order_by}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -1174,10 +1254,11 @@ def _google_books_suggestions(query: str):
             {
                 "q": query,
                 "printType": "books",
-                "maxResults": 12,
+                "maxResults": max_results,
+                "orderBy": order_by,
             }
         )
-        payload = _json_get(f"https://www.googleapis.com/books/v1/volumes?{params}", timeout=2)
+        payload = _json_get(f"https://www.googleapis.com/books/v1/volumes?{params}", timeout=1.5)
     except Exception:
         return []
     items = payload.get("items", [])
@@ -1194,8 +1275,8 @@ def _google_books_suggestions(query: str):
         average_rating = volume.get("averageRating")
         image_url = ""
         image_links = volume.get("imageLinks") or {}
-        if image_links.get("thumbnail"):
-            image_url = image_links["thumbnail"].replace("http://", "https://")
+        if image_links.get("thumbnail") or image_links.get("smallThumbnail"):
+            image_url = (image_links.get("thumbnail") or image_links.get("smallThumbnail") or "").replace("http://", "https://")
         results.append(
             {
                 "key": f"googlebooks:{row.get('id', title)}",
@@ -1228,7 +1309,7 @@ def _openlibrary_suggestions(query: str):
                 "limit": 12,
             }
         )
-        payload = _json_get(f"https://openlibrary.org/search.json?{params}", timeout=2)
+        payload = _json_get(f"https://openlibrary.org/search.json?{params}", timeout=1.5)
     except Exception:
         return []
 
@@ -1891,6 +1972,8 @@ def discover(request):
 
 def _discover_sections_for_types(item_types):
     allowed_types = set(item_types)
+    if allowed_types == {"book"}:
+        return _book_discover_sections()
     sections = []
     for section in _discover_rail_sections():
         rows = [row for row in section.get("items", []) if row.get("item_type") in allowed_types]
