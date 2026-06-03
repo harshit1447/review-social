@@ -170,6 +170,7 @@ class Profile(models.Model):
     location = models.CharField(max_length=120, blank=True)
     website = models.URLField(blank=True)
     favorite_categories = models.CharField(max_length=255, blank=True)
+    last_notification_popup_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

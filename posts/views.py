@@ -76,6 +76,62 @@ def _item_action_state(user, item):
     }
 
 
+def _hydrate_review_card_counts(reviews):
+    review_ids = [review.id for review in reviews if getattr(review, "id", None)]
+    if not review_ids:
+        return
+    rows = Review.objects.filter(id__in=review_ids).annotate(
+        likes_total=Count(
+            "item__saved_entries",
+            filter=Q(item__saved_entries__list_type="favorites"),
+            distinct=True,
+        ),
+        review_like_total=Count("likes", distinct=True),
+        comment_total=Count("comments", distinct=True),
+    ).values("id", "likes_total", "review_like_total", "comment_total")
+    counts = {row["id"]: row for row in rows}
+    for review in reviews:
+        row = counts.get(review.id, {})
+        review.likes_total = row.get("likes_total", getattr(review, "likes_total", 0))
+        review.review_like_total = row.get("review_like_total", getattr(review, "review_like_total", 0))
+        review.comment_total = row.get("comment_total", getattr(review, "comment_total", 0))
+
+
+def _review_card_action_context(user, reviews):
+    item_ids = [review.item_id for review in reviews if getattr(review, "item_id", None)]
+    review_ids = [review.id for review in reviews if getattr(review, "id", None)]
+    context = {
+        "watchlist_item_ids": set(),
+        "readlist_item_ids": set(),
+        "favorite_item_ids": set(),
+        "saved_review_ids": set(),
+        "recommended_item_ids": set(),
+        "review_liked_ids": set(),
+    }
+    if not user.is_authenticated or not item_ids:
+        return context
+    context["watchlist_item_ids"] = set(
+        SavedItem.objects.filter(user=user, list_type="watchlist", item_id__in=item_ids).values_list("item_id", flat=True)
+    )
+    context["readlist_item_ids"] = set(
+        SavedItem.objects.filter(user=user, list_type="readlist", item_id__in=item_ids).values_list("item_id", flat=True)
+    )
+    context["favorite_item_ids"] = set(
+        SavedItem.objects.filter(user=user, list_type="favorites", item_id__in=item_ids).values_list("item_id", flat=True)
+    )
+    context["recommended_item_ids"] = set(
+        Recommendation.objects.filter(from_user=user, item_id__in=item_ids).values_list("item_id", flat=True)
+    )
+    if review_ids:
+        context["saved_review_ids"] = set(
+            SavedReview.objects.filter(user=user, review_id__in=review_ids).values_list("review_id", flat=True)
+        )
+        context["review_liked_ids"] = set(
+            ReviewLike.objects.filter(user=user, review_id__in=review_ids).values_list("review_id", flat=True)
+        )
+    return context
+
+
 def _create_activity(user, activity_type, message="", review=None, target_user=None, collection=None):
     return Activity.objects.create(
         user=user,
@@ -169,6 +225,19 @@ CONTENT_GENRE_BUCKETS = [
         "keywords": ("crime", "police", "court", "law", "legal", "gangster", "mafia"),
     },
 ]
+
+
+TMDB_GENRE_MAP = {
+    "rom-com": {"movie": "10749,35", "series": "18,35"},
+    "thriller": {"movie": "53", "series": "9648"},
+    "action": {"movie": "28", "series": "10759"},
+    "sci-fi": {"movie": "878", "series": "10765"},
+    "drama": {"movie": "18", "series": "18"},
+    "comedy": {"movie": "35", "series": "35"},
+    "fantasy": {"movie": "14", "series": "10765"},
+    "horror": {"movie": "27", "series": "9648"},
+    "crime": {"movie": "80", "series": "80"},
+}
 
 
 def _genre_haystack(item, extra_text=""):
@@ -581,7 +650,7 @@ def landing_suggest_items(request):
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    cache_key = f"landing_suggest:v4:{query.lower()}"
+    cache_key = f"landing_suggest:v5:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse({"results": cached})
@@ -591,29 +660,44 @@ def landing_suggest_items(request):
 
     existing = Item.objects.filter(
         title__icontains=query,
-        item_type__in=["movie", "series"],
-    ).order_by("title").values("title", "item_type", "release_year", "creator_name", "image_url")[:14]
-    for row in existing:
+        item_type__in=["movie", "series", "book"],
+    ).order_by("title").values("title", "item_type", "release_year", "creator_name", "image_url")
+
+    def add_row(row):
         title = (row.get("title") or "").strip()
-        key = f"{title.lower()}:{row.get('release_year', '')}:{row.get('item_type', '')}"
-        if not title or key in seen:
-            continue
+        item_type = row.get("item_type", "")
+        key = f"{title.lower()}:{row.get('year') or row.get('release_year', '')}:{item_type}"
+        if not title or not item_type or key in seen:
+            return
+        if item_type not in {"movie", "series", "book"}:
+            return
         seen.add(key)
         results.append(
             {
                 "title": title,
-                "item_type": row.get("item_type", ""),
-                "year": row.get("release_year", ""),
-                "creator": row.get("creator_name", ""),
+                "item_type": item_type,
+                "year": row.get("year") or row.get("release_year", ""),
+                "creator": row.get("creator") or row.get("creator_name", ""),
                 "image_url": row.get("image_url", ""),
+                "external_source": row.get("external_source", ""),
+                "external_id": row.get("external_id", ""),
             }
         )
 
-    for row in _fallback_title_suggestions(query, ["movie", "series"]):
-        key = f"{row['title'].lower()}:{row.get('year', '')}:{row.get('item_type', '')}"
-        if key not in seen:
-            seen.add(key)
-            results.append(row)
+    for row in existing:
+        add_row(row)
+
+    for row in _fallback_title_suggestions(query, ["movie", "series", "book"]):
+        add_row(row)
+
+    for row_type in ("movie", "series"):
+        external_rows = _tmdb_suggestions(query, row_type)
+        if not external_rows:
+            external_rows = _omdb_fast_suggestions(query, row_type)
+        for row in external_rows:
+            add_row(row)
+    for row in _google_books_suggestions(query):
+        add_row(row)
 
     cache.set(cache_key, results, 300)
     return JsonResponse({"results": results})
@@ -803,6 +887,54 @@ def _tmdb_discover_rows(endpoint: str, item_type: str, limit: int = 10):
         )
         if len(rows) >= limit:
             break
+
+    cache.set(cache_key, rows, 21600)
+    return rows
+
+
+def _tmdb_genre_discover_rows(genre_slug: str, limit: int = 18):
+    genre_map = TMDB_GENRE_MAP.get(genre_slug)
+    if not genre_map:
+        return []
+    cache_key = f"tmdb_genre_discover:v1:{genre_slug}:{limit}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    rows = []
+    endpoints = [
+        ("movie", f"discover/movie?{urlencode({'sort_by': 'popularity.desc', 'with_genres': genre_map['movie'], 'vote_count.gte': 40})}"),
+        ("series", f"discover/tv?{urlencode({'sort_by': 'popularity.desc', 'with_genres': genre_map['series'], 'vote_count.gte': 20})}"),
+    ]
+    for item_type, endpoint in endpoints:
+        for row in _tmdb_discover_rows(endpoint, item_type, limit):
+            row["score"] = f"{min(95, max(15, (len(rows) + 3) * 5))}%"
+            row["url"] = _preview_url_for_payload(row)
+            rows.append(row)
+            if len(rows) >= limit:
+                break
+        if len(rows) >= limit:
+            break
+
+    if len(rows) < 4:
+        local_reviews = Review.objects.select_related("item").filter(item__item_type__in=["movie", "series"]).order_by("-created_at")[:80]
+        for review in _filter_reviews_by_genre(local_reviews, genre_slug):
+            item = review.item
+            rows.append(
+                {
+                    "title": item.title,
+                    "item_type": item.item_type,
+                    "year": item.release_year,
+                    "creator": item.creator_name,
+                    "tag": item.get_item_type_display(),
+                    "description": item.description,
+                    "image_url": item.image_url,
+                    "url": reverse("item_reviews", args=[item.title]),
+                    "score": f"{min(95, max(15, review.rating * 15))}%",
+                }
+            )
+            if len(rows) >= limit:
+                break
 
     cache.set(cache_key, rows, 21600)
     return rows
@@ -1698,6 +1830,9 @@ def discover(request):
     _attach_genres_to_reviews(trending_review_rows)
     _attach_genres_to_reviews(friend_favorite_rows)
     _attach_genres_to_reviews(recent_review_rows)
+    discover_card_reviews = trending_review_rows + friend_favorite_rows + recent_review_rows
+    _hydrate_review_card_counts(discover_card_reviews)
+    review_card_context = _review_card_action_context(request.user, discover_card_reviews)
     return render(
         request,
         "posts/discover.html",
@@ -1719,6 +1854,7 @@ def discover(request):
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
             "recent_page_obj": recent_page,
+            **review_card_context,
         },
     )
 
@@ -2209,6 +2345,8 @@ def profile(request):
         user=request.user
     ).select_related("user", "user__profile", "item").order_by("-created_at")[:5])
     _attach_genres_to_reviews(recent_reviews)
+    _hydrate_review_card_counts(recent_reviews)
+    review_card_context = _review_card_action_context(request.user, recent_reviews)
     top_rated_reviews = Review.objects.filter(
         user=request.user
     ).select_related("item").order_by("-rating", "-created_at")[:5]
@@ -2245,6 +2383,7 @@ def profile(request):
             "profile_form": form,
             "collections": Collection.objects.filter(user=request.user)[:5],
             "saved_reviews": SavedReview.objects.filter(user=request.user).select_related("review", "review__item")[:5],
+            **review_card_context,
         },
     )
 
@@ -2618,6 +2757,17 @@ def user_profile(request, username):
     saved_reviews = SavedReview.objects.filter(
         user=viewed_user,
     ).select_related("review", "review__item").order_by("-created_at")[:5]
+    liked_items = SavedItem.objects.filter(
+        user=viewed_user,
+        list_type="favorites",
+    ).select_related("item").order_by("-created_at")[:10]
+    liked_reviews = list(ReviewLike.objects.filter(
+        user=viewed_user,
+    ).select_related("review", "review__user", "review__user__profile", "review__item").order_by("-created_at")[:10])
+    liked_review_objects = [row.review for row in liked_reviews]
+    _attach_genres_to_reviews(liked_review_objects)
+    _hydrate_review_card_counts(reviews + liked_review_objects)
+    review_card_context = _review_card_action_context(request.user, reviews + liked_review_objects)
     collections = Collection.objects.filter(user=viewed_user, is_public=True).prefetch_related("items")[:5]
     return render(
         request,
@@ -2639,7 +2789,10 @@ def user_profile(request, username):
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
             "saved_reviews": saved_reviews,
+            "liked_items": liked_items,
+            "liked_reviews": liked_reviews,
             "collections": collections,
+            **review_card_context,
         },
     )
 

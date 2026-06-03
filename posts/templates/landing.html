@@ -661,9 +661,9 @@
             <div class="search-wrap">
                 <label class="landing-search" for="landing-search-input">
                     <span>Search</span>
-                    <input id="landing-search-input" type="search" autocomplete="off" placeholder="Find a movie or series">
+                    <input id="landing-search-input" type="search" autocomplete="off" placeholder="Find a movie, series, or book">
                 </label>
-                <div class="suggestions" id="landing-suggestions" role="listbox" aria-label="Movie and series suggestions"></div>
+                <div class="suggestions" id="landing-suggestions" role="listbox" aria-label="Movie, series, and book suggestions"></div>
             </div>
 
             <div class="nav-actions">
@@ -754,7 +754,7 @@
 
                     <section class="search-prompt">
                         <strong>Try the search.</strong>
-                        <span class="muted">Pick a movie or series and Revue will ask you to join before showing reviews.</span>
+                        <span class="muted">Pick a movie, series, or book and Revue will ask you to join before showing reviews.</span>
                     </section>
                 </div>
             </section>
@@ -839,7 +839,9 @@
         }
 
         function labelForType(value) {
-            return value === "series" ? "Series" : "Movie";
+            if (value === "series") return "Series";
+            if (value === "book") return "Book";
+            return "Movie";
         }
 
         function closeSuggestions() {
@@ -895,7 +897,7 @@
                 latestController.abort();
             }
             latestController = new AbortController();
-            suggestions.innerHTML = '<div class="suggestion-empty">Searching movies and series...</div>';
+            suggestions.innerHTML = '<div class="suggestion-empty">Searching movies, series, and books...</div>';
             suggestions.classList.add("is-open");
 
             fetch("{% url 'landing_suggest_items' %}?q=" + encodeURIComponent(query), {

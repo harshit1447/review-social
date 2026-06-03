@@ -124,45 +124,7 @@
 
                 <section id="reviews" class="feed-stack">
                     {% for review in recent_reviews %}
-                        <article class="card social-review-card">
-                            <header class="post-header">
-                                <a class="post-avatar profile-link" href="{% url 'profile' %}" aria-label="{{ user.get_full_name|default:user.username }} profile">
-                                    {% if user.profile.profile_photo %}
-                                        <img src="{{ user.profile.profile_photo.url }}" alt="">
-                                    {% else %}
-                                        {{ user.get_full_name|default:user.username|first }}
-                                    {% endif %}
-                                </a>
-                                <div>
-                                    <div class="post-name-line">
-                                        <a class="post-name profile-link" href="{% url 'profile' %}">{{ user.get_full_name|default:user.username }}</a>
-                                        <span class="inline-owner-actions">
-                                            <a class="owner-action" href="{% url 'edit_review' review.id %}?next={{ request.get_full_path|urlencode }}">Edit</a>
-                                            <form method="post" action="{% url 'delete_review' review.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                                <button class="owner-action danger" type="submit" onclick="return confirm('Delete this review?');">Delete</button>
-                                            </form>
-                                        </span>
-                                    </div>
-                                    <div class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</div>
-                                </div>
-                                <span class="rating">{{ review.rating }}/5</span>
-                            </header>
-                            <div class="post-item">
-                                <a class="review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item.title %}">
-                                    <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                                </a>
-                                <div>
-                                    <h2 class="item-title">
-                                        <a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a>
-                                        <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
-                                        {% if review.inferred_genre_label %}<span class="item-type-inline genre-inline">{{ review.inferred_genre_label }}</span>{% endif %}
-                                    </h2>
-                                    <p class="review-text">{{ review.review_text }}</p>
-                                </div>
-                            </div>
-                        </article>
+                        {% include "posts/partials/review_card.html" %}
                     {% empty %}
                         <div class="card">
                             <p class="empty-state">You have not posted reviews yet.</p>

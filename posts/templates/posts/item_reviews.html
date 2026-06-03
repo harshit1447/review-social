@@ -263,20 +263,6 @@
                         <div class="comment-body-row">
                             <p class="comment-body">{{ comment.body }}</p>
                             <div class="comment-actions" aria-label="Comment actions">
-                                {% if user.is_authenticated %}
-                                <form method="post" action="{% url 'like_comment' comment.id %}" class="js-async-form">
-                                    {% csrf_token %}
-                                    <button type="submit" class="comment-icon-button comment-like-button {% if user in comment.likes.all %}active{% endif %}" data-comment-like-button="1" aria-label="Like comment">
-                                        <span class="comment-heart" aria-hidden="true">{% if user in comment.likes.all %}♥{% else %}♡{% endif %}</span>
-                                        <span class="comment-action-count">{{ comment.likes.count }}</span>
-                                    </button>
-                                </form>
-                                {% else %}
-                                    <a class="comment-icon-button comment-like-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like comment">
-                                        <span class="comment-heart" aria-hidden="true">&#9825;</span>
-                                        <span class="comment-action-count">{{ comment.likes.count }}</span>
-                                    </a>
-                                {% endif %}
                                 {% if user.is_authenticated and comment.user == user %}
                                     <form method="post" action="{% url 'delete_comment' comment.id %}">
                                         {% csrf_token %}

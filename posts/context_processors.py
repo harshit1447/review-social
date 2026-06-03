@@ -4,6 +4,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.utils import timezone
+from django.urls import reverse
 
 
 def _google_enabled_from_social_app() -> bool:
@@ -26,6 +28,70 @@ def _google_enabled_from_social_app() -> bool:
     return enabled
 
 
+def _display_name(user):
+    return user.get_full_name() or user.username
+
+
+def _notification_target(notification):
+    if notification.review_id and notification.review and notification.review.item:
+        return {
+            "url": f"{reverse('item_reviews', args=[notification.review.item.title])}#review-{notification.review_id}",
+            "label": "View review",
+        }
+    if notification.actor_id:
+        return {
+            "url": reverse("user_profile", args=[notification.actor.username]),
+            "label": "View profile",
+        }
+    return {"url": reverse("notifications"), "label": "Open notifications"}
+
+
+def _login_notification_toasts(request):
+    user = getattr(request, "user", None)
+    if not user or not user.is_authenticated:
+        return []
+
+    login_marker = user.last_login.isoformat() if user.last_login else "active"
+    session_key = f"login_notification_toasts_seen:{user.id}:{login_marker}"
+    user_session_key = f"login_notification_toasts_seen_for_user:{user.id}"
+    if request.session.get(session_key) or request.session.get(user_session_key):
+        return []
+
+    try:
+        from .models import Notification, Profile
+
+        profile, _ = Profile.objects.get_or_create(user=user)
+        cutoff = profile.last_notification_popup_at or user.date_joined
+        notifications = list(
+            Notification.objects.filter(
+                recipient=user,
+                created_at__gt=cutoff,
+            )
+            .select_related("actor", "review", "review__item")
+            .order_by("-created_at")[:5]
+        )
+        request.session[session_key] = True
+        request.session[user_session_key] = True
+        request.session.modified = True
+        profile.last_notification_popup_at = timezone.now()
+        profile.save(update_fields=["last_notification_popup_at"])
+    except Exception:
+        return []
+
+    rows = []
+    for notification in notifications:
+        target = _notification_target(notification)
+        rows.append(
+            {
+                "actor": _display_name(notification.actor),
+                "message": notification.message,
+                "url": target["url"],
+                "label": target["label"],
+            }
+        )
+    return rows
+
+
 def auth_options(request):
     social_counts = {
         "sidebar_review_count": 0,
@@ -34,6 +100,7 @@ def auth_options(request):
         "unread_notification_count": 0,
         "recommend_friends": [],
     }
+    login_notification_toasts = _login_notification_toasts(request)
     if getattr(request, "user", None) and request.user.is_authenticated:
         cache_key = f"auth_options:{request.user.id}"
         cached_counts = cache.get(cache_key)
@@ -49,6 +116,7 @@ def auth_options(request):
                 "google_auth_enabled": env_configured
                 or settings_configured
                 or _google_enabled_from_social_app(),
+                "login_notification_toasts": login_notification_toasts,
                 **cached_counts,
             }
         try:
@@ -92,5 +160,6 @@ def auth_options(request):
         or settings_configured
         or _google_enabled_from_social_app()
         ,
+        "login_notification_toasts": login_notification_toasts,
         **social_counts,
     }

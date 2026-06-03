@@ -50,28 +50,43 @@
                 <h2 class="card-title">Reviews</h2>
                 <div class="profile-review-list">
                     {% for review in reviews %}
-                        <article class="profile-review-row">
-                            <a class="profile-review-poster {% if review.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' review.item.title %}" aria-label="{{ review.item.title }}">
-                                <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                            </a>
-                            <div>
-                                <div class="profile-review-topline">
-                                    <h3><a href="{% url 'item_reviews' review.item.title %}">{{ review.item.title }}</a></h3>
-                                    <span class="rating">{{ review.rating }}/5</span>
-                                </div>
-                                <p class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</p>
-                                <p class="meta">
-                                    {{ review.item.get_item_type_display }}
-                                    {% if review.inferred_genre_label %} &middot; {{ review.inferred_genre_label }}{% endif %}
-                                    {% if review.item.release_year %} &middot; {{ review.item.release_year }}{% endif %}
-                                    {% if review.item.creator_name %} &middot; {{ review.item.creator_name }}{% endif %}
-                                </p>
-                                <p class="review-text">{{ review.review_text }}</p>
-                            </div>
-                        </article>
+                        {% include "posts/partials/review_card.html" %}
                     {% empty %}
                         <p class="empty-state">This profile has not posted reviews yet.</p>
                     {% endfor %}
+                </div>
+            </section>
+
+            <section class="card profile-compact-card">
+                <h2 class="card-title">Likes</h2>
+                <div class="profile-review-list">
+                    {% for liked in liked_items %}
+                        <article class="profile-review-row">
+                            <a class="profile-review-poster {% if liked.item.item_type == 'podcast' %}podcast-poster{% endif %}" href="{% url 'item_reviews' liked.item.title %}" aria-label="{{ liked.item.title }}">
+                                <img src="{% if liked.item.image_url %}{{ liked.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
+                            </a>
+                            <div>
+                                <div class="profile-review-topline">
+                                    <h3><a href="{% url 'item_reviews' liked.item.title %}">{{ liked.item.title }}</a></h3>
+                                    <span class="meta">Liked</span>
+                                </div>
+                                <p class="post-meta">liked on {{ liked.created_at|date:"j F Y"|lower }}</p>
+                                <p class="meta">
+                                    {{ liked.item.get_item_type_display }}
+                                    {% if liked.item.release_year %} &middot; {{ liked.item.release_year }}{% endif %}
+                                    {% if liked.item.creator_name %} &middot; {{ liked.item.creator_name }}{% endif %}
+                                </p>
+                            </div>
+                        </article>
+                    {% endfor %}
+
+                    {% for liked in liked_reviews %}
+                        {% include "posts/partials/review_card.html" with review=liked.review show_post_review_link=False %}
+                    {% endfor %}
+
+                    {% if not liked_items and not liked_reviews %}
+                        <p class="empty-state">No likes yet.</p>
+                    {% endif %}
                 </div>
             </section>
         </main>

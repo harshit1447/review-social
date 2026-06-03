@@ -1873,6 +1873,58 @@
             padding: 12px 14px;
         }
 
+        .toast.notification-toast {
+            background: var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            box-shadow: 0 22px 60px rgba(77, 49, 27, 0.2);
+            color: var(--text);
+            display: grid;
+            gap: 8px;
+            font-weight: 500;
+            max-width: min(380px, calc(100vw - 24px));
+            min-width: min(340px, calc(100vw - 24px));
+            padding: 14px 42px 14px 16px;
+            position: relative;
+        }
+
+        .notification-toast strong {
+            display: block;
+            font-size: 0.92rem;
+            line-height: 1.25;
+        }
+
+        .notification-toast p {
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .notification-toast a {
+            color: var(--accent-dark);
+            font-size: 0.84rem;
+            font-weight: 850;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .notification-toast-close {
+            align-items: center;
+            background: rgba(179, 106, 50, 0.08);
+            border: 1px solid rgba(126, 67, 30, 0.14);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 0.85rem;
+            height: 28px;
+            justify-content: center;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 28px;
+        }
+
         @keyframes like-pop {
             0% { transform: scale(1); }
             45% { transform: scale(1.12) translateY(-1px); }
@@ -2518,17 +2570,18 @@
         }
 
         .profile-page .profile-avatar-wrap {
-            margin-top: -54px;
+            margin-top: -28px;
             min-width: 108px;
+            transform: translateY(10px);
         }
 
         .profile-page .profile-copy {
-            padding-top: 28px;
+            padding-top: 34px;
         }
 
         .profile-page .profile-info > .button {
             align-self: center;
-            margin-top: 28px;
+            margin-top: 34px;
         }
 
         .profile-page .profile-info h1 {
@@ -3696,8 +3749,9 @@
         }
 
         .profile-page .profile-avatar-wrap {
-            margin-top: -54px;
+            margin-top: -28px;
             min-width: 108px;
+            transform: translateY(10px);
         }
 
         .profile-detail-grid {
@@ -5041,6 +5095,9 @@
         </aside>
         {% endif %}
         <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+        {% if login_notification_toasts %}
+            {{ login_notification_toasts|json_script:"login-notification-toasts-data" }}
+        {% endif %}
     </div>
     <div class="profile-photo-lightbox" id="profile-photo-lightbox" aria-hidden="true">
         <div class="profile-photo-lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="profile-photo-lightbox-title">
@@ -5063,12 +5120,57 @@
                 }, 2600);
             }
 
+            function showNotificationToast(row, index) {
+                var stack = document.querySelector(".toast-stack");
+                if (!stack || !row) return;
+                var toast = document.createElement("div");
+                var title = document.createElement("strong");
+                var message = document.createElement("p");
+                var link = document.createElement("a");
+                var close = document.createElement("button");
+                var timeoutId = null;
+
+                toast.className = "toast notification-toast";
+                title.textContent = row.actor || "New notification";
+                message.textContent = row.message || "You have a new notification.";
+                link.href = row.url || "{% url 'notifications' %}";
+                link.textContent = row.label || "Open notification";
+                close.className = "notification-toast-close";
+                close.type = "button";
+                close.setAttribute("aria-label", "Dismiss notification");
+                close.textContent = "x";
+
+                close.addEventListener("click", function () {
+                    window.clearTimeout(timeoutId);
+                    toast.remove();
+                });
+
+                toast.appendChild(close);
+                toast.appendChild(title);
+                toast.appendChild(message);
+                toast.appendChild(link);
+
+                window.setTimeout(function () {
+                    stack.appendChild(toast);
+                    timeoutId = window.setTimeout(function () {
+                        toast.remove();
+                    }, 6000);
+                }, Math.min(index || 0, 4) * 250);
+            }
+
             document.addEventListener("DOMContentLoaded", function () {
                 document.querySelectorAll(".feed-stack.is-loading").forEach(function (stack) {
                     window.setTimeout(function () {
                         stack.classList.remove("is-loading");
                     }, 220);
                 });
+
+                var loginToastData = document.getElementById("login-notification-toasts-data");
+                if (loginToastData) {
+                    try {
+                        JSON.parse(loginToastData.textContent || "[]").forEach(showNotificationToast);
+                    } catch (error) {}
+                }
             });
 
             var recommendPanel = document.getElementById("recommend-panel");

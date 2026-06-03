@@ -424,7 +424,7 @@
             </section>
 
             <section class="card">
-                <form method="post" action="{% url 'account_login' %}">
+                <form method="post" action="{% url 'account_login' %}" autocomplete="on">
                     {% csrf_token %}
                     {% if redirect_field_value %}
                         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
@@ -440,7 +440,7 @@
 
                     <div class="field">
                         <label for="id_login">Email or Username</label>
-                        <input id="id_login" name="login" type="text" autocomplete="username" value="{{ form.login.value|default_if_none:'' }}" placeholder="Enter your email or username" required>
+                        <input id="id_login" name="login" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ form.login.value|default_if_none:'' }}" placeholder="Enter your email or username" required>
                     </div>
 
                     <div class="field">
