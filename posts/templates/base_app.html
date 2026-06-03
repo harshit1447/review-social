@@ -3278,6 +3278,121 @@
             margin-top: 5px;
         }
 
+        .discover-rail-stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .discover-poster-rail {
+            background:
+                radial-gradient(circle at 12% 0%, rgba(189, 111, 49, 0.2), transparent 34%),
+                linear-gradient(135deg, #171513 0%, #070706 100%);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 24px 62px rgba(33, 22, 14, 0.18);
+            color: #f7f0e8;
+            overflow: hidden;
+            padding: 18px;
+        }
+
+        .discover-poster-rail .section-heading {
+            margin-bottom: 12px;
+        }
+
+        .discover-poster-rail h2 {
+            color: #fffaf4;
+            font-size: 1.08rem;
+            letter-spacing: -0.02em;
+        }
+
+        .discover-poster-rail .meta {
+            color: rgba(247, 240, 232, 0.66);
+        }
+
+        .poster-rail-scroll {
+            display: grid;
+            gap: 16px;
+            grid-auto-columns: minmax(132px, 148px);
+            grid-auto-flow: column;
+            overflow-x: auto;
+            padding: 4px 2px 8px;
+            scroll-snap-type: x proximity;
+            scrollbar-width: thin;
+        }
+
+        .poster-rail-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .poster-rail-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+        }
+
+        .discover-poster-card {
+            color: inherit;
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+            scroll-snap-align: start;
+            text-decoration: none;
+        }
+
+        .discover-poster-card:hover .discover-poster-frame,
+        .discover-poster-card:focus-visible .discover-poster-frame {
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
+            transform: translateY(-3px);
+        }
+
+        .discover-poster-frame {
+            aspect-ratio: 2 / 3;
+            background: #241b15;
+            border-radius: 10px;
+            display: grid;
+            overflow: hidden;
+            place-items: center;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            width: 100%;
+        }
+
+        .discover-poster-frame img {
+            display: block;
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .discover-poster-frame.poster-placeholder {
+            background:
+                linear-gradient(145deg, rgba(189, 111, 49, 0.42), rgba(16, 13, 11, 0.96)),
+                radial-gradient(circle at 65% 18%, rgba(255, 255, 255, 0.26), transparent 28%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .discover-poster-frame.poster-placeholder span {
+            color: rgba(255, 250, 244, 0.86);
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .discover-poster-card strong,
+        .discover-poster-card small {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .discover-poster-card strong {
+            color: #fffaf4;
+            font-size: 0.92rem;
+            line-height: 1.2;
+        }
+
+        .discover-poster-card small {
+            color: rgba(247, 240, 232, 0.58);
+            font-size: 0.74rem;
+            font-weight: 600;
+        }
+
         .discover-review-list {
             display: grid;
             gap: 18px;
@@ -3823,6 +3938,19 @@
             .explore-title-poster {
                 height: 112px;
                 width: 74px;
+            }
+
+            .discover-poster-rail {
+                border-radius: 18px;
+                margin-inline: -2px;
+                padding: 14px;
+            }
+
+            .poster-rail-scroll {
+                grid-auto-columns: minmax(116px, 128px);
+                gap: 12px;
+                margin-inline: -4px;
+                padding-inline: 4px;
             }
 
             .feed-quick-filters,

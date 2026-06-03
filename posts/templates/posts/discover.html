@@ -48,42 +48,32 @@
 
     <div class="social-layout">
         <main class="social-center">
-            <section class="card explore-title-board">
-                <div class="section-heading">
-                    <div>
-                        <h2>Explore titles</h2>
-                        <p class="meta">Movies, series, and books people are already reviewing on Revue.</p>
-                    </div>
-                    {% if genre_filter %}
-                        <a class="inline-link" href="{% url 'discover' %}?chip={{ chip }}&sort={{ sort }}">Clear filter</a>
-                    {% endif %}
-                </div>
-                <div class="explore-title-grid">
-                    {% for item in explore_items %}
-                        <a class="explore-title-card" href="{% url 'item_reviews' item.title %}">
-                            <span class="explore-title-poster {% if item.item_type == 'podcast' %}podcast-poster{% endif %}">
-                                <img src="{% if item.image_url %}{{ item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                            </span>
-                            <span class="explore-title-copy">
-                                <strong>{{ item.title }}</strong>
-                                <small>
-                                    {{ item.get_item_type_display }}
-                                    {% if item.inferred_genre_label %} &middot; {{ item.inferred_genre_label }}{% endif %}
-                                    {% if item.release_year %} &middot; {{ item.release_year }}{% endif %}
-                                </small>
-                                <span class="explore-title-stats">
-                                    {% if item.average_rating %}<span>{{ item.average_rating|floatformat:1 }}/5</span>{% endif %}
-                                    <span>{{ item.review_total }} review{{ item.review_total|pluralize }}</span>
-                                </span>
-                            </span>
-                        </a>
-                    {% empty %}
-                        <div class="empty-state explore-empty">
-                            <strong>No titles found yet.</strong>
-                            <span>Use the search above to open a movie, series, or book page.</span>
+            <section class="discover-rail-stack">
+                {% for section in discover_rails %}
+                    <section class="card discover-poster-rail">
+                        <div class="section-heading">
+                            <div>
+                                <h2>{{ section.title }}</h2>
+                                <p class="meta">{{ section.kicker }}</p>
+                            </div>
                         </div>
-                    {% endfor %}
-                </div>
+                        <div class="poster-rail-scroll">
+                            {% for row in section.items %}
+                                <a class="discover-poster-card" href="{{ row.url }}">
+                                    <span class="discover-poster-frame {% if not row.image_url %}poster-placeholder{% endif %}">
+                                        {% if row.image_url %}
+                                            <img src="{{ row.image_url }}" alt="">
+                                        {% else %}
+                                            <span>{{ row.title|slice:":1" }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <strong>{{ row.title }}</strong>
+                                    <small>{{ row.tag|default:row.item_type|title }}{% if row.year %} · {{ row.year }}{% endif %}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
             </section>
 
             <section class="card discover-trending-card">
@@ -134,39 +124,6 @@
                         </article>
                     {% empty %}
                         <p class="empty-state">No trending reviews yet.</p>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <section class="card movie-genre-browser">
-                <div class="section-heading">
-                    <h2>Movie and series types</h2>
-                    <a class="inline-link" href="{% url 'movies' %}">See all movies</a>
-                </div>
-                <p class="meta">Browse reviewed movies and shows by mood. These are inferred from titles and review details for now.</p>
-                <div class="movie-genre-stack">
-                    {% for section in movie_genre_sections %}
-                        <section class="movie-genre-row">
-                            <div class="movie-genre-heading">
-                                <h3><a class="genre-heading-link" href="{% url 'discover' %}?chip={{ chip }}&sort={{ sort }}&genre={{ section.slug }}">{{ section.label }}</a></h3>
-                            </div>
-                            <div class="movie-genre-cards">
-                                {% for review in section.reviews %}
-                                    <a class="genre-review-card" href="{% url 'item_reviews' review.item.title %}">
-                                        <span class="genre-poster">
-                                            <img src="{% if review.item.image_url %}{{ review.item.image_url }}{% else %}/static/posts/images/revue-layouts.png{% endif %}" alt="">
-                                        </span>
-                                        <span class="genre-card-copy">
-                                            <strong>{{ review.item.title }}</strong>
-                                            <small>{{ review.rating }}/5 by {{ review.user.get_full_name|default:review.user.username }}</small>
-                                            <em>{{ review.review_text|truncatechars:72 }}</em>
-                                        </span>
-                                    </a>
-                                {% empty %}
-                                    <div class="genre-empty">No {{ section.label|lower }} movie or series reviews yet.</div>
-                                {% endfor %}
-                            </div>
-                        </section>
                     {% endfor %}
                 </div>
             </section>
@@ -248,6 +205,7 @@
             params.set("item_type", row.item_type || "movie");
             if (row.year) params.set("year", row.year);
             if (row.creator) params.set("creator", row.creator);
+            if (row.description) params.set("description", row.description);
             if (row.image_url) params.set("image_url", row.image_url);
             if (row.external_source) params.set("external_source", row.external_source);
             if (row.external_id) params.set("external_id", row.external_id);
@@ -275,7 +233,7 @@
                 var title = document.createElement("strong");
                 var meta = document.createElement("small");
                 title.textContent = row.title;
-                meta.textContent = [row.item_type, row.year, row.creator].filter(Boolean).join(" · ");
+                meta.textContent = [row.item_type, row.year, row.creator].filter(Boolean).join(" | ");
                 copy.appendChild(title);
                 copy.appendChild(meta);
                 link.appendChild(image);
@@ -347,3 +305,4 @@
     })();
 </script>
 {% endblock %}
+

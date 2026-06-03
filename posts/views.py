@@ -386,6 +386,166 @@ FALLBACK_TITLE_SUGGESTIONS = [
     ]
 
 
+DISCOVER_RAIL_SECTIONS = [
+    {
+        "title": "Talk of the town",
+        "kicker": "Fresh picks people are opening now",
+        "items": [
+            {"title": "Obsession", "item_type": "series", "year": "2023", "creator": "Morgan Lloyd Malcolm", "tag": "New show", "description": "A tense limited series about desire, secrets, and consequences."},
+            {"title": "Spider-Noir", "item_type": "series", "year": "2026", "creator": "Oren Uziel", "tag": "New show", "description": "A noir-inspired superhero mystery with a shadowy city at its center."},
+            {"title": "Cocktail 2", "item_type": "movie", "year": "2026", "creator": "Homi Adajania", "tag": "Trailer", "description": "Friendship, romance, and messy choices return in a breezy ensemble story."},
+            {"title": "The Great Grand Superhero", "item_type": "movie", "year": "2026", "creator": "Indra Kumar", "tag": "New movie", "description": "A loud, comic superhero adventure built for easy weekend watching."},
+            {"title": "Drishyam 3", "item_type": "movie", "year": "2026", "creator": "Jeethu Joseph", "tag": "New movie", "description": "The family thriller continues with another carefully guarded secret."},
+            {"title": "Euphoria", "item_type": "series", "year": "2019", "creator": "Sam Levinson", "tag": "Series", "description": "A stylized teen drama about identity, friendship, and self-destruction."},
+        ],
+    },
+    {
+        "title": "Watch it with friends",
+        "kicker": "Easy group-watch candidates",
+        "items": [
+            {"title": "The Mandalorian and Grogu", "item_type": "movie", "year": "2026", "creator": "Jon Favreau", "tag": "Movie", "description": "A new Star Wars adventure built around a familiar duo."},
+            {"title": "Karuppu", "item_type": "movie", "year": "2026", "creator": "R. J. Balaji", "tag": "Movie", "description": "A high-energy Tamil drama with action and emotion."},
+            {"title": "Chand Mera Dil", "item_type": "movie", "year": "2026", "creator": "Vivek Soni", "tag": "Movie", "description": "A romantic drama with a late-night mood."},
+            {"title": "Hokum", "item_type": "movie", "year": "2026", "creator": "Unknown director", "tag": "Movie", "description": "A dark title people are curious about this week."},
+            {"title": "Pati Patni Aur Woh Do", "item_type": "movie", "year": "2026", "creator": "Mudassar Aziz", "tag": "Movie", "description": "A comedy of errors around relationships and timing."},
+            {"title": "Mortal Kombat II", "item_type": "movie", "year": "2026", "creator": "Simon McQuoid", "tag": "Movie", "description": "A tournament action spectacle for game-to-film fans."},
+        ],
+    },
+    {
+        "title": "Worth watching on Prime",
+        "kicker": "Shows and films for your next queue",
+        "items": [
+            {"title": "Spider-Noir", "item_type": "series", "year": "2026", "creator": "Oren Uziel", "tag": "Show", "description": "A stylish, shadow-heavy superhero story."},
+            {"title": "Ela Veezha Poonchira", "item_type": "movie", "year": "2022", "creator": "Shahi Kabir", "tag": "Movie", "description": "A Malayalam thriller set around an isolated police outpost."},
+            {"title": "The Salesman", "item_type": "movie", "year": "2016", "creator": "Asghar Farhadi", "tag": "Movie", "description": "A tense drama about trauma, pride, and revenge."},
+            {"title": "Evangelion: 3.0+1.0 Thrice Upon a Time", "item_type": "movie", "year": "2021", "creator": "Hideaki Anno", "tag": "Movie", "description": "A reflective, maximal finale to a landmark anime saga."},
+            {"title": "Alienoid: Return to the Future", "item_type": "movie", "year": "2024", "creator": "Choi Dong-hoon", "tag": "Movie", "description": "A genre-blending Korean sci-fi fantasy sequel."},
+        ],
+    },
+    {
+        "title": "Books people keep recommending",
+        "kicker": "Fast starts for your reading list",
+        "items": [
+            {"title": "Atomic Habits", "item_type": "book", "year": "2018", "creator": "James Clear", "tag": "Book", "description": "A practical guide to improving systems and habits."},
+            {"title": "Good Economics for Hard Times", "item_type": "book", "year": "2019", "creator": "Abhijit Banerjee, Esther Duflo", "tag": "Book", "description": "Clear thinking on inequality, growth, and policy."},
+            {"title": "The Midnight Library", "item_type": "book", "year": "2020", "creator": "Matt Haig", "tag": "Book", "description": "A warm novel about regret, choices, and possible lives."},
+            {"title": "Project Hail Mary", "item_type": "book", "year": "2021", "creator": "Andy Weir", "tag": "Book", "description": "A funny, puzzle-like survival story in deep space."},
+            {"title": "Tomorrow, and Tomorrow, and Tomorrow", "item_type": "book", "year": "2022", "creator": "Gabrielle Zevin", "tag": "Book", "description": "A novel about games, friendship, ambition, and art."},
+        ],
+    },
+]
+
+
+def _catalog_rows():
+    rows = []
+    for section in DISCOVER_RAIL_SECTIONS:
+        for row in section["items"]:
+            rows.append(row)
+    return rows
+
+
+def _catalog_suggestions(query, item_types=None):
+    normalized_query = query.lower().strip()
+    compact_query = normalized_query.replace(" ", "")
+    allowed_types = set(item_types or ["movie", "series", "book"])
+    results = []
+    seen = set()
+    for row in _catalog_rows():
+        if row["item_type"] not in allowed_types:
+            continue
+        title = row["title"]
+        compact_title = title.lower().replace(" ", "")
+        if normalized_query not in title.lower() and compact_query not in compact_title:
+            continue
+        key = f"catalog:{row['item_type']}:{title.lower()}"
+        if key in seen:
+            continue
+        seen.add(key)
+        results.append(
+            {
+                **row,
+                "key": key,
+                "image_url": "",
+                "external_source": "catalog",
+                "external_id": key,
+                "source": "catalog",
+            }
+        )
+    return results
+
+
+def _preview_url_for_payload(row):
+    params = {
+        "preview": "1",
+        "item_type": row.get("item_type", "movie"),
+        "year": row.get("year", ""),
+        "creator": row.get("creator", ""),
+        "description": row.get("description", ""),
+        "image_url": row.get("image_url", ""),
+        "external_source": row.get("external_source", "catalog"),
+        "external_id": row.get("external_id", ""),
+    }
+    return f"/review/{quote(row.get('title', '').strip())}/?{urlencode(params)}"
+
+
+def _discover_rail_sections():
+    local_items = Item.objects.filter(
+        title__in=[row["title"] for row in _catalog_rows()],
+        item_type__in=["movie", "series", "book"],
+    )
+    local_by_key = {
+        (item.title.lower(), item.item_type): item
+        for item in local_items
+    }
+    sections = []
+    for section in DISCOVER_RAIL_SECTIONS:
+        section_rows = []
+        for seed in section["items"]:
+            item = local_by_key.get((seed["title"].lower(), seed["item_type"]))
+            row = {
+                **seed,
+                "image_url": item.image_url if item and item.image_url else "",
+                "review_total": item.reviews.count() if item and item.pk else 0,
+                "external_source": item.external_source if item and item.external_source else "catalog",
+                "external_id": item.external_id if item and item.external_id else f"catalog:{seed['item_type']}:{seed['title'].lower()}",
+            }
+            if item and item.pk:
+                row["url"] = reverse("item_reviews", args=[item.title])
+            else:
+                row["url"] = _preview_url_for_payload(row)
+            section_rows.append(row)
+        sections.append({**section, "items": section_rows})
+
+    tmdb_sections = [
+        {
+            "title": "Talk of the town",
+            "kicker": "Trending movies and shows from TMDB",
+            "rows": _tmdb_discover_rows("trending/all/week", "movie", 12),
+        },
+        {
+            "title": "Movies people are opening",
+            "kicker": "Popular films to review next",
+            "rows": _tmdb_discover_rows("movie/popular", "movie", 12),
+        },
+        {
+            "title": "Series worth tracking",
+            "kicker": "Popular shows to follow and discuss",
+            "rows": _tmdb_discover_rows("tv/popular", "series", 12),
+        },
+    ]
+    live_sections = []
+    for section in tmdb_sections:
+        rows = section["rows"]
+        if not rows:
+            continue
+        for row in rows:
+            row["url"] = _preview_url_for_payload(row)
+        live_sections.append({"title": section["title"], "kicker": section["kicker"], "items": rows})
+    if live_sections:
+        return live_sections + sections[-1:]
+    return sections
+
+
 def _fallback_title_suggestions(query, item_types=None):
     normalized_query = query.lower().strip()
     compact_query = normalized_query.replace(" ", "")
@@ -399,6 +559,7 @@ def _fallback_title_suggestions(query, item_types=None):
         if normalized_query not in title.lower() and compact_query not in compact_title:
             continue
         results.append({**row, "key": f"fallback:{row['item_type']}:{title.lower()}", "external_source": "", "external_id": "", "source": "fallback"})
+    results.extend(_catalog_suggestions(query, item_types))
     return results
 
 
@@ -455,6 +616,183 @@ def _json_get(url: str, timeout: int = 4):
     )
     with urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
+
+
+def _tmdb_api_key():
+    return os.environ.get("TMDB_API_KEY", "").strip()
+
+
+def _tmdb_image_url(path):
+    return f"{TMDB_IMAGE_BASE}{path}" if path else ""
+
+
+def _tmdb_year(row, item_type):
+    raw_date = row.get("release_date") if item_type == "movie" else row.get("first_air_date")
+    return (raw_date or "")[:4]
+
+
+def _tmdb_title(row, item_type):
+    return (row.get("title") if item_type == "movie" else row.get("name")) or ""
+
+
+def _tmdb_suggestions(query: str, item_type: str):
+    api_key = _tmdb_api_key()
+    if not api_key or not query or item_type not in {"movie", "series"}:
+        return []
+
+    tmdb_kind = "movie" if item_type == "movie" else "tv"
+    cache_key = f"tmdb_suggestions:v1:{item_type}:{query.lower()}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        params = urlencode(
+            {
+                "api_key": api_key,
+                "query": query,
+                "include_adult": "false",
+                "language": "en-US",
+                "page": 1,
+            }
+        )
+        payload = _json_get(f"https://api.themoviedb.org/3/search/{tmdb_kind}?{params}", timeout=3)
+    except Exception:
+        return []
+
+    results = []
+    for row in payload.get("results", []):
+        title = _tmdb_title(row, item_type).strip()
+        tmdb_id = row.get("id")
+        if not title or not tmdb_id:
+            continue
+        results.append(
+            {
+                "key": f"tmdb:{item_type}:{tmdb_id}",
+                "title": title,
+                "item_type": item_type,
+                "year": _tmdb_year(row, item_type),
+                "creator": "",
+                "description": (row.get("overview") or "").strip(),
+                "image_url": _tmdb_image_url(row.get("poster_path")),
+                "external_source": "tmdb",
+                "external_id": f"{item_type}:{tmdb_id}",
+                "source": "tmdb",
+            }
+        )
+    cache.set(cache_key, results, 3600)
+    return results
+
+
+def _tmdb_details(external_id: str):
+    api_key = _tmdb_api_key()
+    if not api_key or not external_id or ":" not in external_id:
+        return {}
+
+    item_type, tmdb_id = external_id.split(":", 1)
+    if item_type not in {"movie", "series"} or not tmdb_id:
+        return {}
+
+    tmdb_kind = "movie" if item_type == "movie" else "tv"
+    cache_key = f"tmdb_details:v1:{external_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        params = urlencode({"api_key": api_key, "language": "en-US", "append_to_response": "credits,external_ids"})
+        payload = _json_get(f"https://api.themoviedb.org/3/{tmdb_kind}/{quote(tmdb_id)}?{params}", timeout=4)
+    except Exception:
+        return {}
+
+    credits = payload.get("credits") or {}
+    cast = [
+        person.get("name", "")
+        for person in (credits.get("cast") or [])[:4]
+        if person.get("name")
+    ]
+    creator = ""
+    if item_type == "movie":
+        directors = [
+            person.get("name", "")
+            for person in (credits.get("crew") or [])
+            if person.get("job") == "Director" and person.get("name")
+        ]
+        creator = ", ".join(directors[:2])
+    else:
+        creators = payload.get("created_by") or []
+        creator = ", ".join([person.get("name", "") for person in creators if person.get("name")][:2])
+
+    year = (payload.get("release_date") or payload.get("first_air_date") or "")[:4]
+    rating = payload.get("vote_average")
+    metadata = {
+        "release_year": year,
+        "creator_name": creator,
+        "cast_names": ", ".join(cast),
+        "description": (payload.get("overview") or "").strip(),
+        "image_url": _tmdb_image_url(payload.get("poster_path")),
+        "imdb_rating": f"{float(rating):.1f}" if rating else "",
+    }
+    metadata = {key: value for key, value in metadata.items() if value}
+    cache.set(cache_key, metadata, 86400)
+    return metadata
+
+
+def _tmdb_discover_rows(endpoint: str, item_type: str, limit: int = 10):
+    api_key = _tmdb_api_key()
+    if not api_key or item_type not in {"movie", "series"}:
+        return []
+
+    cache_key = f"tmdb_discover:v1:{endpoint}:{item_type}:{limit}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        separator = "&" if "?" in endpoint else "?"
+        payload = _json_get(
+            f"https://api.themoviedb.org/3/{endpoint}{separator}{urlencode({'api_key': api_key, 'language': 'en-US'})}",
+            timeout=4,
+        )
+    except Exception:
+        return []
+
+    rows = []
+    for row in payload.get("results", []):
+        media_type = row.get("media_type")
+        row_type = item_type
+        if media_type == "tv":
+            row_type = "series"
+        elif media_type == "movie":
+            row_type = "movie"
+        elif media_type and media_type not in {"movie", "tv"}:
+            continue
+
+        title = _tmdb_title(row, row_type).strip()
+        tmdb_id = row.get("id")
+        if not title or not tmdb_id:
+            continue
+        rows.append(
+            {
+                "title": title,
+                "item_type": row_type,
+                "year": _tmdb_year(row, row_type),
+                "creator": "",
+                "tag": "Movie" if row_type == "movie" else "Show",
+                "description": (row.get("overview") or "").strip(),
+                "image_url": _tmdb_image_url(row.get("poster_path")),
+                "external_source": "tmdb",
+                "external_id": f"{row_type}:{tmdb_id}",
+            }
+        )
+        if len(rows) >= limit:
+            break
+
+    cache.set(cache_key, rows, 21600)
+    return rows
 
 
 def _youtube_video_id(url: str) -> str:
@@ -865,10 +1203,21 @@ def _enrich_item_metadata(item: Item):
     if item.item_type == "book" and item.description and item.book_rating:
         return
 
-    if item.item_type in {"movie", "series"} and item.external_source == "omdb":
+    if item.item_type in {"movie", "series"} and item.external_source == "tmdb":
+        metadata = _tmdb_details(item.external_id)
+    elif item.item_type in {"movie", "series"} and item.external_source == "omdb":
         metadata = _omdb_details(item.external_id)
     elif item.item_type in {"movie", "series"}:
-        metadata = _omdb_best_match(item.title, item.item_type)
+        metadata = {}
+        tmdb_matches = _tmdb_suggestions(item.title, item.item_type)
+        if tmdb_matches:
+            best = next((row for row in tmdb_matches if row["title"].strip().lower() == item.title.strip().lower()), tmdb_matches[0])
+            metadata = _tmdb_details(best.get("external_id", ""))
+            if best.get("external_id"):
+                metadata["external_source"] = "tmdb"
+                metadata["external_id"] = best["external_id"]
+        if not metadata:
+            metadata = _omdb_best_match(item.title, item.item_type)
     elif item.item_type == "book":
         volume_id = item.external_id if item.external_source == "googlebooks" else ""
         metadata = _google_book_rating(volume_id, item.title, item.creator_name)
@@ -900,6 +1249,8 @@ def _metadata_from_payload(payload):
         "item_type": item_type,
         "release_year": (first_value("year") or first_value("release_year")).strip(),
         "creator_name": (first_value("creator") or first_value("creator_name")).strip(),
+        "description": first_value("description").strip(),
+        "cast_names": first_value("cast_names").strip(),
         "image_url": first_value("image_url").strip(),
         "external_source": first_value("external_source").strip(),
         "external_id": first_value("external_id").strip(),
@@ -908,10 +1259,20 @@ def _metadata_from_payload(payload):
 
 def _apply_external_metadata_to_unsaved_item(item):
     metadata = {}
-    if item.item_type in {"movie", "series"} and item.external_source == "omdb" and item.external_id:
+    if item.external_source == "catalog":
+        return
+    if item.item_type in {"movie", "series"} and item.external_source == "tmdb" and item.external_id:
+        metadata = _tmdb_details(item.external_id)
+    elif item.item_type in {"movie", "series"} and item.external_source == "omdb" and item.external_id:
         metadata = _omdb_details(item.external_id)
     elif item.item_type in {"movie", "series"}:
-        metadata = _omdb_best_match(item.title, item.item_type)
+        metadata = {}
+        tmdb_matches = _tmdb_suggestions(item.title, item.item_type)
+        if tmdb_matches:
+            best = next((row for row in tmdb_matches if row["title"].strip().lower() == item.title.strip().lower()), tmdb_matches[0])
+            metadata = _tmdb_details(best.get("external_id", ""))
+        if not metadata:
+            metadata = _omdb_best_match(item.title, item.item_type)
     elif item.item_type == "book":
         volume_id = item.external_id if item.external_source == "googlebooks" else ""
         metadata = _google_book_rating(volume_id, item.title, item.creator_name)
@@ -939,6 +1300,8 @@ def _materialize_item_from_payload(payload):
         item_type=data["item_type"],
         release_year=data["release_year"],
         creator_name=data["creator_name"],
+        description=data["description"],
+        cast_names=data["cast_names"],
         image_url=data["image_url"],
         external_source=data["external_source"],
         external_id=data["external_id"],
@@ -953,6 +1316,8 @@ def _preview_query_for_item(item):
         "item_type": item.item_type,
         "year": item.release_year or "",
         "creator": item.creator_name or "",
+        "description": item.description or "",
+        "cast_names": item.cast_names or "",
         "image_url": item.image_url or "",
         "external_source": item.external_source or "",
         "external_id": item.external_id or "",
@@ -972,7 +1337,7 @@ def suggest_items(request):
         return JsonResponse({"results": [], "error": ""})
 
     if item_type == "all":
-        cache_key = f"suggest_items:all:v2:{query.lower()}"
+        cache_key = f"suggest_items:all:v4:{query.lower()}"
         cached = cache.get(cache_key)
         if cached is not None:
             return JsonResponse({"results": cached, "error": ""})
@@ -1008,13 +1373,8 @@ def suggest_items(request):
             ]
             add_rows(rows)
             add_rows(_fallback_title_suggestions(query, [row_type]))
-
-        for row_type in ("movie", "series", "book"):
-            if row_type == "book":
-                external_results = _google_books_suggestions(query) or _openlibrary_suggestions(query)
-            else:
-                external_results = _omdb_fast_suggestions(query, row_type)
-            add_rows(external_results)
+            if row_type in {"movie", "series"}:
+                add_rows(_tmdb_suggestions(query, row_type))
         cache.set(cache_key, merged, 300)
         return JsonResponse({"results": merged, "error": error_message})
 
@@ -1058,11 +1418,13 @@ def suggest_items(request):
         if not external_results:
             external_results = _wikidata_suggestions(query, item_type)
     elif item_type in {"movie", "series"}:
-        external_results = _omdb_fast_suggestions(query, item_type)
+        external_results = _tmdb_suggestions(query, item_type)
+        if not external_results:
+            external_results = _omdb_fast_suggestions(query, item_type)
         if not external_results:
             external_results = _wikidata_suggestions(query, item_type)
-        if not external_results and not os.environ.get("OMDB_API_KEY", "").strip():
-            error_message = "No poster results found. Add OMDB_API_KEY for stronger movie and series metadata."
+        if not external_results and not _tmdb_api_key():
+            error_message = "No poster results found. Add TMDB_API_KEY for stronger movie and series metadata."
 
     for row in external_results:
         normalized = row["title"].lower()
@@ -1316,39 +1678,6 @@ def discover(request):
     _attach_genres_to_reviews(trending_review_rows)
     _attach_genres_to_reviews(friend_favorite_rows)
     _attach_genres_to_reviews(recent_review_rows)
-    content_reviews_for_genres = (
-        Review.objects.filter(item__item_type__in=["movie", "series"])
-        .select_related("item", "user", "user__profile")
-        .order_by("-created_at")[:60]
-    )
-    explore_items = Item.objects.filter(item_type__in=["movie", "series", "book"]).annotate(
-        review_total=Count("reviews", distinct=True),
-        average_rating=Avg("reviews__rating"),
-        saved_total=Count(
-            "saved_entries",
-            filter=Q(saved_entries__list_type__in=["favorites", "watchlist", "readlist"]),
-            distinct=True,
-        ),
-    )
-    if query:
-        explore_items = explore_items.filter(
-            Q(title__icontains=query)
-            | Q(description__icontains=query)
-            | Q(creator_name__icontains=query)
-            | Q(cast_names__icontains=query)
-        )
-    explore_items = list(explore_items.order_by("-review_total", "-saved_total", "title")[:90])
-    if genre_filter:
-        explore_items = [
-            item for item in explore_items
-            if (genre := _infer_content_genre(item)) and genre["slug"] == genre_filter
-        ]
-    for item in explore_items:
-        genre = _infer_content_genre(item)
-        item.inferred_genre_slug = genre["slug"] if genre else ""
-        item.inferred_genre_label = genre["label"] if genre else ""
-    explore_items = explore_items[:18]
-
     return render(
         request,
         "posts/discover.html",
@@ -1361,12 +1690,11 @@ def discover(request):
             "trending_reviews": trending_review_rows,
             "friend_favorites": friend_favorite_rows,
             "recent_reviews": recent_review_rows,
-            "explore_items": explore_items,
+            "discover_rails": _discover_rail_sections(),
             "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:6],
             "popular_books": Item.objects.filter(item_type="book").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_movies": Item.objects.filter(item_type="movie").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
             "popular_shows": Item.objects.filter(item_type="series").annotate(review_total=Count("reviews")).order_by("-review_total", "title")[:6],
-            "movie_genre_sections": _content_genre_sections(content_reviews_for_genres),
             "suggested_users": User.objects.select_related("profile").exclude(id=request.user.id).exclude(id__in=friend_ids).order_by("first_name", "username")[:6],
             "trending_page_obj": trending_page,
             "friends_page_obj": friends_page,
@@ -1941,6 +2269,8 @@ def item_reviews(request, item_title):
             item_type=payload["item_type"],
             release_year=payload["release_year"],
             creator_name=payload["creator_name"],
+            description=payload["description"],
+            cast_names=payload["cast_names"],
             image_url=payload["image_url"],
             external_source=payload["external_source"],
             external_id=payload["external_id"],
