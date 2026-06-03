@@ -11,7 +11,7 @@
     --accent-strong: #7b451f;
     --gold: #bd7a3a;
     --rose: #a84f3f;
-    --shadow: 0 18px 45px rgba(88, 55, 28, 0.08);
+    --shadow: 0 12px 30px rgba(88, 55, 28, 0.07);
 }
 
 * {
@@ -158,9 +158,9 @@ button {
 .landing-primary-action:hover,
 .landing-primary-action:focus-visible {
     background: var(--accent-strong);
-    box-shadow: 0 16px 28px rgba(88, 55, 28, 0.22);
+    box-shadow: 0 10px 20px rgba(88, 55, 28, 0.16);
     color: white;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .landing-categories {
@@ -270,9 +270,9 @@ button {
 .landing-secondary-action:hover,
 .landing-secondary-action:focus-visible {
     background: #171615;
-    box-shadow: 0 14px 24px rgba(88, 55, 28, 0.2);
+    box-shadow: 0 9px 18px rgba(88, 55, 28, 0.14);
     color: white;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .marketing-shell {
@@ -497,7 +497,7 @@ button {
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid var(--line);
     border-radius: 20px;
-    box-shadow: 0 26px 60px rgba(74, 45, 22, 0.1);
+    box-shadow: 0 14px 34px rgba(74, 45, 22, 0.08);
     padding: clamp(28px, 3.4vw, 46px);
 }
 

@@ -5,6 +5,7 @@
         var list = document.getElementById("discover-title-suggestions");
         var debounceTimer = null;
         var activeRequest = null;
+        var titleCache = new Map();
         if (!form || !input || !list) return;
 
         var allowedTypes = (form.getAttribute("data-allowed-types") || "movie,series,book")
@@ -70,6 +71,16 @@
                 hideList();
                 return [];
             }
+            var cacheKey = allowedTypes.join(",") + ":" + query.toLowerCase();
+            if (titleCache.has(cacheKey)) {
+                var cachedRows = titleCache.get(cacheKey);
+                renderRows(cachedRows);
+                if (openFirst) {
+                    var cachedFirst = list.querySelector("a");
+                    if (cachedFirst) window.location.href = cachedFirst.href;
+                }
+                return cachedRows;
+            }
             if (activeRequest) activeRequest.abort();
             var controller = new AbortController();
             activeRequest = controller;
@@ -82,12 +93,14 @@
                 if (activeRequest !== controller) return [];
                 if (!response.ok) throw new Error("Search failed");
                 var data = await response.json();
-                renderRows(data.results || []);
+                var rows = data.results || [];
+                titleCache.set(cacheKey, rows);
+                renderRows(rows);
                 if (openFirst) {
                     var first = list.querySelector("a");
                     if (first) window.location.href = first.href;
                 }
-                return data.results || [];
+                return rows;
             } catch (error) {
                 if (error.name === "AbortError" && activeRequest !== controller) return [];
                 list.innerHTML = '<div class="discover-suggestion-empty">Search is taking too long. Try one more time.</div>';
@@ -98,7 +111,7 @@
 
         input.addEventListener("input", function () {
             window.clearTimeout(debounceTimer);
-            debounceTimer = window.setTimeout(function () { fetchTitles(false); }, 120);
+            debounceTimer = window.setTimeout(function () { fetchTitles(false); }, 180);
         });
         form.addEventListener("submit", function (event) {
             event.preventDefault();

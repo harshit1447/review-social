@@ -240,6 +240,58 @@ TMDB_GENRE_MAP = {
 }
 
 
+BOOK_GENRE_BUCKETS = [
+    {
+        "slug": "fiction",
+        "label": "Fiction",
+        "query": "popular fiction books",
+        "keywords": ("novel", "fiction", "story", "literary", "characters"),
+    },
+    {
+        "slug": "mystery",
+        "label": "Mystery",
+        "query": "mystery thriller books",
+        "keywords": ("mystery", "thriller", "crime", "detective", "murder", "suspense"),
+    },
+    {
+        "slug": "romance",
+        "label": "Romance",
+        "query": "romance books",
+        "keywords": ("romance", "love", "relationship", "wedding", "heart"),
+    },
+    {
+        "slug": "fantasy",
+        "label": "Fantasy",
+        "query": "fantasy books",
+        "keywords": ("fantasy", "magic", "wizard", "kingdom", "dragon", "myth"),
+    },
+    {
+        "slug": "sci-fi",
+        "label": "Sci-fi",
+        "query": "science fiction books",
+        "keywords": ("science fiction", "sci-fi", "space", "future", "alien", "robot"),
+    },
+    {
+        "slug": "business",
+        "label": "Business",
+        "query": "business economics startup books",
+        "keywords": ("business", "startup", "economics", "money", "market", "company"),
+    },
+    {
+        "slug": "self-help",
+        "label": "Self-help",
+        "query": "self help habit productivity books",
+        "keywords": ("self-help", "habit", "productivity", "mindset", "psychology", "life"),
+    },
+    {
+        "slug": "biography",
+        "label": "Biography",
+        "query": "biography memoir books",
+        "keywords": ("biography", "memoir", "life of", "autobiography", "true story"),
+    },
+]
+
+
 def _genre_haystack(item, extra_text=""):
     return " ".join(
         [
@@ -628,6 +680,14 @@ def _discover_rail_sections():
     return sections
 
 
+def _book_matches_genre(item, genre_slug, extra_text=""):
+    bucket = next((row for row in BOOK_GENRE_BUCKETS if row["slug"] == genre_slug), None)
+    if not bucket or not item:
+        return False
+    haystack = _genre_haystack(item, extra_text)
+    return any(keyword in haystack for keyword in bucket["keywords"])
+
+
 def _fallback_title_suggestions(query, item_types=None):
     normalized_query = query.lower().strip()
     compact_query = normalized_query.replace(" ", "")
@@ -650,7 +710,7 @@ def landing_suggest_items(request):
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    cache_key = f"landing_suggest:v5:{_cache_slug(query)}"
+    cache_key = f"landing_suggest:v6:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse({"results": cached})
@@ -690,14 +750,16 @@ def landing_suggest_items(request):
     for row in _fallback_title_suggestions(query, ["movie", "series", "book"]):
         add_row(row)
 
-    for row_type in ("movie", "series"):
-        external_rows = _tmdb_suggestions(query, row_type)
-        if not external_rows:
-            external_rows = _omdb_fast_suggestions(query, row_type)
-        for row in external_rows:
+    if len(query) >= 3:
+        for row_type in ("movie", "series"):
+            external_rows = _tmdb_suggestions(query, row_type)
+            if not external_rows:
+                external_rows = _omdb_fast_suggestions(query, row_type)
+            for row in external_rows:
+                add_row(row)
+    if len(query) >= 4:
+        for row in _google_books_suggestions(query):
             add_row(row)
-    for row in _google_books_suggestions(query):
-        add_row(row)
 
     cache.set(cache_key, results, 300)
     return JsonResponse({"results": results})
@@ -1195,6 +1257,71 @@ def _openlibrary_suggestions(query: str):
     return results
 
 
+def _book_genre_discover_rows(genre_slug: str, limit: int = 24):
+    bucket = next((row for row in BOOK_GENRE_BUCKETS if row["slug"] == genre_slug), None)
+    if not bucket:
+        return []
+    cache_key = f"book_genre_discover:v1:{genre_slug}:{limit}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    rows = []
+    seen = set()
+
+    def add_row(row, score_index=None):
+        title = (row.get("title") or "").strip()
+        if not title:
+            return
+        key = f"{title.lower()}:{row.get('year', '')}"
+        if key in seen:
+            return
+        seen.add(key)
+        payload = {
+            **row,
+            "item_type": "book",
+            "tag": "Book",
+            "score": f"{min(95, max(15, ((score_index if score_index is not None else len(rows)) + 3) * 5))}%",
+        }
+        payload["url"] = _preview_url_for_payload(payload)
+        rows.append(payload)
+
+    for row in _google_books_suggestions(bucket["query"]):
+        add_row(row)
+        if len(rows) >= limit:
+            break
+
+    if len(rows) < limit:
+        for row in _openlibrary_suggestions(bucket["query"]):
+            add_row(row)
+            if len(rows) >= limit:
+                break
+
+    if len(rows) < 5:
+        local_reviews = Review.objects.select_related("item").filter(item__item_type="book").order_by("-created_at")[:120]
+        for review in local_reviews:
+            if not _book_matches_genre(review.item, genre_slug, review.review_text):
+                continue
+            item = review.item
+            add_row(
+                {
+                    "title": item.title,
+                    "year": item.release_year,
+                    "creator": item.creator_name,
+                    "description": item.description,
+                    "image_url": item.image_url,
+                    "external_source": item.external_source or "local",
+                    "external_id": item.external_id or "",
+                },
+                score_index=review.rating,
+            )
+            if len(rows) >= limit:
+                break
+
+    cache.set(cache_key, rows, 21600)
+    return rows
+
+
 def _omdb_suggestions(query: str, item_type: str):
     api_key = os.environ.get("OMDB_API_KEY", "").strip()
     if not query or not api_key or item_type not in {"movie", "series"}:
@@ -1493,7 +1620,7 @@ def suggest_items(request):
         return JsonResponse({"results": [], "error": ""})
 
     if item_type == "all":
-        cache_key = f"suggest_items:all:v6:{_cache_slug(query)}"
+        cache_key = f"suggest_items:all:v7:{_cache_slug(query)}"
         cached = cache.get(cache_key)
         if cached is not None:
             return JsonResponse({"results": cached, "error": ""})
@@ -1529,10 +1656,15 @@ def suggest_items(request):
             ]
             add_rows(rows)
             add_rows(_fallback_title_suggestions(query, [row_type]))
-            if row_type in {"movie", "series"}:
+            if len(query) >= 3 and row_type in {"movie", "series"}:
                 add_rows(_tmdb_suggestions(query, row_type))
         cache.set(cache_key, merged, 300)
         return JsonResponse({"results": merged, "error": error_message})
+
+    cache_key = f"suggest_items:{item_type}:v7:{_cache_slug(query)}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JsonResponse(cached)
 
     existing = list(
         Item.objects.filter(
@@ -1567,9 +1699,9 @@ def suggest_items(request):
 
     external_results = []
     error_message = ""
-    if item_type == "book":
+    if item_type == "book" and len(query) >= 3:
         external_results = _google_books_suggestions(query)
-    elif item_type in {"movie", "series"}:
+    elif item_type in {"movie", "series"} and len(query) >= 3:
         external_results = _tmdb_suggestions(query, item_type)
         if not external_results:
             external_results = _omdb_fast_suggestions(query, item_type)
@@ -1584,7 +1716,9 @@ def suggest_items(request):
             continue
         results.append(row)
 
-    return JsonResponse({"results": results, "error": error_message})
+    payload = {"results": results, "error": error_message}
+    cache.set(cache_key, payload, 300)
+    return JsonResponse(payload)
 
 
 @login_required
@@ -1882,6 +2016,10 @@ def discover_media(request):
 @login_required
 def discover_books(request):
     friend_ids = _followed_user_ids(request.user)
+    genre_filter = request.GET.get("genre", "").strip().lower()
+    valid_book_genres = {bucket["slug"] for bucket in BOOK_GENRE_BUCKETS}
+    if genre_filter not in valid_book_genres:
+        genre_filter = ""
     book_reviews = (
         Review.objects.select_related("item", "user", "user__profile")
         .filter(item__item_type="book")
@@ -1891,11 +2029,18 @@ def discover_books(request):
     _attach_genres_to_reviews(book_reviews)
     _hydrate_review_card_counts(book_reviews)
     review_card_context = _review_card_action_context(request.user, book_reviews)
+    selected_genre_label = ""
+    if genre_filter:
+        selected_genre_label = next((bucket["label"] for bucket in BOOK_GENRE_BUCKETS if bucket["slug"] == genre_filter), "")
     return render(
         request,
         "posts/discover_books.html",
         {
             "query": request.GET.get("q", "").strip(),
+            "genre_filter": genre_filter,
+            "genre_options": BOOK_GENRE_BUCKETS,
+            "selected_genre_label": selected_genre_label,
+            "genre_rows": _book_genre_discover_rows(genre_filter, 24) if genre_filter else [],
             "book_reviews": book_reviews,
             "discover_rails": _discover_sections_for_types(["book"]),
             "trending_users": User.objects.select_related("profile").annotate(review_total=Count("review")).order_by("-review_total")[:8],

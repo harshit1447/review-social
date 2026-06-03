@@ -22,6 +22,15 @@
             <div id="discover-title-suggestions" class="discover-title-suggestions" hidden></div>
         </form>
         <div class="discover-dropdown-row compact">
+            <label class="discover-category-menu" for="discover-book-genre">
+                <span>Genre</span>
+                <select id="discover-book-genre" onchange="if (this.value) window.location.href = this.value;">
+                    <option value="{% url 'discover_books' %}" {% if not genre_filter %}selected{% endif %}>All genres</option>
+                    {% for option in genre_options %}
+                        <option value="{% url 'discover_books' %}?genre={{ option.slug }}" {% if genre_filter == option.slug %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
             <label class="discover-category-menu" for="discover-library">
                 <span>Browse</span>
                 <select id="discover-library" onchange="if (this.value) window.location.href = this.value;">
@@ -34,6 +43,36 @@
 
     <div class="social-layout">
         <main class="social-center">
+            {% if genre_filter %}
+                <section class="card discover-poster-rail discover-dark-rail">
+                    <div class="section-heading">
+                        <div>
+                            <h2>{{ selected_genre_label }} books</h2>
+                            <p class="meta">Book options from live book discovery and your Revue catalog.</p>
+                        </div>
+                        <a class="rail-link" href="{% url 'discover_books' %}">All genres</a>
+                    </div>
+                    <div class="genre-poster-grid">
+                        {% for row in genre_rows %}
+                            <a class="discover-poster-card" href="{{ row.url }}">
+                                <span class="discover-poster-frame {% if not row.image_url %}poster-placeholder{% endif %}">
+                                    {% if row.image_url %}
+                                        <img src="{{ row.image_url }}" alt="">
+                                    {% else %}
+                                        <span>{{ row.title|slice:":1" }}</span>
+                                    {% endif %}
+                                    {% if row.score %}<em class="genre-score-chip">{{ row.score }}</em>{% endif %}
+                                </span>
+                                <strong>{{ row.title }}</strong>
+                                <small>Book{% if row.year %} &middot; {{ row.year }}{% endif %}</small>
+                            </a>
+                        {% empty %}
+                            <p class="empty-state">No {{ selected_genre_label|lower }} book suggestions yet. Try another genre.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
             <section class="discover-rail-stack">
                 {% for section in discover_rails %}
                     <section class="card discover-poster-rail discover-dark-rail">

@@ -71,6 +71,7 @@
             var defaultTitlePlaceholder = titleInput.getAttribute("placeholder") || "";
             var activeRequest = null;
             var debounceTimer = null;
+            var suggestionCache = new Map();
 
             if (!titleInput || !typeInput || !keyInput || !selectedTitleInput || !list) return;
 
@@ -183,18 +184,27 @@
                     setMessage("");
                     return;
                 }
+                var cacheKey = typeInput.value + ":" + q.toLowerCase();
+                if (suggestionCache.has(cacheKey)) {
+                    var cached = suggestionCache.get(cacheKey);
+                    setMessage(cached.error || "");
+                    renderSuggestions(cached.results || []);
+                    return;
+                }
                 if (activeRequest) {
                     activeRequest.abort();
                 }
-                activeRequest = new AbortController();
+                var controller = new AbortController();
+                activeRequest = controller;
                 try {
                     var params = new URLSearchParams({
                         q: q,
                         item_type: typeInput.value
                     });
                     var response = await fetch("{% url 'suggest_items' %}?" + params.toString(), {
-                        signal: activeRequest.signal
+                        signal: controller.signal
                     });
+                    if (activeRequest !== controller) return;
                     if (!response.ok) {
                         hideList();
                         setMessage("Could not fetch suggestions right now.");
@@ -206,6 +216,7 @@
                     } else {
                         setMessage("");
                     }
+                    suggestionCache.set(cacheKey, data);
                     renderSuggestions(data.results || []);
                 } catch (error) {
                     if (error.name === "AbortError") return;
@@ -216,7 +227,7 @@
 
             function scheduleSuggestions() {
                 window.clearTimeout(debounceTimer);
-                debounceTimer = window.setTimeout(fetchSuggestions, 250);
+                debounceTimer = window.setTimeout(fetchSuggestions, 180);
             }
 
             titleInput.addEventListener("input", function () {
