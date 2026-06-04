@@ -517,6 +517,25 @@ FALLBACK_TITLE_SUGGESTIONS = [
         {"title": "Ikigai", "item_type": "book", "year": "2016", "creator": "Hector Garcia, Francesc Miralles", "image_url": "https://covers.openlibrary.org/b/isbn/9780143130727-L.jpg"},
         {"title": "The Kite Runner", "item_type": "book", "year": "2003", "creator": "Khaled Hosseini", "image_url": "https://covers.openlibrary.org/b/isbn/9781594631931-L.jpg"},
         {"title": "A Thousand Splendid Suns", "item_type": "book", "year": "2007", "creator": "Khaled Hosseini", "image_url": "https://covers.openlibrary.org/b/isbn/9781594483851-L.jpg"},
+        {"title": "Dune", "item_type": "book", "year": "1965", "creator": "Frank Herbert", "image_url": "https://covers.openlibrary.org/b/isbn/9780441172719-L.jpg"},
+        {"title": "1984", "item_type": "book", "year": "1949", "creator": "George Orwell", "image_url": "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg"},
+        {"title": "Animal Farm", "item_type": "book", "year": "1945", "creator": "George Orwell", "image_url": "https://covers.openlibrary.org/b/isbn/9780451526342-L.jpg"},
+        {"title": "The Great Gatsby", "item_type": "book", "year": "1925", "creator": "F. Scott Fitzgerald", "image_url": "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg"},
+        {"title": "To Kill a Mockingbird", "item_type": "book", "year": "1960", "creator": "Harper Lee", "image_url": "https://covers.openlibrary.org/b/isbn/9780061120084-L.jpg"},
+        {"title": "Harry Potter and the Philosopher's Stone", "item_type": "book", "year": "1997", "creator": "J. K. Rowling", "image_url": "https://covers.openlibrary.org/b/isbn/9780747532743-L.jpg"},
+        {"title": "The Hobbit", "item_type": "book", "year": "1937", "creator": "J. R. R. Tolkien", "image_url": "https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg"},
+        {"title": "The Lord of the Rings", "item_type": "book", "year": "1954", "creator": "J. R. R. Tolkien", "image_url": "https://covers.openlibrary.org/b/isbn/9780544003415-L.jpg"},
+        {"title": "The Hunger Games", "item_type": "book", "year": "2008", "creator": "Suzanne Collins", "image_url": "https://covers.openlibrary.org/b/isbn/9780439023528-L.jpg"},
+        {"title": "Pride and Prejudice", "item_type": "book", "year": "1813", "creator": "Jane Austen", "image_url": "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg"},
+        {"title": "The Seven Husbands of Evelyn Hugo", "item_type": "book", "year": "2017", "creator": "Taylor Jenkins Reid", "image_url": "https://covers.openlibrary.org/b/isbn/9781501161933-L.jpg"},
+        {"title": "The Silent Patient", "item_type": "book", "year": "2019", "creator": "Alex Michaelides", "image_url": "https://covers.openlibrary.org/b/isbn/9781250301697-L.jpg"},
+        {"title": "Educated", "item_type": "book", "year": "2018", "creator": "Tara Westover", "image_url": "https://covers.openlibrary.org/b/isbn/9780399590504-L.jpg"},
+        {"title": "Becoming", "item_type": "book", "year": "2018", "creator": "Michelle Obama", "image_url": "https://covers.openlibrary.org/b/isbn/9781524763138-L.jpg"},
+        {"title": "Thinking, Fast and Slow", "item_type": "book", "year": "2011", "creator": "Daniel Kahneman", "image_url": "https://covers.openlibrary.org/b/isbn/9780374533557-L.jpg"},
+        {"title": "Deep Work", "item_type": "book", "year": "2016", "creator": "Cal Newport", "image_url": "https://covers.openlibrary.org/b/isbn/9781455586691-L.jpg"},
+        {"title": "The Lean Startup", "item_type": "book", "year": "2011", "creator": "Eric Ries", "image_url": "https://covers.openlibrary.org/b/isbn/9780307887894-L.jpg"},
+        {"title": "Zero to One", "item_type": "book", "year": "2014", "creator": "Peter Thiel", "image_url": "https://covers.openlibrary.org/b/isbn/9780804139298-L.jpg"},
+        {"title": "The Power of Habit", "item_type": "book", "year": "2012", "creator": "Charles Duhigg", "image_url": "https://covers.openlibrary.org/b/isbn/9780812981605-L.jpg"},
     ]
 
 
@@ -681,7 +700,7 @@ def _discover_rail_sections():
 
 
 def _book_discover_sections():
-    cache_key = "book_discover_sections:v2"
+    cache_key = "book_discover_sections:v5"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -772,12 +791,48 @@ def _book_discover_sections():
         sections.extend(curated_book_sections)
     else:
         sections.extend(curated_book_sections[:1])
-    if fallback_book_rows and not any(section.get("title") == "Books people keep recommending" for section in sections):
+    existing_book_section = next(
+        (section for section in sections if section.get("title") == "Books people keep recommending"),
+        None,
+    )
+    if existing_book_section:
+        existing_titles = {
+            (row.get("title") or "").strip().lower()
+            for row in existing_book_section.get("items", [])
+        }
+        for row in fallback_book_rows:
+            title = (row.get("title") or "").strip().lower()
+            if not title or title in existing_titles:
+                continue
+            existing_book_section["items"].append(row)
+            existing_titles.add(title)
+            if len(existing_book_section["items"]) >= 12:
+                break
+    elif fallback_book_rows:
         sections.append(
             {
                 "title": "Books people keep recommending",
                 "kicker": "Reliable starts for your reading list",
                 "items": fallback_book_rows[:12],
+            }
+        )
+    used_book_titles = {
+        (row.get("title") or "").strip().lower()
+        for section in sections
+        for row in section.get("items", [])
+        if row.get("item_type") == "book"
+    }
+    more_book_rows = [
+        row
+        for row in fallback_book_rows
+        if (row.get("title") or "").strip().lower() not in used_book_titles
+    ]
+    if more_book_rows:
+        sections.append(
+            {
+                "title": "More books to browse",
+                "kicker": "Extra starting points while live book sources catch up",
+                "items": more_book_rows[:12],
             }
         )
     if not sections and fallback_book_rows:
@@ -823,7 +878,7 @@ def landing_suggest_items(request):
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    cache_key = f"landing_suggest:v6:{_cache_slug(query)}"
+    cache_key = f"landing_suggest:v7:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse({"results": cached})
@@ -1377,7 +1432,7 @@ def _book_genre_discover_rows(genre_slug: str, limit: int = 24):
     bucket = next((row for row in BOOK_GENRE_BUCKETS if row["slug"] == genre_slug), None)
     if not bucket:
         return []
-    cache_key = f"book_genre_discover:v2:{genre_slug}:{limit}"
+    cache_key = f"book_genre_discover:v3:{genre_slug}:{limit}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -1760,7 +1815,7 @@ def suggest_items(request):
         }
         if not requested_types:
             requested_types = {"movie", "series", "book"}
-        cache_key = f"suggest_items:all:v8:{'-'.join(sorted(requested_types))}:{_cache_slug(query)}"
+        cache_key = f"suggest_items:all:v10:{'-'.join(sorted(requested_types))}:{_cache_slug(query)}"
         cached = cache.get(cache_key)
         if cached is not None:
             return JsonResponse({"results": cached, "error": ""})
@@ -1770,7 +1825,7 @@ def suggest_items(request):
 
         def add_rows(rows):
             for row in rows:
-                key = f"{row.get('title', '').lower()}:{row.get('item_type', '')}:{row.get('year', '')}:{row.get('external_id', '')}"
+                key = f"{row.get('title', '').strip().lower()}:{row.get('item_type', '')}"
                 if not row.get("title") or key in seen_keys:
                     continue
                 seen_keys.add(key)
@@ -1808,7 +1863,7 @@ def suggest_items(request):
         cache.set(cache_key, merged, 300)
         return JsonResponse({"results": merged, "error": error_message})
 
-    cache_key = f"suggest_items:{item_type}:v8:{_cache_slug(query)}"
+    cache_key = f"suggest_items:{item_type}:v9:{_cache_slug(query)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse(cached)
