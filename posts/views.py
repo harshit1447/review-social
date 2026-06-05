@@ -162,6 +162,134 @@ def landing(request):
     return render(request, "landing.html")
 
 
+def _api_absolute_url(request, value):
+    if not value:
+        return ""
+    if str(value).startswith(("http://", "https://")):
+        return value
+    return request.build_absolute_uri(value)
+
+
+def _api_profile_photo_url(request, user):
+    profile = getattr(user, "profile", None)
+    if not profile or not profile.profile_photo:
+        return ""
+    try:
+        return request.build_absolute_uri(profile.profile_photo.url)
+    except ValueError:
+        return ""
+
+
+def _api_user_payload(request, user):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "name": _display_name(user),
+        "profile_photo": _api_profile_photo_url(request, user),
+        "profile_url": request.build_absolute_uri(reverse("user_profile", args=[user.username])),
+    }
+
+
+def _api_item_payload(request, item):
+    item_likes = getattr(item, "api_like_total", None)
+    if item_likes is None:
+        item_likes = item.saved_entries.filter(list_type="favorites").count()
+    item_saves = getattr(item, "api_save_total", None)
+    if item_saves is None:
+        item_saves = item.saved_entries.exclude(list_type="favorites").count()
+    return {
+        "id": item.id,
+        "title": item.title,
+        "item_type": item.item_type,
+        "item_type_label": item.get_item_type_display(),
+        "release_year": item.release_year,
+        "creator_name": item.creator_name,
+        "cast_names": item.cast_names,
+        "description": item.description,
+        "image_url": _api_absolute_url(request, item.image_url),
+        "imdb_rating": item.imdb_rating or "",
+        "rt_rating": item.rotten_tomatoes_rating or "",
+        "book_rating": item.book_rating or "",
+        "likes": item_likes,
+        "saves": item_saves,
+        "url": request.build_absolute_uri(reverse("item_reviews", args=[item.title])),
+    }
+
+
+def _api_review_payload(request, review):
+    review_likes = getattr(review, "review_like_total", None)
+    if review_likes is None:
+        review_likes = review.likes.count()
+    comments = getattr(review, "comment_total", None)
+    if comments is None:
+        comments = review.comments.count()
+    return {
+        "id": review.id,
+        "rating": review.rating,
+        "review_text": review.review_text,
+        "created_at": review.created_at.isoformat(),
+        "user": _api_user_payload(request, review.user),
+        "item": _api_item_payload(request, review.item),
+        "counts": {
+            "review_likes": review_likes,
+            "comments": comments,
+            "item_likes": review.item.saved_entries.filter(list_type="favorites").count(),
+        },
+        "url": request.build_absolute_uri(reverse("item_reviews", args=[review.item.title])),
+    }
+
+
+def api_health(request):
+    return JsonResponse({"ok": True, "service": "revue", "version": "mobile-api-v1"})
+
+
+def api_feed(request):
+    try:
+        limit = int(request.GET.get("limit", 20))
+    except ValueError:
+        limit = 20
+    limit = max(1, min(limit, 50))
+    reviews = (
+        Review.objects.select_related("user", "user__profile", "item")
+        .annotate(
+            review_like_total=Count("likes", distinct=True),
+            comment_total=Count("comments", distinct=True),
+        )
+        .order_by("-created_at")[:limit]
+    )
+    results = [_api_review_payload(request, review) for review in reviews]
+    return JsonResponse({"count": len(results), "results": results})
+
+
+def api_discover(request):
+    section = request.GET.get("section", "media").strip().lower()
+    item_types = ["book"] if section == "books" else ["movie", "series"]
+    sections = []
+    for source_section in _discover_sections_for_types(item_types):
+        items = []
+        for row in source_section.get("items", [])[:12]:
+            row_url = row.get("url", "")
+            items.append(
+                {
+                    "title": row.get("title", ""),
+                    "item_type": row.get("item_type", ""),
+                    "year": row.get("year", ""),
+                    "creator": row.get("creator", ""),
+                    "description": row.get("description", ""),
+                    "image_url": row.get("image_url", ""),
+                    "url": request.build_absolute_uri(row_url) if row_url.startswith("/") else row_url,
+                }
+            )
+        sections.append(
+            {
+                "title": source_section.get("title", ""),
+                "kicker": source_section.get("kicker", ""),
+                "items": items,
+            }
+        )
+    return JsonResponse({"section": section, "sections": sections})
+
+
 def _item_queryset_for_type(item_type):
     return Item.objects.filter(item_type=item_type).annotate(
         review_total=Count("reviews", distinct=True),

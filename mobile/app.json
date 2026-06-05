@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Revue",
+    "slug": "revue-mobile",
+    "scheme": "revue",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#f6efe6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "social.revue.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "social.revue.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#f6efe6"
+      }
+    },
+    "extra": {
+      "apiUrl": "https://www.revue.social",
+      "eas": {
+        "projectId": "308cf25a-0252-4a70-9cec-db06bf1b45c5"
+      }
+    }
+  }
+}

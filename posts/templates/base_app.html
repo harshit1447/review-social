@@ -3470,11 +3470,11 @@
 
         .discover-poster-rail {
             background:
-                radial-gradient(circle at 12% 0%, rgba(189, 111, 49, 0.2), transparent 34%),
-                linear-gradient(135deg, #171513 0%, #070706 100%);
-            border-color: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 24px 62px rgba(33, 22, 14, 0.18);
-            color: #f7f0e8;
+                radial-gradient(circle at 10% 0%, rgba(189, 111, 49, 0.08), transparent 34%),
+                linear-gradient(135deg, rgba(255, 253, 250, 0.98), rgba(251, 246, 239, 0.95));
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+            color: var(--text);
             overflow: hidden;
             padding: 18px;
         }
@@ -3484,13 +3484,13 @@
         }
 
         .discover-poster-rail h2 {
-            color: #fffaf4;
+            color: var(--text);
             font-size: 1.08rem;
             letter-spacing: -0.02em;
         }
 
         .discover-poster-rail .meta {
-            color: rgba(247, 240, 232, 0.66);
+            color: var(--muted);
         }
 
         .poster-rail-scroll {
@@ -3510,7 +3510,7 @@
         }
 
         .poster-rail-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(189, 111, 49, 0.22);
             border-radius: 999px;
         }
 
@@ -3525,13 +3525,14 @@
 
         .discover-poster-card:hover .discover-poster-frame,
         .discover-poster-card:focus-visible .discover-poster-frame {
-            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
+            box-shadow: 0 18px 34px rgba(76, 51, 32, 0.18);
             transform: translateY(-3px);
         }
 
         .discover-poster-frame {
             aspect-ratio: 2 / 3;
-            background: #241b15;
+            background: #eadccb;
+            border: 1px solid rgba(125, 92, 64, 0.12);
             border-radius: 10px;
             display: grid;
             overflow: hidden;
@@ -3550,22 +3551,22 @@
 
         .discover-poster-frame.poster-placeholder {
             background:
-                linear-gradient(145deg, rgba(189, 111, 49, 0.42), rgba(16, 13, 11, 0.96)),
-                radial-gradient(circle at 65% 18%, rgba(255, 255, 255, 0.26), transparent 28%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+                linear-gradient(145deg, rgba(189, 111, 49, 0.22), rgba(70, 48, 32, 0.16)),
+                radial-gradient(circle at 65% 18%, rgba(255, 255, 255, 0.72), transparent 28%);
+            border: 1px solid rgba(189, 111, 49, 0.18);
         }
 
         .discover-poster-frame.poster-placeholder span {
-            color: rgba(255, 250, 244, 0.86);
+            color: var(--accent-dark);
             font-size: 3rem;
             font-weight: 700;
         }
 
         .discover-dark-rail {
             background:
-                radial-gradient(circle at 8% 0%, rgba(121, 88, 192, 0.2), transparent 25%),
-                radial-gradient(circle at 92% 12%, rgba(189, 111, 49, 0.22), transparent 28%),
-                linear-gradient(135deg, #171513 0%, #070706 100%);
+                radial-gradient(circle at 8% 0%, rgba(189, 111, 49, 0.08), transparent 25%),
+                radial-gradient(circle at 92% 12%, rgba(125, 92, 64, 0.08), transparent 28%),
+                linear-gradient(135deg, rgba(255, 253, 250, 0.98), rgba(251, 246, 239, 0.95));
         }
 
         .genre-poster-grid {
@@ -3580,9 +3581,10 @@
         }
 
         .genre-score-chip {
-            background: rgba(23, 21, 19, 0.54);
+            background: rgba(255, 250, 244, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.72);
             border-radius: 999px;
-            color: #fff;
+            color: var(--accent-dark);
             font-style: normal;
             font-weight: 900;
             padding: 4px 9px;
@@ -3592,13 +3594,13 @@
         }
 
         .rail-link {
-            color: rgba(255, 250, 244, 0.74);
+            color: var(--accent-dark);
             font-size: 0.78rem;
             font-weight: 750;
         }
 
         .rail-link:hover {
-            color: #fff;
+            color: var(--text);
             text-decoration: underline;
             text-underline-offset: 3px;
         }
@@ -3611,13 +3613,13 @@
         }
 
         .discover-poster-card strong {
-            color: #fffaf4;
+            color: var(--text);
             font-size: 0.92rem;
             line-height: 1.2;
         }
 
         .discover-poster-card small {
-            color: rgba(247, 240, 232, 0.58);
+            color: var(--muted);
             font-size: 0.74rem;
             font-weight: 600;
         }

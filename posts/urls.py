@@ -5,6 +5,9 @@ from . import views
 urlpatterns = [
     path("", views.landing, name="landing"),
     path("landing/suggest/", views.landing_suggest_items, name="landing_suggest_items"),
+    path("api/health/", views.api_health, name="api_health"),
+    path("api/feed/", views.api_feed, name="api_feed"),
+    path("api/discover/", views.api_discover, name="api_discover"),
     path("feed/", views.feed, name="feed"),
     path("movies/", views.category_page, {"item_type": "movie"}, name="movies"),
     path("series/", views.category_page, {"item_type": "series"}, name="series"),
