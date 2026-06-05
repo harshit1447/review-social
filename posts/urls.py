@@ -44,6 +44,7 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("profile/photo/delete/", views.delete_profile_photo, name="delete_profile_photo"),
     path("notifications/", views.notifications, name="notifications"),
+    path("quiz/daily/", views.daily_quiz, name="daily_quiz"),
     path("saved-reviews/", views.saved_reviews, name="saved_reviews"),
     path("collections/", login_required(views.CollectionListView.as_view()), name="collections"),
     path("collections/new/", login_required(views.CollectionCreateView.as_view()), name="collection_create"),

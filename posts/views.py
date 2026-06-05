@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, DetailView, ListView
 from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -33,6 +34,7 @@ from .models import (
     SavedItem,
     SavedReview,
 )
+from .quiz_data import get_daily_quiz
 
 
 def _cache_slug(value):
@@ -51,6 +53,39 @@ def _display_name(user):
 
 def _save_list_type_for_item(item):
     return "readlist" if item.item_type == "book" else "watchlist"
+
+
+@login_required
+def daily_quiz(request):
+    questions = get_daily_quiz(timezone.localdate())
+    results = None
+    score = 0
+
+    if request.method == "POST":
+        results = []
+        for index, question in enumerate(questions):
+            selected = request.POST.get(f"question_{index}", "")
+            is_correct = selected == question["answer"]
+            if is_correct:
+                score += 1
+            results.append(
+                {
+                    **question,
+                    "selected": selected,
+                    "is_correct": is_correct,
+                }
+            )
+        messages.success(request, f"You scored {score}/6 on today's quiz.")
+
+    return render(
+        request,
+        "posts/daily_quiz.html",
+        {
+            "questions": questions,
+            "results": results,
+            "score": score,
+        },
+    )
 
 
 def _item_action_state(user, item):

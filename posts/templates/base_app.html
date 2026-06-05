@@ -1979,6 +1979,159 @@
             width: 28px;
         }
 
+        .daily-quiz-modal {
+            align-items: center;
+            background: rgba(23, 21, 19, 0.22);
+            bottom: 0;
+            display: none;
+            justify-content: center;
+            left: 0;
+            padding: 22px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 70;
+        }
+
+        .daily-quiz-modal.open {
+            display: flex;
+        }
+
+        .daily-quiz-card {
+            background:
+                radial-gradient(circle at 86% 0%, rgba(179, 106, 50, 0.12), transparent 32%),
+                var(--surface-solid);
+            border: 1px solid rgba(126, 67, 30, 0.16);
+            border-radius: 28px;
+            box-shadow: 0 28px 90px rgba(23, 21, 19, 0.22);
+            max-width: 440px;
+            padding: 24px;
+            width: min(440px, calc(100vw - 30px));
+        }
+
+        .daily-quiz-card h2 {
+            font-size: 1.65rem;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            margin: 8px 0 8px;
+        }
+
+        .daily-quiz-card p {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .daily-quiz-badge {
+            color: var(--accent-dark);
+            display: inline-flex;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .daily-quiz-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .daily-quiz-actions .button,
+        .daily-quiz-actions button {
+            min-height: 42px;
+        }
+
+        .daily-quiz-later {
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 850;
+            padding: 10px 18px;
+        }
+
+        .quiz-page {
+            max-width: 980px;
+        }
+
+        .quiz-form,
+        .quiz-results {
+            display: grid;
+            gap: 16px;
+        }
+
+        .quiz-question-card {
+            display: grid;
+            gap: 14px;
+        }
+
+        .quiz-question-top {
+            align-items: start;
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+        }
+
+        .quiz-question-top h2 {
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .quiz-section-pill,
+        .quiz-result-pill {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            color: var(--accent-dark);
+            flex: 0 0 auto;
+            font-size: 0.78rem;
+            font-weight: 850;
+            padding: 6px 10px;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.58);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            gap: 10px;
+            padding: 11px 12px;
+        }
+
+        .quiz-option:hover {
+            background: var(--accent-soft);
+        }
+
+        .quiz-option input {
+            accent-color: var(--accent);
+        }
+
+        .quiz-result-card.correct {
+            border-color: rgba(68, 128, 86, 0.32);
+        }
+
+        .quiz-result-card.incorrect {
+            border-color: rgba(179, 70, 50, 0.28);
+        }
+
+        .quiz-answer-line {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .quiz-answer-line strong {
+            color: var(--text);
+        }
+
         @keyframes like-pop {
             0% { transform: scale(1); }
             45% { transform: scale(1.12) translateY(-1px); }
@@ -5388,6 +5541,19 @@
         {% if login_notification_toasts %}
             {{ login_notification_toasts|json_script:"login-notification-toasts-data" }}
         {% endif %}
+        {% if daily_quiz_prompt %}
+            <div class="daily-quiz-modal" id="daily-quiz-modal" aria-hidden="true">
+                <section class="daily-quiz-card" role="dialog" aria-modal="true" aria-labelledby="daily-quiz-title">
+                    <span class="daily-quiz-badge">Today's Revue quiz</span>
+                    <h2 id="daily-quiz-title">Play the daily movie and series quiz?</h2>
+                    <p>Six quick questions: three Hollywood and three Bollywood. Each has three options.</p>
+                    <div class="daily-quiz-actions">
+                        <a class="button" href="{{ daily_quiz_prompt.url }}">Start quiz</a>
+                        <button type="button" class="daily-quiz-later" id="daily-quiz-later">Later</button>
+                    </div>
+                </section>
+            </div>
+        {% endif %}
     </div>
     <div class="profile-photo-lightbox" id="profile-photo-lightbox" aria-hidden="true">
         <div class="profile-photo-lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="profile-photo-lightbox-title">
@@ -5460,6 +5626,27 @@
                     try {
                         JSON.parse(loginToastData.textContent || "[]").forEach(showNotificationToast);
                     } catch (error) {}
+                }
+
+                var dailyQuizModal = document.getElementById("daily-quiz-modal");
+                var dailyQuizLater = document.getElementById("daily-quiz-later");
+                if (dailyQuizModal) {
+                    window.setTimeout(function () {
+                        dailyQuizModal.classList.add("open");
+                        dailyQuizModal.setAttribute("aria-hidden", "false");
+                    }, 500);
+                    if (dailyQuizLater) {
+                        dailyQuizLater.addEventListener("click", function () {
+                            dailyQuizModal.classList.remove("open");
+                            dailyQuizModal.setAttribute("aria-hidden", "true");
+                        });
+                    }
+                    dailyQuizModal.addEventListener("click", function (event) {
+                        if (event.target === dailyQuizModal) {
+                            dailyQuizModal.classList.remove("open");
+                            dailyQuizModal.setAttribute("aria-hidden", "true");
+                        }
+                    });
                 }
             });
 

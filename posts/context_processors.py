@@ -92,6 +92,27 @@ def _login_notification_toasts(request):
     return rows
 
 
+def _daily_quiz_prompt(request):
+    user = getattr(request, "user", None)
+    if not user or not user.is_authenticated:
+        return None
+    resolver_match = getattr(request, "resolver_match", None)
+    if resolver_match and resolver_match.url_name == "daily_quiz":
+        return None
+
+    today = timezone.localdate().isoformat()
+    session_key = f"daily_quiz_prompt_seen:{user.id}:{today}"
+    if request.session.get(session_key):
+        return None
+
+    request.session[session_key] = True
+    request.session.modified = True
+    return {
+        "date": today,
+        "url": reverse("daily_quiz"),
+    }
+
+
 def auth_options(request):
     social_counts = {
         "sidebar_review_count": 0,
@@ -101,6 +122,7 @@ def auth_options(request):
         "recommend_friends": [],
     }
     login_notification_toasts = _login_notification_toasts(request)
+    daily_quiz_prompt = _daily_quiz_prompt(request)
     if getattr(request, "user", None) and request.user.is_authenticated:
         cache_key = f"auth_options:{request.user.id}"
         cached_counts = cache.get(cache_key)
@@ -117,6 +139,7 @@ def auth_options(request):
                 or settings_configured
                 or _google_enabled_from_social_app(),
                 "login_notification_toasts": login_notification_toasts,
+                "daily_quiz_prompt": daily_quiz_prompt,
                 **cached_counts,
             }
         try:
@@ -161,5 +184,6 @@ def auth_options(request):
         or _google_enabled_from_social_app()
         ,
         "login_notification_toasts": login_notification_toasts,
+        "daily_quiz_prompt": daily_quiz_prompt,
         **social_counts,
     }

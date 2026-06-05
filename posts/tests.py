@@ -57,6 +57,24 @@ class SocialReviewTests(TestCase):
         self.assertFalse(user.profile.profile_photo)
         self.assertFalse(user.profile.cover_image)
 
+    def test_daily_quiz_renders_and_scores(self):
+        self.client.login(username="alex", password="pass")
+        response = self.client.get(reverse("daily_quiz"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Movie and series quiz")
+        questions = response.context["questions"]
+        self.assertEqual(len(questions), 6)
+
+        post_data = {
+            f"question_{index}": question["answer"]
+            for index, question in enumerate(questions)
+        }
+        result = self.client.post(reverse("daily_quiz"), post_data)
+
+        self.assertEqual(result.status_code, 200)
+        self.assertContains(result, "6/6")
+
     def test_friends_filter_only_shows_friend_reviews(self):
         Friendship.objects.create(from_user=self.alex, to_user=self.sam)
         Review.objects.create(

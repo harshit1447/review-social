@@ -1,0 +1,63 @@
+{% extends "base_app.html" %}
+
+{% block title %}Daily Quiz | Revue{% endblock %}
+
+{% block content %}
+<div class="page quiz-page">
+    <section class="page-header">
+        <p class="section-kicker">Daily quiz</p>
+        <h1>Movie and series quiz</h1>
+        <p class="page-subtitle">Six quick questions: three Hollywood and three Bollywood. Pick one answer for each.</p>
+    </section>
+
+    {% if results %}
+        <section class="card compact-product-hero">
+            <div>
+                <p class="section-kicker">Your score</p>
+                <h2>{{ score }}/6</h2>
+                <p class="meta">Come back tomorrow for a fresh set.</p>
+            </div>
+            <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+        </section>
+
+        <section class="quiz-results">
+            {% for result in results %}
+                <article class="card quiz-question-card quiz-result-card {% if result.is_correct %}correct{% else %}incorrect{% endif %}">
+                    <div class="quiz-question-top">
+                        <h2>{{ forloop.counter }}. {{ result.question }}</h2>
+                        <span class="quiz-result-pill">{% if result.is_correct %}Correct{% else %}Missed{% endif %}</span>
+                    </div>
+                    <p class="quiz-answer-line">Your answer: <strong>{{ result.selected|default:"Not answered" }}</strong></p>
+                    {% if not result.is_correct %}
+                        <p class="quiz-answer-line">Correct answer: <strong>{{ result.answer }}</strong></p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <form class="quiz-form" method="post">
+            {% csrf_token %}
+            {% for question in questions %}
+                <article class="card quiz-question-card">
+                    <div class="quiz-question-top">
+                        <h2>{{ forloop.counter }}. {{ question.question }}</h2>
+                        <span class="quiz-section-pill">{{ question.section }}</span>
+                    </div>
+                    <div class="quiz-options">
+                        {% for option in question.options %}
+                            <label class="quiz-option">
+                                <input type="radio" name="question_{{ forloop.parentloop.counter0 }}" value="{{ option }}" required>
+                                <span>{{ option }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit">Submit quiz</button>
+                <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
