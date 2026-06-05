@@ -329,6 +329,24 @@ class SavedReview(models.Model):
         return f"{self.user} saved review {self.review_id}"
 
 
+class DailyQuizAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_quiz_attempts")
+    quiz_date = models.DateField()
+    score = models.PositiveSmallIntegerField(default=0)
+    total_questions = models.PositiveSmallIntegerField(default=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-quiz_date", "-score", "updated_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "quiz_date"], name="unique_daily_quiz_attempt")
+        ]
+
+    def __str__(self):
+        return f"{self.user} scored {self.score}/{self.total_questions} on {self.quiz_date}"
+
+
 @receiver(post_save, sender=User)
 def ensure_user_profile(sender, instance, created, **kwargs):
     if created:

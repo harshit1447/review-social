@@ -23,6 +23,7 @@ from .models import (
     CollectionItem,
     Comment,
     CommentLike,
+    DailyQuizAttempt,
     Follow,
     Friendship,
     Item,
@@ -55,9 +56,21 @@ def _save_list_type_for_item(item):
     return "readlist" if item.item_type == "book" else "watchlist"
 
 
+def _daily_quiz_leaderboard(user, quiz_date=None, limit=8):
+    quiz_date = quiz_date or timezone.localdate()
+    user_ids = {_id for _id in _followed_user_ids(user)}
+    user_ids.add(user.id)
+    return (
+        DailyQuizAttempt.objects.filter(quiz_date=quiz_date, user_id__in=user_ids)
+        .select_related("user", "user__profile")
+        .order_by("-score", "updated_at")[:limit]
+    )
+
+
 @login_required
 def daily_quiz(request):
-    questions = get_daily_quiz(timezone.localdate())
+    today = timezone.localdate()
+    questions = get_daily_quiz(today)
     results = None
     score = 0
 
@@ -75,7 +88,18 @@ def daily_quiz(request):
                     "is_correct": is_correct,
                 }
             )
+        DailyQuizAttempt.objects.update_or_create(
+            user=request.user,
+            quiz_date=today,
+            defaults={
+                "score": score,
+                "total_questions": len(questions),
+            },
+        )
         messages.success(request, f"You scored {score}/6 on today's quiz.")
+
+    leaderboard = _daily_quiz_leaderboard(request.user, today)
+    user_attempt = DailyQuizAttempt.objects.filter(user=request.user, quiz_date=today).first()
 
     return render(
         request,
@@ -84,6 +108,8 @@ def daily_quiz(request):
             "questions": questions,
             "results": results,
             "score": score,
+            "leaderboard": leaderboard,
+            "user_attempt": user_attempt,
         },
     )
 
@@ -2202,6 +2228,12 @@ def feed(request, review_form=None):
         recipient=request.user
     ).select_related("actor").order_by("-created_at")[:5]
     user_review_count = Review.objects.filter(user=request.user).count()
+    today = timezone.localdate()
+    daily_quiz_attempt = DailyQuizAttempt.objects.filter(
+        user=request.user,
+        quiz_date=today,
+    ).first()
+    daily_quiz_leaderboard = _daily_quiz_leaderboard(request.user, today)
 
     review_form_instance = review_form
     if review_form_instance is None:
@@ -2249,6 +2281,8 @@ def feed(request, review_form=None):
             "notifications_preview": notifications_preview,
             "user_review_count": user_review_count,
             "remaining_taste_reviews": max(10 - user_review_count, 0),
+            "daily_quiz_attempt": daily_quiz_attempt,
+            "daily_quiz_leaderboard": daily_quiz_leaderboard,
         },
     )
 

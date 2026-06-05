@@ -20,6 +20,21 @@
             <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
         </section>
 
+        <section class="card">
+            <h2 class="card-title">Friends leaderboard</h2>
+            <div class="daily-quiz-leaderboard">
+                {% for attempt in leaderboard %}
+                    <div class="daily-quiz-rank">
+                        <span>{{ forloop.counter }}</span>
+                        <strong>{{ attempt.user.get_full_name|default:attempt.user.username }}</strong>
+                        <em>{{ attempt.score }}/{{ attempt.total_questions }}</em>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">Your friends have not played today's quiz yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+
         <section class="quiz-results">
             {% for result in results %}
                 <article class="card quiz-question-card quiz-result-card {% if result.is_correct %}correct{% else %}incorrect{% endif %}">
@@ -60,4 +75,77 @@
         </form>
     {% endif %}
 </div>
+
+{% if results %}
+    <div class="quiz-score-modal open" id="quiz-score-modal" aria-hidden="false">
+        <section class="quiz-score-card" role="dialog" aria-modal="true" aria-labelledby="quiz-score-title">
+            <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
+            <p class="section-kicker">Quiz complete</p>
+            <h2 id="quiz-score-title">{{ score }}/6</h2>
+            <p>
+                {% if score >= 5 %}
+                    You are sitting at the top table today.
+                {% elif score >= 3 %}
+                    Solid score. Tomorrow is another round.
+                {% else %}
+                    Warm-up round done. The next one is yours.
+                {% endif %}
+            </p>
+            <div class="quiz-score-leaderboard">
+                <h3>Friends leaderboard</h3>
+                {% for attempt in leaderboard|slice:":5" %}
+                    <div class="daily-quiz-rank">
+                        <span>{{ forloop.counter }}</span>
+                        <strong>{{ attempt.user.get_full_name|default:attempt.user.username }}</strong>
+                        <em>{{ attempt.score }}/{{ attempt.total_questions }}</em>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">No friend scores yet.</p>
+                {% endfor %}
+            </div>
+            <div class="quiz-score-actions">
+                <button type="button" id="quiz-score-close">Continue</button>
+                <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            var modal = document.getElementById("quiz-score-modal");
+            var close = document.getElementById("quiz-score-close");
+            var layer = document.getElementById("confetti-layer");
+            var colors = ["#b86b2c", "#171513", "#e8c8aa", "#f5efe7", "#7e431e"];
+
+            function closeModal() {
+                if (!modal) return;
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+            }
+
+            function blastConfetti() {
+                if (!layer) return;
+                for (var index = 0; index < 84; index += 1) {
+                    var piece = document.createElement("span");
+                    piece.className = "confetti-piece";
+                    piece.style.setProperty("--left", Math.floor(Math.random() * 100) + "%");
+                    piece.style.setProperty("--drift", Math.floor(Math.random() * 260 - 130) + "px");
+                    piece.style.setProperty("--spin", Math.floor(Math.random() * 720 + 180) + "deg");
+                    piece.style.setProperty("--duration", Math.floor(Math.random() * 900 + 1300) + "ms");
+                    piece.style.setProperty("--confetti-color", colors[index % colors.length]);
+                    piece.style.animationDelay = Math.floor(Math.random() * 260) + "ms";
+                    layer.appendChild(piece);
+                }
+            }
+
+            blastConfetti();
+            if (close) close.addEventListener("click", closeModal);
+            if (modal) {
+                modal.addEventListener("click", function (event) {
+                    if (event.target === modal) closeModal();
+                });
+            }
+        })();
+    </script>
+{% endif %}
 {% endblock %}

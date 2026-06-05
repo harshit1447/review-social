@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Friendship, Item, Recommendation, Review, SavedItem
+from .models import DailyQuizAttempt, Friendship, Item, Recommendation, Review, SavedItem
 
 
 class SocialReviewTests(TestCase):
@@ -74,6 +74,19 @@ class SocialReviewTests(TestCase):
 
         self.assertEqual(result.status_code, 200)
         self.assertContains(result, "6/6")
+        self.assertContains(result, "Friends leaderboard")
+        attempt = DailyQuizAttempt.objects.get(user=self.alex)
+        self.assertEqual(attempt.score, 6)
+        self.assertEqual(attempt.total_questions, 6)
+
+    def test_feed_shows_daily_quiz_widget(self):
+        self.client.login(username="alex", password="pass")
+
+        response = self.client.get(reverse("feed"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Movie + series challenge")
+        self.assertContains(response, reverse("daily_quiz"))
 
     def test_friends_filter_only_shows_friend_reviews(self):
         Friendship.objects.create(from_user=self.alex, to_user=self.sam)
