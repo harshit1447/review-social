@@ -1140,6 +1140,7 @@ def _json_get(url: str, timeout: int = 4):
 
 
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
+TMDB_PROVIDER_LOGO_BASE = "https://image.tmdb.org/t/p/w92"
 
 
 def _tmdb_api_key():
@@ -1260,6 +1261,117 @@ def _tmdb_details(external_id: str):
     metadata = {key: value for key, value in metadata.items() if value}
     cache.set(cache_key, metadata, 86400)
     return metadata
+
+
+def _ott_provider_badge(name, logo_path=""):
+    normalized = (name or "").lower()
+    provider_class = "generic"
+    short = (name or "OTT")[:1].upper()
+    if "netflix" in normalized:
+        provider_class = "netflix"
+        short = "N"
+    elif "prime" in normalized or "amazon" in normalized:
+        provider_class = "prime"
+        short = "P"
+    elif "hotstar" in normalized or "disney" in normalized:
+        provider_class = "hotstar"
+        short = "H"
+    elif "zee" in normalized:
+        provider_class = "zee5"
+        short = "Z"
+    elif "sony" in normalized:
+        provider_class = "sonyliv"
+        short = "S"
+    elif "apple" in normalized:
+        provider_class = "apple"
+        short = "A"
+
+    return {
+        "name": name,
+        "short": short,
+        "class": provider_class,
+        "logo_url": f"{TMDB_PROVIDER_LOGO_BASE}{logo_path}" if logo_path else "",
+    }
+
+
+def _fallback_ott_providers(item):
+    if item.item_type not in {"movie", "series"}:
+        return []
+
+    title = (item.title or "").lower()
+    providers = []
+    provider_hints = [
+        (
+            ("stranger things", "maamla legal hai", "brooklyn nine-nine", "peaky blinders"),
+            "Netflix",
+        ),
+        (
+            ("the boys", "fallout", "mirzapur", "panchayat", "fool me once"),
+            "Prime Video",
+        ),
+        (
+            ("succession", "game of thrones", "industry", "modern family", "mandalorian"),
+            "JioHotstar",
+        ),
+        (
+            ("foundation", "ted lasso", "severance"),
+            "Apple TV+",
+        ),
+    ]
+    for keywords, provider_name in provider_hints:
+        if any(keyword in title for keyword in keywords):
+            providers.append(_ott_provider_badge(provider_name))
+
+    return providers[:3]
+
+
+def _streaming_providers_for_item(item):
+    if item.item_type not in {"movie", "series"}:
+        return []
+
+    fallback = _fallback_ott_providers(item)
+    if fallback:
+        return fallback
+
+    api_key = _tmdb_api_key()
+    external_id = item.external_id or ""
+    if not api_key or ":" not in external_id:
+        return []
+
+    item_type, tmdb_id = external_id.split(":", 1)
+    if item_type not in {"movie", "series"} or not tmdb_id:
+        return []
+
+    tmdb_kind = "movie" if item_type == "movie" else "tv"
+    cache_key = f"tmdb_watch_providers:v1:{external_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        payload = _json_get(
+            f"https://api.themoviedb.org/3/{tmdb_kind}/{quote(tmdb_id)}/watch/providers?{urlencode({'api_key': api_key})}",
+            timeout=1.8,
+        )
+    except Exception:
+        return []
+
+    results = payload.get("results") or {}
+    country_payload = results.get("IN") or results.get("US") or {}
+    provider_rows = country_payload.get("flatrate") or country_payload.get("ads") or country_payload.get("rent") or []
+    providers = []
+    seen = set()
+    for provider in provider_rows:
+        name = provider.get("provider_name")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        providers.append(_ott_provider_badge(name, provider.get("logo_path", "")))
+        if len(providers) >= 4:
+            break
+
+    cache.set(cache_key, providers, 86400)
+    return providers
 
 
 def _tmdb_discover_rows(endpoint: str, item_type: str, limit: int = 10):
@@ -3182,6 +3294,7 @@ def item_reviews(request, item_title):
             "saved_item_active": item_state["save_active"],
             "recommended_item_active": item_state["recommended_active"],
             "item_like_count": item_like_count,
+            "ott_providers": _streaming_providers_for_item(item),
             "review_liked_ids": review_liked_ids,
             "popular_reviews": popular_reviews,
             "suggested_users": suggested_users,

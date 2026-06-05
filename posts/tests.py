@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from unittest.mock import patch
 
 from .models import DailyQuizAttempt, Friendship, Item, Recommendation, Review, SavedItem
 
@@ -56,6 +57,16 @@ class SocialReviewTests(TestCase):
         self.assertEqual(user.email, "photo-optional@example.com")
         self.assertFalse(user.profile.profile_photo)
         self.assertFalse(user.profile.cover_image)
+
+    def test_item_page_shows_ott_provider_badge_for_known_titles(self):
+        item = Item.objects.create(title="Succession", item_type="series", release_year="2018")
+
+        with patch("posts.views._tmdb_api_key", return_value=""):
+            response = self.client.get(reverse("item_reviews", args=[item.title]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Available on OTT")
+        self.assertContains(response, "JioHotstar")
 
     def test_daily_quiz_renders_and_scores(self):
         self.client.login(username="alex", password="pass")
