@@ -79,6 +79,25 @@ class SocialReviewTests(TestCase):
         self.assertEqual(attempt.score, 6)
         self.assertEqual(attempt.total_questions, 6)
 
+    def test_daily_quiz_allows_only_one_attempt_per_day(self):
+        self.client.login(username="alex", password="pass")
+        questions = self.client.get(reverse("daily_quiz")).context["questions"]
+        perfect_answers = {
+            f"question_{index}": question["answer"]
+            for index, question in enumerate(questions)
+        }
+        wrong_answers = {
+            f"question_{index}": question["options"][0]
+            for index, question in enumerate(questions)
+        }
+
+        self.client.post(reverse("daily_quiz"), perfect_answers)
+        response = self.client.post(reverse("daily_quiz"), wrong_answers, follow=True)
+
+        attempt = DailyQuizAttempt.objects.get(user=self.alex)
+        self.assertEqual(attempt.score, 6)
+        self.assertContains(response, "Already played today")
+
     def test_feed_shows_daily_quiz_widget(self):
         self.client.login(username="alex", password="pass")
 

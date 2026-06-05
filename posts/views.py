@@ -73,8 +73,13 @@ def daily_quiz(request):
     questions = get_daily_quiz(today)
     results = None
     score = 0
+    user_attempt = DailyQuizAttempt.objects.filter(user=request.user, quiz_date=today).first()
 
     if request.method == "POST":
+        if user_attempt:
+            messages.info(request, "You have already played today's quiz. Come back tomorrow for a fresh one.")
+            return redirect("daily_quiz")
+
         results = []
         for index, question in enumerate(questions):
             selected = request.POST.get(f"question_{index}", "")
@@ -97,9 +102,9 @@ def daily_quiz(request):
             },
         )
         messages.success(request, f"You scored {score}/6 on today's quiz.")
+        user_attempt = DailyQuizAttempt.objects.filter(user=request.user, quiz_date=today).first()
 
     leaderboard = _daily_quiz_leaderboard(request.user, today)
-    user_attempt = DailyQuizAttempt.objects.filter(user=request.user, quiz_date=today).first()
 
     return render(
         request,

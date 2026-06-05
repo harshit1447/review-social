@@ -101,6 +101,14 @@ def _daily_quiz_prompt(request):
         return None
 
     today = timezone.localdate().isoformat()
+    try:
+        from .models import DailyQuizAttempt
+
+        if DailyQuizAttempt.objects.filter(user=user, quiz_date=today).exists():
+            return None
+    except Exception:
+        pass
+
     session_key = f"daily_quiz_prompt_seen:{user.id}:{today}"
     if request.session.get(session_key):
         return None

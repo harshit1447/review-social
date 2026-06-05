@@ -24,6 +24,34 @@
                     </section>
                 {% endif %}
 
+                <section class="card daily-quiz-widget daily-quiz-mobile-card">
+                    <div class="daily-quiz-widget-top">
+                        <span class="section-kicker">Daily quiz</span>
+                        {% if daily_quiz_attempt %}
+                            <span class="daily-quiz-score-pill">{{ daily_quiz_attempt.score }}/{{ daily_quiz_attempt.total_questions }}</span>
+                        {% else %}
+                            <span class="daily-quiz-score-pill muted-pill">New</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="card-title">Movie + series challenge</h2>
+                    <p class="meta">Six questions today: 3 Hollywood and 3 Bollywood.</p>
+                    <a class="button daily-quiz-cta" href="{% url 'daily_quiz' %}">
+                        {% if daily_quiz_attempt %}View your score{% else %}Play now{% endif %}
+                    </a>
+                    <div class="daily-quiz-leaderboard">
+                        <div class="daily-quiz-leaderboard-title">Friends leaderboard</div>
+                        {% for attempt in daily_quiz_leaderboard|slice:":4" %}
+                            <div class="daily-quiz-rank">
+                                <span>{{ forloop.counter }}</span>
+                                <strong>{{ attempt.user.get_full_name|default:attempt.user.username }}</strong>
+                                <em>{{ attempt.score }}/{{ attempt.total_questions }}</em>
+                            </div>
+                        {% empty %}
+                            <p class="empty-state">Be the first in your circle to play today.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
                 <section id="feed-composer" class="card composer-panel tidy-composer-panel">
                     <div class="composer-title-row">
                         <div>

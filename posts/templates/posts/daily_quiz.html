@@ -49,6 +49,30 @@
                 </article>
             {% endfor %}
         </section>
+    {% elif user_attempt %}
+        <section class="card compact-product-hero">
+            <div>
+                <p class="section-kicker">Already played today</p>
+                <h2>{{ user_attempt.score }}/{{ user_attempt.total_questions }}</h2>
+                <p class="meta">Daily quiz allows one attempt per day. Come back tomorrow for a fresh set.</p>
+            </div>
+            <a class="button secondary" href="{% url 'feed' %}">Back to feed</a>
+        </section>
+
+        <section class="card">
+            <h2 class="card-title">Friends leaderboard</h2>
+            <div class="daily-quiz-leaderboard">
+                {% for attempt in leaderboard %}
+                    <div class="daily-quiz-rank">
+                        <span>{{ forloop.counter }}</span>
+                        <strong>{{ attempt.user.get_full_name|default:attempt.user.username }}</strong>
+                        <em>{{ attempt.score }}/{{ attempt.total_questions }}</em>
+                    </div>
+                {% empty %}
+                    <p class="empty-state">Your friends have not played today's quiz yet.</p>
+                {% endfor %}
+            </div>
+        </section>
     {% else %}
         <form class="quiz-form" method="post">
             {% csrf_token %}
