@@ -71,6 +71,19 @@
                     </div>
                     <div class="feed-actions compact-actions item-action-buttons" aria-label="Item actions">
                         {% if user.is_authenticated %}
+                        {% if ott_providers %}
+                            <div class="ott-provider-strip" aria-label="Available on OTT">
+                                {% for provider in ott_providers %}
+                                    <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
+                                        {% if provider.logo_url %}
+                                            <img src="{{ provider.logo_url }}" alt="">
+                                        {% else %}
+                                            <span>{{ provider.short }}</span>
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         <form method="post" action="{% if is_preview_item %}{% url 'preview_item_action' 'favorites' %}{% else %}{% url 'toggle_saved_item' item.id 'favorites' %}{% endif %}" class="{% if not is_preview_item %}js-async-form{% endif %}">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -90,19 +103,6 @@
                                 <span class="sr-only">Like</span>
                             </button>
                         </form>
-                        {% if ott_providers %}
-                            <div class="ott-provider-strip" aria-label="Available on OTT">
-                                {% for provider in ott_providers %}
-                                    <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
-                                        {% if provider.logo_url %}
-                                            <img src="{{ provider.logo_url }}" alt="">
-                                        {% else %}
-                                            <span>{{ provider.short }}</span>
-                                        {% endif %}
-                                    </span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
                         <form method="post" action="{% if is_preview_item %}{% url 'preview_item_action' item_save_list_type %}{% else %}{% url 'toggle_saved_item' item.id item_save_list_type %}{% endif %}" class="{% if not is_preview_item %}js-async-form{% endif %}">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -142,10 +142,6 @@
                             </button>
                         {% endif %}
                         {% else %}
-                            <a class="icon-button item-like-button has-count" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like" title="Log in to like">
-                                <span class="icon-count">{{ item_like_count|default:0 }}</span>
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
-                            </a>
                             {% if ott_providers %}
                                 <div class="ott-provider-strip" aria-label="Available on OTT">
                                     {% for provider in ott_providers %}
@@ -159,6 +155,10 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
+                            <a class="icon-button item-like-button has-count" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like" title="Log in to like">
+                                <span class="icon-count">{{ item_like_count|default:0 }}</span>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.3-9.4-8.2C.1 9.1 2.2 4.5 6.4 4.5c2.1 0 3.5 1.1 4.3 2.3.8-1.2 2.2-2.3 4.3-2.3 4.2 0 6.3 4.6 3.8 8.3C18.7 16.7 12 21 12 21Z"/></svg>
+                            </a>
                             <a class="icon-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to save" title="Log in to save">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
                             </a>
