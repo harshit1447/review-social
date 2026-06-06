@@ -349,7 +349,6 @@ def api_discover(request):
         sections.append(
             {
                 "title": source_section.get("title", ""),
-                "kicker": source_section.get("kicker", ""),
                 "items": items,
             }
         )
@@ -887,7 +886,7 @@ def _discover_rail_sections():
             continue
         for row in rows:
             row["url"] = _preview_url_for_payload(row)
-        live_sections.append({"title": section["title"], "kicker": section["kicker"], "items": rows})
+        live_sections.append({"title": section["title"], "items": rows})
     if live_sections:
         return live_sections + sections[-1:]
     return sections
@@ -952,7 +951,7 @@ def _book_discover_sections():
             if len(rows) >= 12:
                 break
         if rows:
-            sections.append({"title": spec["title"], "kicker": spec["kicker"], "items": rows})
+            sections.append({"title": spec["title"], "items": rows})
 
     curated_book_sections = [
         {**section, "items": [row for row in section.get("items", []) if row.get("item_type") == "book"]}

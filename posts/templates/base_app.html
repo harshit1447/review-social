@@ -3032,6 +3032,23 @@
             padding-bottom: 0;
         }
 
+        .public-profile-page .profile-avatar,
+        .public-profile-page .profile-avatar.profile-photo-view-button {
+            aspect-ratio: 1 / 1;
+            flex: 0 0 132px;
+            height: 132px;
+            max-height: 132px;
+            max-width: 132px;
+            min-height: 132px;
+            min-width: 132px;
+            width: 132px;
+        }
+
+        .public-profile-page .profile-info > form {
+            align-self: center;
+            margin-top: 18px;
+        }
+
         .profile-detail-grid {
             display: grid;
             gap: 20px;
@@ -3139,15 +3156,43 @@
 
         .profile-toggle-tabs {
             border-bottom: 1px solid rgba(126, 67, 30, 0.12);
+            gap: 24px;
             margin: 0;
             padding: 14px 16px 0;
+            position: relative;
         }
 
         .profile-toggle-tabs .tab {
             background: transparent;
             border: 0;
+            color: var(--muted);
             cursor: pointer;
             font: inherit;
+            font-size: 0.98rem;
+            font-weight: 500;
+            padding: 10px 4px 12px;
+            position: relative;
+            transition: color 0.18s ease, font-size 0.18s ease, font-weight 0.18s ease;
+        }
+
+        .profile-toggle-tabs .tab::after {
+            background: transparent;
+            bottom: -1px;
+            content: "";
+            height: 2px;
+            left: 0;
+            position: absolute;
+            right: 0;
+        }
+
+        .profile-toggle-tabs .tab.active {
+            color: var(--text);
+            font-size: 1.05rem;
+            font-weight: 750;
+        }
+
+        .profile-toggle-tabs .tab.active::after {
+            background: #332920;
         }
 
         .profile-tab-panel {
@@ -3412,13 +3457,13 @@
 
         .ott-provider-icon {
             align-items: center;
-            background: #171412;
-            border: 1px solid rgba(126, 67, 30, 0.12);
+            background: rgba(179, 106, 50, 0.12);
+            border: 1px solid rgba(126, 67, 30, 0.2);
             border-radius: 999px;
-            color: #fff;
+            color: var(--accent-dark);
             display: inline-flex;
             font-size: 0.76rem;
-            font-weight: 700;
+            font-weight: 800;
             height: 28px;
             justify-content: center;
             line-height: 1;
@@ -3433,28 +3478,14 @@
             width: 100%;
         }
 
-        .ott-netflix {
-            background: #e50914;
-        }
-
-        .ott-prime {
-            background: #00a8e1;
-        }
-
-        .ott-hotstar {
-            background: #111827;
-        }
-
-        .ott-zee5 {
-            background: #4b1d82;
-        }
-
-        .ott-sonyliv {
-            background: #1b2d4a;
-        }
-
+        .ott-netflix,
+        .ott-prime,
+        .ott-hotstar,
+        .ott-zee5,
+        .ott-sonyliv,
         .ott-apple {
-            background: #222;
+            background: rgba(179, 106, 50, 0.12);
+            color: var(--accent-dark);
         }
 
         .item-action-buttons .recommend-button {
@@ -3903,6 +3934,12 @@
 
         .discover-poster-rail .meta {
             color: var(--muted);
+        }
+
+        .discover-poster-rail > .meta,
+        .discover-poster-rail .section-heading + .meta,
+        .discover-poster-rail .section-heading + p {
+            display: none;
         }
 
         .poster-rail-scroll {
