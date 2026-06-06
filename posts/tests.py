@@ -3,9 +3,11 @@ from django.contrib.auth import authenticate
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from .models import DailyQuizAttempt, Friendship, Item, Recommendation, Review, SavedItem
+from .quiz_data import get_daily_quiz
 
 
 class SocialReviewTests(TestCase):
@@ -108,6 +110,20 @@ class SocialReviewTests(TestCase):
         attempt = DailyQuizAttempt.objects.get(user=self.alex)
         self.assertEqual(attempt.score, 6)
         self.assertContains(response, "Already played today")
+
+    def test_daily_quiz_changes_questions_each_day(self):
+        today = date(2026, 6, 6)
+        tomorrow = today + timedelta(days=1)
+        today_questions = get_daily_quiz(today)
+        tomorrow_questions = get_daily_quiz(tomorrow)
+
+        self.assertEqual(len(today_questions), 6)
+        self.assertEqual(len(tomorrow_questions), 6)
+        self.assertTrue(
+            {row["question"] for row in today_questions}.isdisjoint(
+                {row["question"] for row in tomorrow_questions}
+            )
+        )
 
     def test_feed_shows_daily_quiz_widget(self):
         self.client.login(username="alex", password="pass")
