@@ -2500,13 +2500,20 @@
         }
 
         .feed-hero-compact {
-            align-items: center;
-            margin-bottom: 16px;
+            align-items: start;
+            display: grid;
+            gap: 34px;
+            grid-template-columns: minmax(0, 1fr) 270px;
+            margin-bottom: 8px;
             min-height: auto;
         }
 
         .feed-composer-toggle {
             flex: 0 0 auto;
+            font-size: 0.96rem;
+            justify-self: end;
+            min-height: 46px;
+            padding: 12px 22px;
             white-space: nowrap;
         }
 
@@ -2558,6 +2565,10 @@
         .tidy-right-rail .card-title {
             font-size: 1rem;
             margin-bottom: 8px;
+        }
+
+        .feed-layout-tidy .tidy-right-rail {
+            margin-top: -8px;
         }
 
         .composer-title-row {
@@ -4408,6 +4419,11 @@
             grid-template-columns: minmax(0, 1fr) 280px;
         }
 
+        .feed-hero-compact {
+            gap: 28px;
+            grid-template-columns: minmax(0, 1fr) 280px;
+        }
+
         .social-center,
         .feed-stack,
         .right-rail,
@@ -4716,11 +4732,15 @@
 
             .feed-hero-compact {
                 align-items: flex-start;
+                display: grid;
+                gap: 12px;
+                grid-template-columns: 1fr;
             }
 
             .feed-composer-toggle {
                 align-self: stretch;
                 justify-content: center;
+                justify-self: stretch;
             }
 
             .page-header h1,
