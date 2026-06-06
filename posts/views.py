@@ -7,6 +7,7 @@ from django.db.models import Avg, Count, Q
 from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DetailView, ListView
@@ -2330,6 +2331,30 @@ def feed(request, review_form=None):
                 review_id__in=page_review_ids,
             ).values_list("review_id", flat=True)
         )
+
+    feed_review_context = {
+        "reviews": page_reviews,
+        "watchlist_item_ids": watchlist_item_ids,
+        "readlist_item_ids": readlist_item_ids,
+        "favorite_item_ids": favorite_item_ids,
+        "saved_review_ids": saved_review_ids,
+        "recommended_item_ids": recommended_item_ids,
+        "review_liked_ids": review_liked_ids,
+    }
+
+    if request.GET.get("partial") == "reviews":
+        return JsonResponse(
+            {
+                "html": render_to_string(
+                    "posts/partials/feed_review_cards.html",
+                    feed_review_context,
+                    request=request,
+                ),
+                "has_next": page_obj.has_next(),
+                "next_page": page_obj.next_page_number() if page_obj.has_next() else None,
+            }
+        )
+
     activities = Activity.objects.select_related("user", "user__profile", "review", "review__item", "target_user", "collection")
     followed_activities = activities.filter(user_id__in=friend_ids) if friend_ids else Activity.objects.none()
     popular_reviews = Review.objects.select_related("user", "user__profile", "item").annotate(
@@ -2377,18 +2402,12 @@ def feed(request, review_form=None):
         request,
         "posts/feed.html",
         {
-            "reviews": page_reviews,
             "page_obj": page_obj,
             "friends_only": friends_only,
             "query": query,
             "sort": sort,
             "type_filter": type_filter,
-            "watchlist_item_ids": watchlist_item_ids,
-            "readlist_item_ids": readlist_item_ids,
-            "favorite_item_ids": favorite_item_ids,
-            "saved_review_ids": saved_review_ids,
-            "recommended_item_ids": recommended_item_ids,
-            "review_liked_ids": review_liked_ids,
+            **feed_review_context,
             "review_form": review_form_instance,
             "activities": activities[:12],
             "followed_activities": followed_activities[:6],

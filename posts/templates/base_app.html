@@ -2498,8 +2498,14 @@
         }
 
         .feed-hero-compact {
+            align-items: center;
             margin-bottom: 16px;
             min-height: auto;
+        }
+
+        .feed-composer-toggle {
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
 
         .feed-hero-compact h1 {
@@ -2523,6 +2529,27 @@
 
         .tidy-composer-panel {
             gap: 8px;
+        }
+
+        .feed-composer-panel {
+            max-height: 760px;
+            opacity: 1;
+            overflow: visible;
+            transform: translateY(0);
+            transition: max-height 0.28s ease, opacity 0.2s ease, transform 0.2s ease, margin 0.2s ease, padding 0.2s ease;
+        }
+
+        .feed-composer-panel.is-collapsed {
+            border-width: 0;
+            box-shadow: none;
+            margin: 0;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding-bottom: 0;
+            padding-top: 0;
+            pointer-events: none;
+            transform: translateY(-8px);
         }
 
         .tidy-composer-panel h2,
@@ -2737,6 +2764,18 @@
 
         .tidy-feed-stack {
             gap: 24px;
+            width: 100%;
+        }
+
+        .feed-load-status {
+            color: var(--muted);
+            font-size: 0.9rem;
+            padding: 4px 0 18px;
+            text-align: center;
+        }
+
+        .feed-scroll-sentinel {
+            height: 1px;
             width: 100%;
         }
 
@@ -4660,6 +4699,15 @@
             .page-header,
             .feed-hero {
                 margin-bottom: 14px;
+            }
+
+            .feed-hero-compact {
+                align-items: flex-start;
+            }
+
+            .feed-composer-toggle {
+                align-self: stretch;
+                justify-content: center;
             }
 
             .page-header h1,

@@ -9,6 +9,15 @@
                 <h1>Home feed</h1>
                 <p>Reviews from people you follow, recent posts, and quick ways to discover what is worth your time.</p>
             </div>
+            <button
+                type="button"
+                class="button feed-composer-toggle"
+                id="feed-composer-toggle"
+                aria-controls="feed-composer"
+                aria-expanded="{% if review_form.errors %}true{% else %}false{% endif %}"
+            >
+                Post review
+            </button>
         </section>
 
         <div class="social-layout feed-layout-tidy">
@@ -52,7 +61,11 @@
                     </div>
                 </section>
 
-                <section id="feed-composer" class="card composer-panel tidy-composer-panel">
+                <section
+                    id="feed-composer"
+                    class="card composer-panel tidy-composer-panel feed-composer-panel{% if not review_form.errors %} is-collapsed{% endif %}"
+                    aria-hidden="{% if review_form.errors %}false{% else %}true{% endif %}"
+                >
                     <div class="composer-title-row">
                         <div>
                             <h2>What are you recommending today?</h2>
@@ -125,7 +138,12 @@
                     </div>
                 </section>
 
-                <section class="feed-stack is-loading tidy-feed-stack">
+                <section
+                    class="feed-stack is-loading tidy-feed-stack"
+                    id="feed-review-stack"
+                    data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+                    data-has-next="{% if page_obj.has_next %}true{% else %}false{% endif %}"
+                >
                     <div class="skeleton-feed" aria-hidden="true">
                         <article class="card skeleton-card">
                             <div class="skeleton-row">
@@ -146,9 +164,9 @@
                         </article>
                     </div>
 
-                    {% for review in reviews %}
-                        {% include "posts/partials/review_card.html" %}
-                    {% empty %}
+                    {% if reviews %}
+                        {% include "posts/partials/feed_review_cards.html" %}
+                    {% else %}
                         <div class="card empty-panel">
                             <span class="empty-orb">R</span>
                             <h2>No reviews yet</h2>
@@ -158,7 +176,9 @@
                                 <a class="button secondary" href="{% url 'friends' %}?tab=suggestions">Find people</a>
                             </div>
                         </div>
-                    {% endfor %}
+                    {% endif %}
+                    <div class="feed-load-status" id="feed-load-status" aria-live="polite" {% if not page_obj.has_next %}hidden{% endif %}>Loading more reviews...</div>
+                    <div class="feed-scroll-sentinel" id="feed-scroll-sentinel" aria-hidden="true"></div>
                 </section>
             </main>
 
@@ -231,6 +251,46 @@
             </aside>
         </div>
     </div>
+
+    <script>
+        (function () {
+            var toggle = document.getElementById("feed-composer-toggle");
+            var panel = document.getElementById("feed-composer");
+            var titleInput = document.getElementById("id_item_title");
+
+            if (!toggle || !panel) return;
+
+            function setComposerOpen(open, shouldFocus) {
+                panel.classList.toggle("is-collapsed", !open);
+                panel.setAttribute("aria-hidden", open ? "false" : "true");
+                toggle.setAttribute("aria-expanded", open ? "true" : "false");
+
+                if (open && shouldFocus && titleInput) {
+                    window.setTimeout(function () {
+                        titleInput.focus({ preventScroll: true });
+                    }, 180);
+                }
+            }
+
+            toggle.addEventListener("click", function () {
+                var shouldOpen = panel.classList.contains("is-collapsed");
+                setComposerOpen(shouldOpen, shouldOpen);
+                if (shouldOpen) {
+                    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+
+            document.addEventListener("click", function (event) {
+                var link = event.target.closest('a[href$="#feed-composer"]');
+                if (!link) return;
+                setComposerOpen(true, false);
+            });
+
+            if (window.location.hash === "#feed-composer") {
+                setComposerOpen(true, false);
+            }
+        })();
+    </script>
 
     <script>
         (function () {
@@ -386,6 +446,82 @@
             document.addEventListener("click", function (event) {
                 if (!list.contains(event.target) && event.target !== titleInput) hideList();
             });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            var stack = document.getElementById("feed-review-stack");
+            var sentinel = document.getElementById("feed-scroll-sentinel");
+            var status = document.getElementById("feed-load-status");
+            var scrollRoot = document.querySelector(".main-content");
+            var loading = false;
+
+            if (!stack || !sentinel) return;
+
+            function hasNextPage() {
+                return stack.getAttribute("data-has-next") === "true" && stack.getAttribute("data-next-page");
+            }
+
+            function setStatus(text, visible) {
+                if (!status) return;
+                status.textContent = text || "";
+                status.hidden = !visible;
+            }
+
+            async function loadNextPage() {
+                if (loading || !hasNextPage()) return;
+                loading = true;
+                setStatus("Loading more reviews...", true);
+                var nextPage = stack.getAttribute("data-next-page");
+                var params = new URLSearchParams(window.location.search);
+                params.set("page", nextPage);
+                params.set("partial", "reviews");
+                try {
+                    var response = await fetch(window.location.pathname + "?" + params.toString(), {
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    });
+                    if (!response.ok) throw new Error("Could not load feed page");
+                    var data = await response.json();
+                    if (data.html) {
+                        var fragment = document.createElement("template");
+                        fragment.innerHTML = data.html.trim();
+                        stack.insertBefore(fragment.content, status || sentinel);
+                    }
+                    if (data.has_next && data.next_page) {
+                        stack.setAttribute("data-has-next", "true");
+                        stack.setAttribute("data-next-page", data.next_page);
+                        setStatus("", false);
+                    } else {
+                        stack.setAttribute("data-has-next", "false");
+                        stack.removeAttribute("data-next-page");
+                        setStatus("You have reached the last post.", true);
+                    }
+                } catch (error) {
+                    setStatus("Could not load more reviews. Scroll again to retry.", true);
+                } finally {
+                    loading = false;
+                }
+            }
+
+            if ("IntersectionObserver" in window) {
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) loadNextPage();
+                    });
+                }, {
+                    root: scrollRoot || null,
+                    rootMargin: "420px 0px",
+                    threshold: 0
+                });
+                observer.observe(sentinel);
+            } else if (scrollRoot) {
+                scrollRoot.addEventListener("scroll", function () {
+                    if (scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 420) {
+                        loadNextPage();
+                    }
+                }, { passive: true });
+            }
         })();
     </script>
 {% endblock %}
