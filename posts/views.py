@@ -1291,7 +1291,7 @@ def _ott_provider_badge(name, logo_path=""):
     elif "prime" in normalized or "amazon" in normalized:
         provider_class = "prime"
         short = "P"
-    elif "hotstar" in normalized or "disney" in normalized:
+    elif "hotstar" in normalized or "disney" in normalized or "jio" in normalized:
         provider_class = "hotstar"
         short = "H"
     elif "zee" in normalized:
@@ -1304,9 +1304,8 @@ def _ott_provider_badge(name, logo_path=""):
         provider_class = "apple"
         short = "A"
 
-    logo_url = f"{TMDB_PROVIDER_LOGO_BASE}{logo_path}" if logo_path else ""
-    if provider_class in OTT_LOGO_URLS:
-        logo_url = OTT_LOGO_URLS[provider_class]
+    logo_url = OTT_LOGO_URLS.get(provider_class, "")
+    if logo_url:
         name = OTT_DISPLAY_NAMES.get(provider_class, name)
 
     return {
@@ -1389,7 +1388,10 @@ def _streaming_providers_for_item(item):
         if not name or name in seen:
             continue
         seen.add(name)
-        providers.append(_ott_provider_badge(name, provider.get("logo_path", "")))
+        badge = _ott_provider_badge(name, provider.get("logo_path", ""))
+        if not badge.get("logo_url"):
+            continue
+        providers.append(badge)
         if len(providers) >= 4:
             break
 
