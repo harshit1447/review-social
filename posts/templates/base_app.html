@@ -5,8 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Revue{% endblock %}</title>
-    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'posts/images/revue-favicon.png' %}">
+    <link rel="icon" href="{% static 'posts/images/revue-favicon.ico' %}?v=3" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'posts/images/revue-favicon-32.png' %}?v=3">
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}?v=3">
+    <link rel="apple-touch-icon" href="{% static 'posts/images/revue-apple-touch-icon.png' %}?v=3">
     <link rel="stylesheet" href="{% static 'posts/styles.css' %}?v=linkedin-font-1">
     <style>
         :root {
@@ -3496,8 +3498,8 @@
 
         .ott-provider-icon {
             align-items: center;
-            background: rgba(179, 106, 50, 0.12);
-            border: 1px solid rgba(126, 67, 30, 0.2);
+            background: #fff;
+            border: 1px solid rgba(126, 67, 30, 0.18);
             border-radius: 999px;
             color: var(--accent-dark);
             display: inline-flex;
@@ -3513,7 +3515,18 @@
         .ott-provider-icon img {
             display: block;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            padding: 3px;
+            width: 100%;
+        }
+
+        .ott-logo-fallback {
+            align-items: center;
+            background: rgba(179, 106, 50, 0.12);
+            border-radius: 999px;
+            display: inline-flex;
+            height: 100%;
+            justify-content: center;
             width: 100%;
         }
 
@@ -3523,7 +3536,7 @@
         .ott-zee5,
         .ott-sonyliv,
         .ott-apple {
-            background: rgba(179, 106, 50, 0.12);
+            background: #fff;
             color: var(--accent-dark);
         }
 

@@ -75,7 +75,12 @@
                             <div class="ott-provider-strip" aria-label="Available on OTT">
                                 {% for provider in ott_providers %}
                                     <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
-                                        <span>{{ provider.short }}</span>
+                                        {% if provider.logo_url %}
+                                            <img src="{{ provider.logo_url }}" alt="{{ provider.name }} logo" loading="lazy" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                                            <span class="ott-logo-fallback" hidden>{{ provider.short }}</span>
+                                        {% else %}
+                                            <span class="ott-logo-fallback">{{ provider.short }}</span>
+                                        {% endif %}
                                     </span>
                                 {% endfor %}
                             </div>
@@ -142,7 +147,12 @@
                                 <div class="ott-provider-strip" aria-label="Available on OTT">
                                     {% for provider in ott_providers %}
                                         <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
-                                            <span>{{ provider.short }}</span>
+                                            {% if provider.logo_url %}
+                                                <img src="{{ provider.logo_url }}" alt="{{ provider.name }} logo" loading="lazy" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                                                <span class="ott-logo-fallback" hidden>{{ provider.short }}</span>
+                                            {% else %}
+                                                <span class="ott-logo-fallback">{{ provider.short }}</span>
+                                            {% endif %}
                                         </span>
                                     {% endfor %}
                                 </div>

@@ -1142,6 +1142,24 @@ def _json_get(url: str, timeout: int = 4):
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_PROVIDER_LOGO_BASE = "https://image.tmdb.org/t/p/w92"
 
+OTT_LOGO_URLS = {
+    "netflix": "/static/posts/images/ott/netflix.svg",
+    "prime": "/static/posts/images/ott/prime-video.svg",
+    "hotstar": "/static/posts/images/ott/jiohotstar.svg",
+    "zee5": "/static/posts/images/ott/zee5.svg",
+    "sonyliv": "/static/posts/images/ott/sonyliv.svg",
+    "apple": "/static/posts/images/ott/apple-tv.svg",
+}
+
+OTT_DISPLAY_NAMES = {
+    "netflix": "Netflix",
+    "prime": "Prime Video",
+    "hotstar": "JioHotstar",
+    "zee5": "ZEE5",
+    "sonyliv": "Sony LIV",
+    "apple": "Apple TV+",
+}
+
 
 def _tmdb_api_key():
     return os.environ.get("TMDB_API_KEY", "").strip()
@@ -1286,11 +1304,16 @@ def _ott_provider_badge(name, logo_path=""):
         provider_class = "apple"
         short = "A"
 
+    logo_url = f"{TMDB_PROVIDER_LOGO_BASE}{logo_path}" if logo_path else ""
+    if provider_class in OTT_LOGO_URLS:
+        logo_url = OTT_LOGO_URLS[provider_class]
+        name = OTT_DISPLAY_NAMES.get(provider_class, name)
+
     return {
         "name": name,
         "short": short,
         "class": provider_class,
-        "logo_url": f"{TMDB_PROVIDER_LOGO_BASE}{logo_path}" if logo_path else "",
+        "logo_url": logo_url,
     }
 
 
