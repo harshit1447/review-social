@@ -2521,6 +2521,10 @@
             padding: 14px;
         }
 
+        .tidy-composer-panel {
+            gap: 8px;
+        }
+
         .tidy-composer-panel h2,
         .tidy-right-rail .card-title {
             font-size: 1rem;
@@ -2532,12 +2536,12 @@
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 4px;
         }
 
         .inline-review-form {
             display: grid;
-            gap: 12px;
+            gap: 9px;
         }
 
         .inline-review-form label {
@@ -2706,11 +2710,12 @@
         }
 
         .feed-quick-filters {
-            border-bottom: 1px solid rgba(126, 67, 30, 0.1);
+            align-items: center;
+            border-bottom: 0;
             flex-wrap: nowrap;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 10px;
+            padding-bottom: 0;
         }
 
         .feed-quick-filters .filter-link {
@@ -2719,6 +2724,15 @@
             min-height: 36px;
             padding: 7px 13px;
             white-space: nowrap;
+        }
+
+        .filter-separator {
+            align-self: center;
+            background: rgba(126, 67, 30, 0.16);
+            flex: 0 0 auto;
+            height: 24px;
+            margin: 0 4px;
+            width: 1px;
         }
 
         .tidy-feed-stack {

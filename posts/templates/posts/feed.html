@@ -116,11 +116,10 @@
                         <a class="filter-link {% if type_filter == 'movie' %}active{% endif %}" href="{% url 'feed' %}?type=movie{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Movies</a>
                         <a class="filter-link {% if type_filter == 'book' %}active{% endif %}" href="{% url 'feed' %}?type=book{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Books</a>
                         <a class="filter-link {% if type_filter == 'series' %}active{% endif %}" href="{% url 'feed' %}?type=series{% if friends_only %}&filter=friends{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">TV Shows</a>
-                    </div>
-
-                    <div class="filters">
+                        <span class="filter-separator" aria-hidden="true"></span>
                         <a class="filter-link {% if not friends_only %}active{% endif %}" href="{% url 'feed' %}?{% if type_filter %}type={{ type_filter }}&{% endif %}{% if sort != 'newest' %}sort={{ sort }}{% endif %}">Everyone</a>
                         <a class="filter-link {% if friends_only %}active{% endif %}" href="{% url 'feed' %}?filter=friends{% if type_filter %}&type={{ type_filter }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Friends</a>
+                        <span class="filter-separator" aria-hidden="true"></span>
                         <a class="filter-link {% if sort == 'newest' %}active{% endif %}" href="{% url 'feed' %}?{% if friends_only %}filter=friends&{% endif %}{% if type_filter %}type={{ type_filter }}&{% endif %}sort=newest">New</a>
                         <a class="filter-link {% if sort == 'top' %}active{% endif %}" href="{% url 'feed' %}?{% if friends_only %}filter=friends&{% endif %}{% if type_filter %}type={{ type_filter }}&{% endif %}sort=top">Top</a>
                     </div>
