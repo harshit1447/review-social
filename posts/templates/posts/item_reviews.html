@@ -74,7 +74,7 @@
                         {% if ott_providers %}
                             <div class="ott-provider-strip" aria-label="Available on OTT">
                                 {% for provider in ott_providers %}
-                                    {% if provider.logo_url %}
+                                    {% if provider.logo_url and provider.class != "generic" %}
                                         <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
                                             <img src="{{ provider.logo_url }}" alt="{{ provider.name }} logo" loading="lazy" onerror="this.closest('.ott-provider-icon').hidden=true;">
                                         </span>
@@ -143,7 +143,7 @@
                             {% if ott_providers %}
                                 <div class="ott-provider-strip" aria-label="Available on OTT">
                                     {% for provider in ott_providers %}
-                                        {% if provider.logo_url %}
+                                        {% if provider.logo_url and provider.class != "generic" %}
                                             <span class="ott-provider-icon ott-{{ provider.class }}" title="{{ provider.name }}" aria-label="{{ provider.name }}">
                                                 <img src="{{ provider.logo_url }}" alt="{{ provider.name }} logo" loading="lazy" onerror="this.closest('.ott-provider-icon').hidden=true;">
                                             </span>

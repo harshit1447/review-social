@@ -1365,7 +1365,7 @@ def _streaming_providers_for_item(item):
         return []
 
     tmdb_kind = "movie" if item_type == "movie" else "tv"
-    cache_key = f"tmdb_watch_providers:v1:{external_id}"
+    cache_key = f"tmdb_watch_providers:v2:{external_id}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
