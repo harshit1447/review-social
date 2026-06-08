@@ -5,6 +5,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Revue - Social reviews from people you trust</title>
+    <meta name="description" content="Find what to watch, read, or recommend next through people who share your taste. Discover movies, series, and books on Revue.">
+    <link rel="canonical" href="{{ seo_site_url }}/">
+    <meta property="og:site_name" content="Revue">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Revue - Find what to watch, read, or recommend next">
+    <meta property="og:description" content="Rate movies, series, and books. Follow people with similar taste. Get better recommendations.">
+    <meta property="og:url" content="{{ seo_site_url }}/">
+    <meta property="og:image" content="{{ seo_image }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Revue - Social reviews from people you trust">
+    <meta name="twitter:description" content="Discover movies, series, and books through people who share your taste.">
+    <meta name="twitter:image" content="{{ seo_image }}">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Revue",
+            "url": "{{ seo_site_url }}/",
+            "description": "A social review platform for movies, series, and books.",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "{{ seo_site_url }}/discover/?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    </script>
     <link rel="icon" href="{% static 'posts/images/revue-favicon.ico' %}?v=3" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'posts/images/revue-favicon-32.png' %}?v=3">
     <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}?v=3">

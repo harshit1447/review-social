@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path("", views.landing, name="landing"),
+    path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("sitemap.xml", views.sitemap_xml, name="sitemap_xml"),
     path("landing/suggest/", views.landing_suggest_items, name="landing_suggest_items"),
     path("api/health/", views.api_health, name="api_health"),
     path("api/feed/", views.api_feed, name="api_feed"),

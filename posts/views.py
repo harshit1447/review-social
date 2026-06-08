@@ -2,10 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Avg, Count, Q
 from django.core.paginator import Paginator
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
@@ -16,6 +17,7 @@ from urllib.request import Request, urlopen
 import json
 import os
 import re
+from xml.sax.saxutils import escape as xml_escape
 
 from .forms import CollectionForm, CommentForm, ProfileForm, RecommendationForm, ReviewEditForm, ReviewForm, SignUpForm
 from .models import (
@@ -37,6 +39,102 @@ from .models import (
     SavedReview,
 )
 from .quiz_data import get_daily_quiz
+
+
+def _public_site_url():
+    return getattr(settings, "PUBLIC_SITE_URL", "https://www.revue.social").rstrip("/")
+
+
+def _absolute_url(path):
+    return f"{_public_site_url()}{path}"
+
+
+def _item_meta_description(item, reviews_count=0):
+    item_type = item.get_item_type_display().lower()
+    if item.description:
+        base = item.description.strip()
+    else:
+        base = f"Read Revue reviews and recommendations for {item.title}."
+    base = re.sub(r"\s+", " ", base)
+    if len(base) > 155:
+        base = base[:152].rsplit(" ", 1)[0] + "..."
+    if reviews_count:
+        return f"{base} See {reviews_count} {item_type} review{'s' if reviews_count != 1 else ''} on Revue."
+    return base
+
+
+def robots_txt(request):
+    site_url = _public_site_url()
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /accounts/",
+        "Disallow: /api/",
+        f"Sitemap: {site_url}{reverse('sitemap_xml')}",
+        "",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
+def sitemap_xml(request):
+    site_url = _public_site_url()
+    static_routes = [
+        ("landing", 1.0, "daily"),
+        ("discover", 0.8, "daily"),
+        ("discover_media", 0.8, "daily"),
+        ("discover_books", 0.8, "daily"),
+        ("people", 0.7, "weekly"),
+        ("recommendations", 0.7, "weekly"),
+        ("movies", 0.7, "weekly"),
+        ("series", 0.7, "weekly"),
+        ("books", 0.7, "weekly"),
+    ]
+    rows = []
+    for route_name, priority, changefreq in static_routes:
+        try:
+            rows.append(
+                {
+                    "loc": f"{site_url}{reverse(route_name)}",
+                    "priority": f"{priority:.1f}",
+                    "changefreq": changefreq,
+                    "lastmod": timezone.localdate().isoformat(),
+                }
+            )
+        except Exception:
+            continue
+
+    for item in Item.objects.order_by("-created_at")[:500]:
+        rows.append(
+            {
+                "loc": f"{site_url}{reverse('item_reviews', args=[item.title])}",
+                "priority": "0.8",
+                "changefreq": "weekly",
+                "lastmod": item.created_at.date().isoformat(),
+            }
+        )
+
+    for user in User.objects.filter(is_active=True).order_by("-date_joined")[:500]:
+        rows.append(
+            {
+                "loc": f"{site_url}{reverse('user_profile', args=[user.username])}",
+                "priority": "0.6",
+                "changefreq": "weekly",
+                "lastmod": user.date_joined.date().isoformat(),
+            }
+        )
+
+    urlset = "\n".join(
+        "  <url>"
+        f"<loc>{xml_escape(row['loc'])}</loc>"
+        f"<lastmod>{row['lastmod']}</lastmod>"
+        f"<changefreq>{row['changefreq']}</changefreq>"
+        f"<priority>{row['priority']}</priority>"
+        "</url>"
+        for row in rows
+    )
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urlset}\n</urlset>\n'
+    return HttpResponse(xml, content_type="application/xml")
 
 
 def _cache_slug(value):
@@ -3271,6 +3369,8 @@ def item_reviews(request, item_title):
         )
         .order_by("-created_at")
     )
+    review_count = reviews.count()
+    average_rating = reviews.aggregate(avg=Avg("rating"))["avg"] if item.pk else None
     page_obj = Paginator(reviews, 12).get_page(request.GET.get("page"))
     page_reviews = list(page_obj.object_list)
     _attach_genres_to_reviews(page_reviews)
@@ -3321,6 +3421,36 @@ def item_reviews(request, item_title):
         ).select_related("user", "user__profile", "review").prefetch_related("replies", "likes")[:20]
     else:
         top_level_comments = Comment.objects.none()
+    item_url = _absolute_url(reverse("item_reviews", args=[item.title]))
+    item_image = item.image_url or f"{_public_site_url()}/static/posts/images/revue-favicon.png"
+    item_description = _item_meta_description(item, review_count)
+    schema_type = {
+        "movie": "Movie",
+        "series": "TVSeries",
+        "book": "Book",
+    }.get(item.item_type, "CreativeWork")
+    item_schema = {
+        "@context": "https://schema.org",
+        "@type": schema_type,
+        "name": item.title,
+        "url": item_url,
+        "description": item_description,
+    }
+    if item_image:
+        item_schema["image"] = item_image
+    if item.release_year:
+        item_schema["datePublished"] = str(item.release_year)
+    if item.creator_name:
+        creator_key = "author" if item.item_type == "book" else "director"
+        item_schema[creator_key] = {"@type": "Person", "name": item.creator_name}
+    if average_rating:
+        item_schema["aggregateRating"] = {
+            "@type": "AggregateRating",
+            "ratingValue": round(float(average_rating), 1),
+            "ratingCount": review_count,
+            "bestRating": 5,
+            "worstRating": 1,
+        }
     return render(
         request,
         "posts/item_reviews.html",
@@ -3344,6 +3474,12 @@ def item_reviews(request, item_title):
             "is_preview_item": is_preview_item,
             "preview_query": preview_query,
             "open_recommend_on_load": request.GET.get("open_recommend") == "1",
+            "review_count": review_count,
+            "seo_title_override": f"{item.title} reviews | Revue",
+            "seo_description_override": item_description,
+            "seo_canonical_override": item_url,
+            "seo_image_override": item_image,
+            "item_schema_json": json.dumps(item_schema).replace("</", "<\\/"),
         },
     )
 

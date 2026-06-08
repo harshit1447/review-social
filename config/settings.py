@@ -116,6 +116,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'posts.context_processors.auth_options',
+                'posts.context_processors.seo_defaults',
             ],
         },
     },
@@ -124,6 +125,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 SITE_ID = 1
+PUBLIC_SITE_URL = os.environ.get('PUBLIC_SITE_URL', 'https://www.revue.social').rstrip('/')
 
 AUTHENTICATION_BACKENDS = [
     'posts.auth_backends.EmailOrUsernameBackend',

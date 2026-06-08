@@ -4,7 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Review Social{% endblock %}</title>
+    <title>{% block title %}{{ seo_title }}{% endblock %}</title>
+    <meta name="description" content="{% block seo_description %}{{ seo_description }}{% endblock %}">
+    <link rel="canonical" href="{% block seo_canonical %}{{ seo_canonical }}{% endblock %}">
+    <meta property="og:site_name" content="{{ seo_site_name }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}{{ seo_title }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ seo_description }}{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ seo_canonical }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ seo_image }}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="{% static 'posts/images/revue-favicon.ico' %}?v=3" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'posts/images/revue-favicon-32.png' %}?v=3">
     <link rel="icon" type="image/png" sizes="512x512" href="{% static 'posts/images/revue-favicon.png' %}?v=3">

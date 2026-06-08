@@ -1,6 +1,19 @@
 {% extends "base_app.html" %}
 
-{% block title %}{{ item.title }} | Review Social{% endblock %}
+{% block title %}{{ seo_title_override }}{% endblock %}
+{% block seo_description %}{{ seo_description_override }}{% endblock %}
+{% block seo_canonical %}{{ seo_canonical_override }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ seo_title_override }}{% endblock %}
+{% block og_description %}{{ seo_description_override }}{% endblock %}
+{% block og_url %}{{ seo_canonical_override }}{% endblock %}
+{% block og_image %}{{ seo_image_override }}{% endblock %}
+{% block twitter_title %}{{ seo_title_override }}{% endblock %}
+{% block twitter_description %}{{ seo_description_override }}{% endblock %}
+{% block twitter_image %}{{ seo_image_override }}{% endblock %}
+{% block structured_data %}
+    <script type="application/ld+json">{{ item_schema_json|safe }}</script>
+{% endblock %}
 
 {% block content %}
     <div class="page item-detail-page">

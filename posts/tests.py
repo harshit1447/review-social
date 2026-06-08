@@ -70,6 +70,37 @@ class SocialReviewTests(TestCase):
         self.assertContains(response, "Available on OTT")
         self.assertContains(response, "JioHotstar")
 
+    def test_public_seo_endpoints_render(self):
+        Item.objects.create(title="The Social Network", item_type="movie", release_year="2010")
+
+        robots = self.client.get(reverse("robots_txt"))
+        sitemap = self.client.get(reverse("sitemap_xml"))
+
+        self.assertEqual(robots.status_code, 200)
+        self.assertContains(robots, "Sitemap: https://www.revue.social/sitemap.xml")
+        self.assertEqual(sitemap.status_code, 200)
+        self.assertContains(sitemap, "<urlset")
+        self.assertContains(sitemap, "/review/The%20Social%20Network/")
+
+    def test_item_page_has_share_metadata_and_schema(self):
+        item = Item.objects.create(
+            title="The Social Network",
+            item_type="movie",
+            release_year="2010",
+            creator_name="David Fincher",
+            description="A story about the founding of Facebook and the people behind it.",
+            image_url="https://example.com/social-network.jpg",
+        )
+        Review.objects.create(user=self.alex, item=item, rating=5, review_text="Sharp and rewatchable.")
+
+        response = self.client.get(reverse("item_reviews", args=[item.title]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<title>The Social Network reviews | Revue</title>", html=True)
+        self.assertContains(response, 'property="og:image" content="https://example.com/social-network.jpg"')
+        self.assertContains(response, 'type="application/ld+json"')
+        self.assertContains(response, '"@type": "Movie"')
+
     def test_daily_quiz_renders_and_scores(self):
         self.client.login(username="alex", password="pass")
         response = self.client.get(reverse("daily_quiz"))

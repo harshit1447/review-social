@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.templatetags.static import static
 from django.utils import timezone
 from django.urls import reverse
 
@@ -194,4 +195,23 @@ def auth_options(request):
         "login_notification_toasts": login_notification_toasts,
         "daily_quiz_prompt": daily_quiz_prompt,
         **social_counts,
+    }
+
+
+def seo_defaults(request):
+    site_url = getattr(settings, "PUBLIC_SITE_URL", "https://www.revue.social").rstrip("/")
+    path = getattr(request, "path", "/") or "/"
+    canonical = f"{site_url}{path}"
+    default_title = "Revue - Social reviews from people whose taste you trust"
+    default_description = (
+        "Discover movies, series, and books through reviews, recommendations, "
+        "and people who share your taste."
+    )
+    return {
+        "seo_site_name": "Revue",
+        "seo_site_url": site_url,
+        "seo_title": default_title,
+        "seo_description": default_description,
+        "seo_canonical": canonical,
+        "seo_image": f"{site_url}{static('posts/images/revue-favicon.png')}",
     }
