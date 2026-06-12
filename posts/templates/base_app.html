@@ -5774,6 +5774,730 @@
                 width: 74px;
             }
         }
+
+        /* Mobile polish pass: keep the existing Revue look, but prevent cramped/overlapping layouts. */
+        @media (max-width: 820px) {
+            :root {
+                --mobile-page-gutter: 14px;
+            }
+
+            html {
+                -webkit-text-size-adjust: 100%;
+            }
+
+            body {
+                font-size: 14px;
+                line-height: 1.42;
+            }
+
+            .app-shell-authenticated {
+                display: block !important;
+                height: auto !important;
+                min-height: 100svh;
+                overflow: visible !important;
+                width: 100% !important;
+                zoom: 1 !important;
+            }
+
+            .sidebar {
+                align-items: center !important;
+                display: flex !important;
+                height: 74px !important;
+                left: 0;
+                padding: 12px var(--mobile-page-gutter) !important;
+                position: sticky !important;
+                right: 0;
+                top: 0;
+                width: 100% !important;
+            }
+
+            .sidebar-header {
+                display: block !important;
+                flex: 0 0 auto;
+            }
+
+            .sidebar-brand {
+                font-size: 2.35rem !important;
+                line-height: 1 !important;
+            }
+
+            .sidebar-nav {
+                align-items: center;
+                display: flex !important;
+                gap: 0;
+                margin-left: auto !important;
+                padding: 0 !important;
+            }
+
+            .sidebar-nav > :not(.sidebar-profile-card),
+            .sidebar-footer {
+                display: none !important;
+            }
+
+            .sidebar-profile-card {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .sidebar-profile-top {
+                gap: 0 !important;
+            }
+
+            .sidebar-profile-card .avatar,
+            .sidebar-profile-card .profile-avatar,
+            .sidebar-profile-card .post-avatar {
+                height: 48px !important;
+                min-width: 48px !important;
+                width: 48px !important;
+            }
+
+            .main-content {
+                height: auto !important;
+                overflow: visible !important;
+                padding: 18px var(--mobile-page-gutter) calc(96px + env(safe-area-inset-bottom)) !important;
+            }
+
+            .page {
+                max-width: none !important;
+                width: 100%;
+            }
+
+            .page-header,
+            .feed-hero,
+            .compact-product-hero {
+                gap: 10px !important;
+                margin-bottom: 14px !important;
+                padding: 0 !important;
+            }
+
+            .page-header h1,
+            .page-header h2,
+            .feed-hero h1,
+            .compact-product-hero h1 {
+                font-size: clamp(2.15rem, 11vw, 3rem) !important;
+                letter-spacing: -0.055em;
+                line-height: 0.98 !important;
+            }
+
+            .page-subtitle,
+            .feed-hero p,
+            .compact-product-hero p,
+            .meta {
+                font-size: 0.94rem;
+                line-height: 1.45;
+            }
+
+            .social-layout,
+            .layout-grid,
+            .feed-layout-tidy,
+            .item-detail-layout,
+            .profile-detail-grid,
+            .notification-grid,
+            .two-column {
+                display: grid !important;
+                gap: 14px !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .social-center,
+            .feed-stack,
+            .tidy-feed-stack,
+            .profile-main-column,
+            .item-detail-main {
+                min-width: 0 !important;
+                width: 100%;
+            }
+
+            .right-rail,
+            .tidy-right-rail {
+                display: none !important;
+            }
+
+            .card,
+            .toolbar,
+            .form-card,
+            .profile-compact-card {
+                border-radius: 20px !important;
+                padding: 16px !important;
+            }
+
+            .daily-quiz-mobile-card {
+                display: grid !important;
+            }
+
+            .feed-composer-toggle,
+            .mobile-create {
+                bottom: calc(74px + env(safe-area-inset-bottom)) !important;
+                box-shadow: 0 16px 32px rgba(126, 67, 30, 0.22);
+                min-height: 48px !important;
+                padding: 0 20px !important;
+                position: fixed !important;
+                right: 14px !important;
+                width: auto !important;
+                z-index: 44;
+            }
+
+            .feed-composer-panel.is-collapsed {
+                display: none !important;
+            }
+
+            .composer-grid,
+            .inline-review-form,
+            .taste-search-row,
+            .search-row {
+                display: grid !important;
+                gap: 10px !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .inline-review-form input,
+            .inline-review-form select,
+            .inline-review-form textarea,
+            .form-card input,
+            .form-card select,
+            .form-card textarea,
+            .search-row input {
+                box-sizing: border-box;
+                font-size: 1rem !important;
+                min-height: 46px !important;
+                width: 100% !important;
+            }
+
+            .inline-review-form textarea,
+            .form-card textarea {
+                min-height: 118px !important;
+            }
+
+            .item-suggestions,
+            .discover-title-suggestions {
+                border-radius: 18px !important;
+                left: 0 !important;
+                max-height: min(56vh, 420px) !important;
+                overflow-y: auto !important;
+                right: 0 !important;
+                z-index: 80 !important;
+            }
+
+            .item-suggestion,
+            .discover-suggestion-row {
+                grid-template-columns: 52px minmax(0, 1fr) !important;
+                min-height: 72px;
+                text-align: left !important;
+            }
+
+            .item-suggestion img,
+            .discover-suggestion-row img {
+                height: 68px !important;
+                width: 52px !important;
+            }
+
+            .toolbar.tidy-toolbar {
+                padding: 10px !important;
+            }
+
+            .feed-quick-filters,
+            .toolbar .filters,
+            .product-tabs,
+            .genre-filter-strip,
+            .discover-dropdown-row {
+                align-items: center;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                gap: 8px !important;
+                margin-inline: -2px !important;
+                overflow-x: auto !important;
+                padding: 2px 2px 8px !important;
+                scrollbar-width: none;
+            }
+
+            .feed-quick-filters::-webkit-scrollbar,
+            .toolbar .filters::-webkit-scrollbar,
+            .product-tabs::-webkit-scrollbar,
+            .genre-filter-strip::-webkit-scrollbar,
+            .discover-dropdown-row::-webkit-scrollbar {
+                display: none;
+            }
+
+            .filter-link,
+            .button,
+            .form-actions button,
+            .inline-review-form button {
+                border-radius: 999px !important;
+                flex: 0 0 auto;
+                min-height: 40px !important;
+                padding: 9px 15px !important;
+                white-space: nowrap;
+            }
+
+            .filter-separator {
+                flex: 0 0 1px;
+                height: 30px;
+            }
+
+            .social-review-card,
+            .tidy-review-card,
+            .review-card {
+                display: grid !important;
+                gap: 12px !important;
+                overflow: hidden;
+                padding: 16px !important;
+            }
+
+            .social-review-card .post-header,
+            .tidy-review-card .post-header,
+            .post-header {
+                align-items: start !important;
+                display: grid !important;
+                gap: 10px !important;
+                grid-template-columns: 42px minmax(0, 1fr) auto !important;
+            }
+
+            .avatar,
+            .post-avatar,
+            .mini-avatar {
+                height: 42px !important;
+                min-width: 42px !important;
+                width: 42px !important;
+            }
+
+            .post-name-line {
+                align-items: baseline;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .social-review-card .post-item,
+            .tidy-review-card .post-item,
+            .post-item {
+                align-items: start !important;
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 92px minmax(0, 1fr) !important;
+            }
+
+            .social-review-card .review-poster,
+            .tidy-review-card .review-poster,
+            .review-poster,
+            .item-thumb,
+            .profile-review-poster {
+                aspect-ratio: 2 / 3 !important;
+                height: auto !important;
+                min-height: 0 !important;
+                width: 92px !important;
+            }
+
+            .review-copy {
+                min-height: 138px !important;
+            }
+
+            .item-title {
+                font-size: 1.05rem !important;
+                line-height: 1.16 !important;
+                word-break: normal;
+            }
+
+            .review-text {
+                font-size: 0.95rem !important;
+                line-height: 1.45 !important;
+            }
+
+            .external-ratings,
+            .review-social-stats,
+            .compact-actions {
+                flex-wrap: wrap !important;
+            }
+
+            .review-meta-actions {
+                align-items: end !important;
+                display: flex !important;
+                gap: 10px !important;
+                justify-content: space-between !important;
+                margin-top: 10px !important;
+            }
+
+            .compact-actions,
+            .item-action-buttons {
+                align-items: end !important;
+                display: inline-flex !important;
+                gap: 14px !important;
+                justify-content: flex-start !important;
+            }
+
+            .compact-actions .icon-button,
+            .item-action-buttons .icon-button {
+                height: 36px !important;
+                min-height: 36px !important;
+                min-width: 34px !important;
+                padding: 0 !important;
+                width: 36px !important;
+            }
+
+            .compact-actions .icon-button svg,
+            .item-action-buttons .icon-button svg {
+                height: 24px !important;
+                width: 24px !important;
+            }
+
+            .item-detail-page .item-hero {
+                align-items: stretch !important;
+                display: grid !important;
+                gap: 16px !important;
+                grid-template-columns: 1fr !important;
+                overflow: hidden !important;
+                padding: 16px !important;
+            }
+
+            .item-detail-page .item-hero-poster {
+                align-self: center !important;
+                grid-row: auto !important;
+                justify-self: center !important;
+                max-width: min(62vw, 210px) !important;
+                order: 0 !important;
+                width: min(62vw, 210px) !important;
+            }
+
+            .item-detail-page .item-hero-poster img {
+                aspect-ratio: 2 / 3 !important;
+                height: auto !important;
+                max-height: none !important;
+                object-fit: cover !important;
+                position: static !important;
+                width: 100% !important;
+            }
+
+            .item-detail-page .item-hero-copy {
+                display: grid !important;
+                gap: 11px !important;
+                min-width: 0;
+            }
+
+            .item-detail-page .item-hero-copy h1 {
+                font-size: clamp(2rem, 10vw, 2.8rem) !important;
+                line-height: 1.02 !important;
+            }
+
+            .item-detail-page .item-synopsis {
+                font-size: 0.98rem !important;
+                line-height: 1.48 !important;
+            }
+
+            .item-detail-page .item-facts {
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            .item-detail-page .item-facts > div {
+                min-width: 0;
+                padding-top: 9px !important;
+            }
+
+            .item-detail-page .item-facts dd {
+                font-size: 0.95rem !important;
+                line-height: 1.45 !important;
+            }
+
+            .item-hero-actions-row {
+                align-items: start !important;
+                display: grid !important;
+                gap: 14px !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .item-hero-actions-row .form-actions {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+            }
+
+            .item-action-buttons {
+                justify-content: flex-start !important;
+                margin-left: 0 !important;
+            }
+
+            .ott-provider-strip {
+                align-items: center;
+                display: inline-flex;
+                flex: 0 0 auto;
+                gap: 7px;
+            }
+
+            .item-review-stack,
+            .discussion-list {
+                display: grid;
+                gap: 14px;
+            }
+
+            .item-review-card,
+            .comment-card {
+                padding: 16px !important;
+            }
+
+            .item-review-header,
+            .comment-header {
+                display: grid !important;
+                gap: 10px !important;
+                grid-template-columns: 42px minmax(0, 1fr) auto !important;
+            }
+
+            .reply-form,
+            .comment-form {
+                display: grid;
+                gap: 10px;
+                grid-template-columns: 1fr !important;
+            }
+
+            .reply-form input,
+            .comment-form textarea {
+                width: 100%;
+            }
+
+            .profile-page .profile-hero,
+            .public-profile-page .profile-hero {
+                overflow: hidden !important;
+                padding: 0 !important;
+            }
+
+            .profile-page .profile-cover,
+            .public-profile-page .profile-cover {
+                border-radius: 16px 16px 0 0 !important;
+                height: 128px !important;
+                margin: 0 !important;
+            }
+
+            .profile-page .profile-info,
+            .public-profile-page .profile-info {
+                align-items: end !important;
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 102px minmax(0, 1fr) !important;
+                padding: 0 16px 18px !important;
+            }
+
+            .profile-page .profile-avatar,
+            .profile-page .profile-avatar.profile-photo-view-button,
+            .public-profile-page .profile-avatar,
+            .public-profile-page .profile-avatar.profile-photo-view-button {
+                border-radius: 50% !important;
+                font-size: 2.2rem !important;
+                height: 104px !important;
+                overflow: hidden !important;
+                width: 104px !important;
+            }
+
+            .profile-page .profile-avatar img,
+            .public-profile-page .profile-avatar img {
+                border-radius: 50% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                width: 100% !important;
+            }
+
+            .profile-page .profile-avatar-wrap {
+                margin-top: -52px !important;
+                min-width: 104px !important;
+                transform: none !important;
+            }
+
+            .public-profile-page .profile-info > .profile-avatar,
+            .public-profile-page .profile-info > .profile-photo-view-button {
+                margin-top: -52px !important;
+            }
+
+            .profile-copy {
+                align-self: center;
+                min-width: 0;
+                padding-top: 8px !important;
+            }
+
+            .profile-copy h1,
+            .profile-info h1 {
+                font-size: clamp(1.55rem, 7vw, 2.1rem) !important;
+                line-height: 1.05 !important;
+            }
+
+            .profile-page .profile-info .button,
+            .public-profile-page .profile-info form {
+                grid-column: 1 / -1 !important;
+                justify-self: start !important;
+            }
+
+            .stat-grid,
+            .public-profile-page .stat-grid {
+                display: grid !important;
+                gap: 10px !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            .stat-card {
+                border-radius: 16px !important;
+                min-height: 74px !important;
+                padding: 13px 14px !important;
+            }
+
+            .stat-value {
+                font-size: 1.35rem !important;
+            }
+
+            .profile-review-row {
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 82px minmax(0, 1fr) !important;
+            }
+
+            .profile-review-poster {
+                width: 82px !important;
+            }
+
+            .friends-header {
+                align-items: start !important;
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .friends-toolbar {
+                display: grid !important;
+                gap: 12px !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .friends-toolbar .search-row {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+            }
+
+            .person-row-card,
+            .people-card,
+            .people-match-card {
+                min-height: 0 !important;
+            }
+
+            .recommend-panel {
+                border-radius: 24px 24px 0 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                max-height: 86svh !important;
+                overflow: hidden !important;
+                right: 0 !important;
+                width: 100% !important;
+            }
+
+            .recommend-form {
+                display: grid !important;
+                grid-template-rows: auto minmax(160px, 1fr) auto auto !important;
+                max-height: calc(86svh - 78px) !important;
+                overflow: hidden !important;
+                padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+            }
+
+            .recommend-friend-list {
+                max-height: none !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                padding-right: 2px;
+            }
+
+            .recommend-friend {
+                min-height: 62px !important;
+            }
+
+            .discover-poster-rail,
+            .explore-title-board {
+                overflow: hidden !important;
+            }
+
+            .poster-rail-scroll,
+            .explore-title-grid {
+                overflow-x: auto !important;
+                padding-bottom: 8px !important;
+                scrollbar-width: none;
+            }
+
+            .poster-rail-scroll::-webkit-scrollbar,
+            .explore-title-grid::-webkit-scrollbar {
+                display: none;
+            }
+
+            .movie-genre-cards {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media (max-width: 520px) {
+            :root {
+                --mobile-page-gutter: 12px;
+            }
+
+            .main-content {
+                padding-top: 16px !important;
+            }
+
+            .card,
+            .toolbar,
+            .form-card,
+            .profile-compact-card {
+                padding: 14px !important;
+            }
+
+            .feed-hero h1,
+            .page-header h1,
+            .page-header h2 {
+                font-size: clamp(2rem, 12vw, 2.75rem) !important;
+            }
+
+            .social-review-card .post-item,
+            .tidy-review-card .post-item,
+            .post-item {
+                grid-template-columns: 86px minmax(0, 1fr) !important;
+            }
+
+            .social-review-card .review-poster,
+            .tidy-review-card .review-poster,
+            .review-poster,
+            .item-thumb {
+                width: 86px !important;
+            }
+
+            .review-copy {
+                min-height: 129px !important;
+            }
+
+            .item-detail-page .item-facts,
+            .stat-grid,
+            .public-profile-page .stat-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            .profile-page .profile-info,
+            .public-profile-page .profile-info {
+                grid-template-columns: 96px minmax(0, 1fr) !important;
+            }
+
+            .profile-page .profile-avatar,
+            .profile-page .profile-avatar.profile-photo-view-button,
+            .public-profile-page .profile-avatar,
+            .public-profile-page .profile-avatar.profile-photo-view-button {
+                height: 96px !important;
+                width: 96px !important;
+            }
+
+            .profile-page .profile-avatar-wrap,
+            .public-profile-page .profile-info > .profile-avatar,
+            .public-profile-page .profile-info > .profile-photo-view-button {
+                margin-top: -48px !important;
+            }
+
+            .friends-toolbar .search-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            .friends-toolbar .search-row button {
+                justify-self: start;
+            }
+        }
     </style>
 </head>
 <body>
