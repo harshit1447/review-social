@@ -14,8 +14,8 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next_url }}">
                 <div class="field">
-                    <label for="{{ form.rating.id_for_label }}">Rating</label>
-                    {{ form.rating }}
+                    <label for="{{ form.rating.id_for_label }}">Stars</label>
+                    {% include "posts/partials/star_input.html" with field=form.rating %}
                     {{ form.rating.errors }}
                 </div>
                 <div class="field">

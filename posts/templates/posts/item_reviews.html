@@ -210,7 +210,7 @@
                             </div>
                             <div class="post-meta">{{ review.created_at|date:"M j, Y" }}</div>
                         </div>
-                        <span class="rating">{{ review.rating }}/5</span>
+                        <span class="rating star-rating-badge">{% include "posts/partials/stars.html" with rating=review.rating %}</span>
                     </header>
                     <p class="review-text">{{ review.review_text }}</p>
                     <div class="review-social-stats" aria-label="Review reactions">
@@ -353,7 +353,7 @@
                         {% for review in popular_reviews %}
                             <a class="rail-item" href="{% url 'item_reviews' review.item.title %}">
                                 <strong>{{ review.item.title }}</strong>
-                                <div class="meta">{{ review.rating }}/5 by {{ review.user.get_full_name|default:review.user.username }}</div>
+                                <div class="meta">{% include "posts/partials/stars.html" with rating=review.rating %} by {{ review.user.get_full_name|default:review.user.username }}</div>
                             </a>
                         {% empty %}
                             <p class="empty-state">Trending appears when reviews arrive.</p>

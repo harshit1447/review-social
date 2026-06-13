@@ -84,7 +84,7 @@ class ReviewForm(forms.Form):
     rating = forms.IntegerField(
         min_value=1,
         max_value=5,
-        widget=forms.NumberInput(attrs={"placeholder": "out of 5"}),
+        widget=forms.NumberInput(attrs={"placeholder": "Choose stars"}),
     )
     review_text = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}))
 
@@ -123,6 +123,7 @@ class ReviewEditForm(forms.ModelForm):
         model = Review
         fields = ["rating", "review_text"]
         widgets = {
+            "rating": forms.NumberInput(attrs={"placeholder": "Choose stars"}),
             "review_text": forms.Textarea(attrs={"rows": 4}),
         }
 

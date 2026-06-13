@@ -10,7 +10,8 @@
         <div class="profile-info">
             {% if viewed_user.profile.profile_photo %}
                 <button class="profile-avatar profile-photo-view-button" type="button" data-profile-photo-src="{{ viewed_user.profile.profile_photo.url }}" data-profile-photo-name="{{ viewed_user.get_full_name|default:viewed_user.username }}" aria-label="View {{ viewed_user.get_full_name|default:viewed_user.username }} profile photo">
-                    <img src="{{ viewed_user.profile.profile_photo.url }}" alt="">
+                    <span class="avatar-fallback-letter">{{ viewed_user.get_full_name|default:viewed_user.username|first }}</span>
+                    <img src="{{ viewed_user.profile.profile_photo.url }}" alt="" onerror="this.hidden=true;">
                 </button>
             {% else %}
                 <span class="profile-avatar">

@@ -3262,10 +3262,20 @@ def profile(request):
     recommendation_count = Recommendation.objects.filter(to_user=request.user).count()
     recent_reviews = list(Review.objects.filter(
         user=request.user
-    ).select_related("user", "user__profile", "item").order_by("-created_at")[:5])
+    ).select_related("user", "user__profile", "item").order_by("-created_at")[:20])
     _attach_genres_to_reviews(recent_reviews)
-    _hydrate_review_card_counts(recent_reviews)
-    review_card_context = _review_card_action_context(request.user, recent_reviews)
+    liked_items = SavedItem.objects.filter(
+        user=request.user, list_type="favorites"
+    ).select_related("item").order_by("-created_at")[:20]
+    liked_reviews = list(
+        ReviewLike.objects.filter(user=request.user)
+        .select_related("review", "review__user", "review__user__profile", "review__item")
+        .order_by("-created_at")[:20]
+    )
+    liked_review_objects = [row.review for row in liked_reviews]
+    _attach_genres_to_reviews(liked_review_objects)
+    _hydrate_review_card_counts(recent_reviews + liked_review_objects)
+    review_card_context = _review_card_action_context(request.user, recent_reviews + liked_review_objects)
     top_rated_reviews = Review.objects.filter(
         user=request.user
     ).select_related("item").order_by("-rating", "-created_at")[:5]
@@ -3299,9 +3309,11 @@ def profile(request):
             "top_types": top_types,
             "watchlist_items": watchlist_items,
             "readlist_items": readlist_items,
+            "liked_items": liked_items,
+            "liked_reviews": liked_reviews,
             "profile_form": form,
-            "collections": Collection.objects.filter(user=request.user)[:5],
-            "saved_reviews": SavedReview.objects.filter(user=request.user).select_related("review", "review__item")[:5],
+            "collections": Collection.objects.filter(user=request.user).prefetch_related("items")[:20],
+            "saved_reviews": SavedReview.objects.filter(user=request.user).select_related("review", "review__item", "review__user", "review__user__profile")[:20],
             **review_card_context,
         },
     )

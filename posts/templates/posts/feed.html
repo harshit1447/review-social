@@ -102,8 +102,8 @@
                                 <p id="item-suggestion-message" class="meta suggestion-message"></p>
                                 <div id="item-suggestions" class="item-suggestions" hidden></div>
                             </div>
-                            <label for="{{ review_form.rating.id_for_label }}">Rating
-                                {{ review_form.rating }}
+                            <label for="{{ review_form.rating.id_for_label }}">Stars
+                                {% include "posts/partials/star_input.html" with field=review_form.rating %}
                             </label>
                         </div>
 
@@ -220,7 +220,7 @@
                         {% for review in reviews|slice:":4" %}
                             <a class="rail-item" href="{% url 'item_reviews' review.item.title %}">
                                 <strong>{{ review.item.title }}</strong>
-                                <div class="meta">{{ review.rating }}/5 by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></div>
+                                <div class="meta">{% include "posts/partials/stars.html" with rating=review.rating %} by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></div>
                             </a>
                         {% empty %}
                             <p class="empty-state">Trending appears when reviews arrive.</p>

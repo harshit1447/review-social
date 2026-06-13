@@ -23,7 +23,7 @@
             </div>
             <div class="post-meta">posted on {{ review.created_at|date:"j F Y"|lower }}</div>
         </div>
-        <span class="rating">{{ review.rating }}/5</span>
+        <span class="rating star-rating-badge">{% include "posts/partials/stars.html" with rating=review.rating %}</span>
     </header>
 
     <div class="post-item">

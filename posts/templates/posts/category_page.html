@@ -38,7 +38,7 @@
                                     <span class="item-type-inline">{{ review.item.get_item_type_display }}</span>
                                     {% if review.inferred_genre_label %}<span class="item-type-inline genre-inline">{{ review.inferred_genre_label }}</span>{% endif %}
                                 </div>
-                                <p class="meta">{{ review.rating }}/5 by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></p>
+                                <p class="meta">{% include "posts/partials/stars.html" with rating=review.rating %} by <a class="inline-link" href="{% url 'user_profile' review.user.username %}">{{ review.user.get_full_name|default:review.user.username }}</a></p>
                                 <p class="review-text">{{ review.review_text|truncatechars:150 }}</p>
                             </div>
                         </article>
@@ -60,7 +60,7 @@
                     {% for item in top_rated %}
                         <a class="rail-item" href="{% url 'item_reviews' item.title %}">
                             <strong>{{ item.title }}</strong>
-                            <div class="meta">{{ item.average_rating|floatformat:1 }}/5 · {{ item.review_total }} review{{ item.review_total|pluralize }}</div>
+                            <div class="meta">{% include "posts/partials/stars.html" with rating=item.average_rating %} · {{ item.review_total }} review{{ item.review_total|pluralize }}</div>
                         </a>
                     {% empty %}
                         <p class="empty-state">Top rated titles will appear here.</p>
