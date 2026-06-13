@@ -229,13 +229,13 @@
                                 <span class="review-stat-count">{{ review.review_like_total|default:0 }}</span>
                             </a>
                         {% endif %}
-                        <a class="review-stat-button" href="#review-comment-{{ review.id }}" aria-label="Reply to review" title="Reply">
+                        <button class="review-stat-button js-toggle-review-comment" type="button" data-target="review-comment-{{ review.id }}" aria-expanded="false" aria-controls="review-comment-{{ review.id }}" aria-label="Reply to this review" title="Reply">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-5 3 1.5-5A7.5 7.5 0 1 1 21 11.5Z"/></svg>
                             <span class="review-stat-count">{{ review.comment_total|default:0 }}</span>
-                        </a>
+                        </button>
                     </div>
                     {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'add_comment' review.id %}" class="inline-comment-form" id="review-comment-{{ review.id }}">
+                        <form method="post" action="{% url 'add_comment' review.id %}" class="inline-comment-form is-collapsed" id="review-comment-{{ review.id }}">
                             {% csrf_token %}
                             {{ comment_form.body }}
                             <div class="form-actions">
@@ -243,7 +243,7 @@
                             </div>
                         </form>
                     {% else %}
-                        <div class="inline-comment-form public-comment-prompt" id="review-comment-{{ review.id }}">
+                        <div class="inline-comment-form public-comment-prompt is-collapsed" id="review-comment-{{ review.id }}">
                             <p class="meta">Log in to join the discussion.</p>
                             <div class="form-actions">
                                 <a class="button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">Log in</a>

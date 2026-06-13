@@ -137,14 +137,6 @@
                                     <p class="meta">No readlist items yet.</p>
                                 {% endfor %}
                             </div>
-                            <div class="recommendation">
-                                <strong>Saved reviews</strong>
-                                {% for saved in saved_reviews %}
-                                    <p class="meta"><a href="{% url 'item_reviews' saved.review.item.title %}">{{ saved.review.item.title }}</a></p>
-                                {% empty %}
-                                    <p class="meta">No saved reviews yet.</p>
-                                {% endfor %}
-                            </div>
                         </div>
                     </div>
 

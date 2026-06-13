@@ -102,7 +102,7 @@
                                 <p id="item-suggestion-message" class="meta suggestion-message"></p>
                                 <div id="item-suggestions" class="item-suggestions" hidden></div>
                             </div>
-                            <label for="{{ review_form.rating.id_for_label }}">Stars
+                            <label class="star-field" for="{{ review_form.rating.id_for_label }}">Stars
                                 {% include "posts/partials/star_input.html" with field=review_form.rating %}
                             </label>
                         </div>

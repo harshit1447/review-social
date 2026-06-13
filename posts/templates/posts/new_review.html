@@ -38,7 +38,7 @@
                     {% endif %}
                 </div>
                 <div class="field">
-                    <label for="{{ form.rating.id_for_label }}">Stars</label>
+                    <label class="star-field" for="{{ form.rating.id_for_label }}">Stars</label>
                     {% include "posts/partials/star_input.html" with field=form.rating %}
                 </div>
                 <div class="field">

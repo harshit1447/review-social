@@ -2703,11 +2703,49 @@
         .composer-grid {
             display: grid;
             gap: 10px;
-            grid-template-columns: 118px minmax(0, 1fr) 94px;
+            grid-template-columns: 118px minmax(0, 1fr) 150px;
         }
 
         .composer-grid label {
             position: relative;
+        }
+
+        .composer-grid .star-field {
+            min-width: 140px;
+        }
+
+        .inline-review-form .star-input {
+            align-items: center;
+            display: inline-flex;
+            gap: 2px;
+            justify-content: flex-start;
+            min-height: 36px;
+            overflow: visible;
+            white-space: nowrap;
+        }
+
+        .inline-review-form .star-input-button,
+        .form-card .star-input-button {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            color: rgba(126, 67, 30, 0.28);
+            flex: 0 0 auto;
+            font-size: 1.3rem;
+            height: auto;
+            line-height: 1;
+            min-height: 0;
+            min-width: 0;
+            padding: 0 1px;
+            width: auto;
+        }
+
+        .inline-review-form .star-input-button.filled,
+        .inline-review-form .star-input-button.preview,
+        .form-card .star-input-button.filled,
+        .form-card .star-input-button.preview {
+            background: transparent;
+            color: var(--accent);
         }
 
         .composer-title-field {
@@ -3693,6 +3731,10 @@
             padding: 10px;
         }
 
+        .inline-comment-form.is-collapsed {
+            display: none;
+        }
+
         .inline-comment-form textarea {
             background: rgba(255, 255, 255, 0.86);
             border: 1px solid rgba(112, 103, 94, 0.22);
@@ -4537,7 +4579,7 @@
         }
 
         .composer-grid {
-            grid-template-columns: 112px minmax(0, 1fr) 88px;
+            grid-template-columns: 112px minmax(0, 1fr) 150px;
         }
 
         .social-review-card,
@@ -6622,6 +6664,26 @@
             text-transform: uppercase;
             z-index: 1;
         }
+
+        .inline-review-form .star-input-button,
+        .form-card .star-input-button {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            color: rgba(126, 67, 30, 0.28) !important;
+            font-size: 1.3rem !important;
+            height: auto !important;
+            line-height: 1 !important;
+            min-height: 0 !important;
+            padding: 0 1px !important;
+        }
+
+        .inline-review-form .star-input-button.filled,
+        .inline-review-form .star-input-button.preview,
+        .form-card .star-input-button.filled,
+        .form-card .star-input-button.preview {
+            color: var(--accent) !important;
+        }
     </style>
 </head>
 <body>
@@ -6970,7 +7032,43 @@
                 if (recommendForm) recommendForm.reset();
             }
 
+            function openReviewCommentForm(targetId, trigger) {
+                var panel = targetId ? document.getElementById(targetId) : null;
+                if (!panel) return;
+                var willOpen = panel.classList.contains("is-collapsed");
+                panel.classList.toggle("is-collapsed", !willOpen);
+                if (trigger) trigger.setAttribute("aria-expanded", String(willOpen));
+                if (willOpen) {
+                    var field = panel.querySelector("textarea, input");
+                    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    if (field) {
+                        window.setTimeout(function () {
+                            field.focus();
+                        }, 180);
+                    }
+                }
+            }
+
+            document.querySelectorAll(".inline-comment-form").forEach(function (panel) {
+                if (!panel.id) return;
+                var trigger = document.querySelector('.js-toggle-review-comment[data-target="' + panel.id + '"]');
+                if (trigger) trigger.setAttribute("aria-expanded", String(!panel.classList.contains("is-collapsed")));
+            });
+
+            if (window.location.hash && window.location.hash.indexOf("#review-comment-") === 0) {
+                var hashTarget = window.location.hash.slice(1);
+                var hashTrigger = document.querySelector('.js-toggle-review-comment[data-target="' + hashTarget + '"]');
+                openReviewCommentForm(hashTarget, hashTrigger);
+            }
+
             document.addEventListener("click", function (event) {
+                var commentTrigger = event.target.closest(".js-toggle-review-comment");
+                if (commentTrigger) {
+                    event.preventDefault();
+                    openReviewCommentForm(commentTrigger.getAttribute("data-target"), commentTrigger);
+                    return;
+                }
+
                 var trigger = event.target.closest(".js-open-recommend");
                 if (trigger) {
                     event.preventDefault();

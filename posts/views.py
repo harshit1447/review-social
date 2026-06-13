@@ -321,6 +321,57 @@ def _notify(recipient, actor, notification_type, message, review=None, comment=N
     )
 
 
+def _decorate_notification_links(rows, actor_attr="actor"):
+    rows = list(rows)
+    unlinked_rows = [row for row in rows if not getattr(row, "review_id", None)]
+    items = []
+    if unlinked_rows:
+        items = sorted(
+            Item.objects.only("title"),
+            key=lambda item: len(item.title or ""),
+            reverse=True,
+        )
+
+    for row in rows:
+        row.linked_item_title = ""
+        row.linked_item_url = ""
+        row.linked_message_prefix = ""
+        row.linked_message_suffix = ""
+
+        review = getattr(row, "review", None)
+        if review:
+            row.linked_item_title = review.item.title
+            row.linked_item_url = f"{reverse('item_reviews', kwargs={'item_title': review.item.title})}#review-{review.id}"
+            if getattr(row, "activity_type", "") == Activity.REVIEW_POSTED:
+                row.linked_message_prefix = "reviewed "
+            elif getattr(row, "activity_type", "") == Activity.REVIEW_LIKED:
+                row.linked_message_prefix = "liked a review of "
+            elif getattr(row, "activity_type", "") == Activity.COMMENTED:
+                row.linked_message_prefix = "commented on "
+            continue
+
+        message = (getattr(row, "message", "") or "").strip()
+        actor = getattr(row, actor_attr, None)
+        actor_name = _display_name(actor) if actor else ""
+        if actor_name and message.casefold().startswith(actor_name.casefold()):
+            message = message[len(actor_name):].lstrip()
+
+        message_folded = message.casefold()
+        for item in items:
+            title = item.title or ""
+            index = message_folded.find(title.casefold())
+            if title and index >= 0:
+                row.linked_item_title = title
+                row.linked_item_url = reverse("item_reviews", kwargs={"item_title": title})
+                row.linked_message_prefix = message[:index]
+                row.linked_message_suffix = message[index + len(title):]
+                break
+        else:
+            row.linked_message_prefix = message
+
+    return rows
+
+
 def landing(request):
     if request.user.is_authenticated:
         return redirect("feed")
@@ -3795,11 +3846,13 @@ def notifications(request):
             Activity.RECOMMENDED,
         ],
     ).select_related("user", "user__profile", "review", "review__item", "target_user").order_by("-created_at")[:20]
+    notification_rows = _decorate_notification_links(page_obj.object_list, actor_attr="actor")
+    friend_activity = _decorate_notification_links(friend_activity, actor_attr="user")
     return render(
         request,
         "posts/notifications.html",
         {
-            "notifications": page_obj.object_list,
+            "notifications": notification_rows,
             "page_obj": page_obj,
             "friend_activity": friend_activity,
         },
