@@ -12,7 +12,7 @@
         {% for person in people %}
             <article class="person-card">
                 <div class="person-card-top">
-                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                     <div>
                         <strong><a href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                         <div class="meta">@{{ person.username }}</div>

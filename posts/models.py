@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.functional import cached_property
 
 
 class Item(models.Model):
@@ -176,6 +177,22 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+    @cached_property
+    def profile_photo_is_available(self):
+        return self._stored_file_is_available(self.profile_photo)
+
+    @cached_property
+    def cover_image_is_available(self):
+        return self._stored_file_is_available(self.cover_image)
+
+    def _stored_file_is_available(self, field_file):
+        if not field_file or not field_file.name:
+            return False
+        try:
+            return field_file.storage.exists(field_file.name)
+        except Exception:
+            return False
 
 
 class Follow(models.Model):

@@ -150,6 +150,10 @@
                                 <span class="sr-only">Recommend</span>
                             </button>
                         {% endif %}
+                        <button type="button" class="icon-button share-button js-share-item" data-share-url="{% if is_preview_item %}{{ request.get_full_path }}{% else %}{% url 'item_reviews' item.title %}{% endif %}" data-share-title="{{ item.title }}" aria-label="Share {{ item.title }}" title="Share">
+                            {% include "posts/partials/share_icon.html" %}
+                            <span class="sr-only">Share</span>
+                        </button>
                         {% else %}
                             {% if ott_providers %}
                                 <div class="ott-provider-strip" aria-label="Available on OTT">
@@ -170,6 +174,10 @@
                             <a class="icon-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to recommend" title="Log in to recommend">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
                             </a>
+                            <button type="button" class="icon-button share-button js-share-item" data-share-url="{% if is_preview_item %}{{ request.get_full_path }}{% else %}{% url 'item_reviews' item.title %}{% endif %}" data-share-title="{{ item.title }}" aria-label="Share {{ item.title }}" title="Share">
+                                {% include "posts/partials/share_icon.html" %}
+                                <span class="sr-only">Share</span>
+                            </button>
                         {% endif %}
                     </div>
                 </div>
@@ -188,7 +196,7 @@
                 <article class="card item-review-card" id="review-{{ review.id }}">
                     <header class="item-review-header">
                         <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
-                            {% if review.user.profile.profile_photo %}
+                            {% if review.user.profile.profile_photo_is_available %}
                                 <img src="{{ review.user.profile.profile_photo.url }}" alt="">
                             {% else %}
                                 {{ review.user.get_full_name|default:review.user.username|first }}
@@ -280,7 +288,7 @@
                     <article class="comment-card">
                         <header class="comment-header">
                             <a class="mini-avatar profile-link" href="{% url 'user_profile' comment.user.username %}" aria-label="{{ comment.user.get_full_name|default:comment.user.username }} profile">
-                                {% if comment.user.profile.profile_photo %}
+                                {% if comment.user.profile.profile_photo_is_available %}
                                     <img src="{{ comment.user.profile.profile_photo.url }}" alt="">
                                 {% else %}
                                     {{ comment.user.get_full_name|default:comment.user.username|first }}
@@ -368,7 +376,7 @@
                             <div class="person-row">
                                 <div class="person-name">
                                     <a class="avatar profile-link" href="{% url 'user_profile' suggested_user.username %}" aria-label="{{ suggested_user.get_full_name|default:suggested_user.username }} profile">
-                                        {% if suggested_user.profile.profile_photo %}
+                                        {% if suggested_user.profile.profile_photo_is_available %}
                                             <img src="{{ suggested_user.profile.profile_photo.url }}" alt="">
                                         {% else %}
                                             {{ suggested_user.get_full_name|default:suggested_user.username|first }}

@@ -1,7 +1,7 @@
 <article class="card social-review-card review-card tidy-review-card">
     <header class="post-header">
         <a class="post-avatar profile-link" href="{% url 'user_profile' review.user.username %}" aria-label="{{ review.user.get_full_name|default:review.user.username }} profile">
-            {% if review.user.profile.profile_photo %}
+            {% if review.user.profile.profile_photo_is_available %}
                 <img src="{{ review.user.profile.profile_photo.url }}" alt="">
             {% else %}
                 {{ review.user.get_full_name|default:review.user.username|first }}
@@ -97,6 +97,10 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-6 6v-4.1c-4.8.2-7.8 1.9-10 5.1.7-5.2 3.7-9.4 10-10V4Z"/></svg>
                             <span class="sr-only">Recommend</span>
                         </button>
+                        <button type="button" class="icon-button share-button js-share-item" data-share-url="{% url 'item_reviews' review.item.title %}" data-share-title="{{ review.item.title }}" aria-label="Share {{ review.item.title }}" title="Share">
+                            {% include "posts/partials/share_icon.html" %}
+                            <span class="sr-only">Share</span>
+                        </button>
                     {% else %}
                         <a class="icon-button item-like-button has-count" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to like" title="Log in to like">
                             <span class="icon-count">{{ review.likes_total|default:0 }}</span>
@@ -105,6 +109,10 @@
                         <a class="icon-button" href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Log in to save" title="Log in to save">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Zm1.8 2v12.9L12 15.5l4.2 2.4V5H7.8Z"/></svg>
                         </a>
+                        <button type="button" class="icon-button share-button js-share-item" data-share-url="{% url 'item_reviews' review.item.title %}" data-share-title="{{ review.item.title }}" aria-label="Share {{ review.item.title }}" title="Share">
+                            {% include "posts/partials/share_icon.html" %}
+                            <span class="sr-only">Share</span>
+                        </button>
                     {% endif %}
                 </div>
             </div>

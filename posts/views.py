@@ -388,7 +388,7 @@ def _api_absolute_url(request, value):
 
 def _api_profile_photo_url(request, user):
     profile = getattr(user, "profile", None)
-    if not profile or not profile.profile_photo:
+    if not profile or not profile.profile_photo_is_available:
         return ""
     try:
         return request.build_absolute_uri(profile.profile_photo.url)

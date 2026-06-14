@@ -3672,6 +3672,19 @@
             transform: translateX(1px);
         }
 
+        .share-button .share-icon {
+            fill: none;
+        }
+
+        .share-button .share-icon path,
+        .share-button .share-icon circle {
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2;
+        }
+
         .item-hero-actions-row .button {
             min-height: 38px;
             padding: 8px 14px;
@@ -6697,7 +6710,7 @@
                 {% if user.is_authenticated %}
                 <section class="sidebar-profile-card">
                     <div class="sidebar-profile-top">
-                        {% if request.user.profile.profile_photo %}
+                        {% if request.user.profile.profile_photo_is_available %}
                             <button class="avatar profile-photo-view-button" type="button" data-profile-photo-src="{{ request.user.profile.profile_photo.url }}" data-profile-photo-name="{{ request.user.get_full_name|default:request.user.username }}" aria-label="View {{ request.user.get_full_name|default:request.user.username }} profile photo">
                                 <span class="avatar-fallback-letter">{{ request.user.get_full_name|default:request.user.username|first }}</span>
                                 <img src="{{ request.user.profile.profile_photo.url }}" alt="" onerror="this.hidden=true;">
@@ -6811,7 +6824,7 @@
                         <label class="recommend-friend" data-friend-name="{{ friend.get_full_name|default:friend.username|lower }} {{ friend.username|lower }}">
                             <input type="checkbox" name="to_user" value="{{ friend.id }}">
                             <a class="avatar profile-link" href="{% url 'user_profile' friend.username %}">
-                                {% if friend.profile.profile_photo %}
+                                {% if friend.profile.profile_photo_is_available %}
                                     <img src="{{ friend.profile.profile_photo.url }}" alt="">
                                 {% else %}
                                     {{ friend.get_full_name|default:friend.username|first }}
@@ -6868,6 +6881,43 @@
                 window.setTimeout(function () {
                     toast.remove();
                 }, 2600);
+            }
+
+            function copyTextToClipboard(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+                var textarea = document.createElement("textarea");
+                textarea.value = text;
+                textarea.setAttribute("readonly", "");
+                textarea.style.position = "fixed";
+                textarea.style.left = "-9999px";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                textarea.remove();
+                return Promise.resolve();
+            }
+
+            function shareItem(trigger) {
+                var relativeUrl = trigger.getAttribute("data-share-url") || window.location.pathname;
+                var absoluteUrl = new URL(relativeUrl, window.location.origin).href;
+                var title = trigger.getAttribute("data-share-title") || document.title || "Revue";
+                var text = "See " + title + " on Revue";
+
+                if (navigator.share) {
+                    navigator.share({ title: title, text: text, url: absoluteUrl }).catch(function (error) {
+                        if (!error || error.name === "AbortError") return;
+                        copyTextToClipboard(absoluteUrl).then(function () {
+                            showToast("Link copied");
+                        });
+                    });
+                    return;
+                }
+
+                copyTextToClipboard(absoluteUrl).then(function () {
+                    showToast("Link copied");
+                });
             }
 
             function showNotificationToast(row, index) {
@@ -7066,6 +7116,13 @@
                 if (commentTrigger) {
                     event.preventDefault();
                     openReviewCommentForm(commentTrigger.getAttribute("data-target"), commentTrigger);
+                    return;
+                }
+
+                var shareTrigger = event.target.closest(".js-share-item");
+                if (shareTrigger) {
+                    event.preventDefault();
+                    shareItem(shareTrigger);
                     return;
                 }
 

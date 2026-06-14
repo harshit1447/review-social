@@ -235,7 +235,7 @@
                             <div class="person-row">
                                 <div class="person-name">
                                     <a class="avatar profile-link" href="{% url 'user_profile' suggested_user.username %}" aria-label="{{ suggested_user.get_full_name|default:suggested_user.username }} profile">
-                                        {% if suggested_user.profile.profile_photo %}
+                                        {% if suggested_user.profile.profile_photo_is_available %}
                                             <img src="{{ suggested_user.profile.profile_photo.url }}" alt="">
                                         {% else %}
                                             {{ suggested_user.get_full_name|default:suggested_user.username|first }}

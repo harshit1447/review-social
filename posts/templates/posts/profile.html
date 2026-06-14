@@ -7,7 +7,7 @@
 {% block content %}
     <div class="page profile-page">
         <section class="card profile-hero">
-            <div class="profile-cover" {% if user.profile.cover_image %}style="background-image:url('{{ user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}>
+            <div class="profile-cover" {% if user.profile.cover_image_is_available %}style="background-image:url('{{ user.profile.cover_image.url }}'); background-size:cover; background-position:center;"{% endif %}>
                 <button class="image-edit-trigger cover-edit-trigger js-cover-edit" type="button" title="Change cover image" aria-label="Change cover image">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 20h9" />
@@ -17,7 +17,7 @@
             </div>
             <div class="profile-info">
                 <span class="profile-avatar-wrap">
-                    {% if user.profile.profile_photo %}
+                    {% if user.profile.profile_photo_is_available %}
                         <button class="profile-avatar profile-photo-view-button" type="button" data-profile-photo-src="{{ user.profile.profile_photo.url }}" data-profile-photo-name="{{ user.get_full_name|default:user.username }}" aria-label="View {{ user.get_full_name|default:user.username }} profile photo">
                             <span class="avatar-fallback-letter">{{ user.get_full_name|default:user.username|first }}</span>
                             <img src="{{ user.profile.profile_photo.url }}" alt="" onerror="this.hidden=true;">
@@ -262,7 +262,7 @@
                 </label>
                 <div class="profile-photo-actions">
                     <button type="button" class="secondary js-photo-pick">Choose photo</button>
-                    {% if user.profile.profile_photo %}
+                    {% if user.profile.profile_photo_is_available %}
                         <form method="post" action="{% url 'delete_profile_photo' %}">
                             {% csrf_token %}
                             <button type="submit" class="secondary danger-text">Delete photo</button>
@@ -307,7 +307,7 @@
             var canvas = document.getElementById("avatar-crop-canvas");
             var zoomInput = document.getElementById("avatar-zoom");
             var ctx = canvas ? canvas.getContext("2d") : null;
-            var currentPhotoUrl = "{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url|escapejs }}{% endif %}";
+            var currentPhotoUrl = "{% if user.profile.profile_photo_is_available %}{{ user.profile.profile_photo.url|escapejs }}{% endif %}";
             var image = null;
             var imageName = "profile-photo.jpg";
             var offsetX = 0;

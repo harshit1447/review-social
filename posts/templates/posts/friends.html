@@ -79,7 +79,7 @@
                         {% if active_tab == "followers" %}
                             {% for person in followers %}
                                 <article class="person-row-card">
-                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div class="person-row-main">
                                         <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                         <span class="meta">@{{ person.username }} · follows you</span>
@@ -95,7 +95,7 @@
                         {% elif active_tab == "suggestions" %}
                             {% for person in suggested_users %}
                                 <article class="person-row-card">
-                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div class="person-row-main">
                                         <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                         <span class="meta">@{{ person.username }} · suggested for you</span>
@@ -111,7 +111,7 @@
                         {% else %}
                             {% for person in friends %}
                                 <article class="person-row-card">
-                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div class="person-row-main">
                                         <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                         <span class="meta">@{{ person.username }} · following</span>
@@ -136,7 +136,7 @@
                         {% for person in suggested_users|slice:":8" %}
                             <div class="person-row">
                                 <div class="person-name">
-                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
+                                    <a class="avatar profile-link" href="{% url 'user_profile' person.username %}" aria-label="{{ person.get_full_name|default:person.username }} profile">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a>
                                     <div>
                                         <strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong>
                                         <div class="meta">@{{ person.username }}</div>

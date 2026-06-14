@@ -20,7 +20,7 @@
             {% for notification in notifications %}
                 <article class="card activity-card notification-card {% if not notification.is_read %}unread{% endif %}">
                     <a class="mini-avatar profile-link" href="{% url 'user_profile' notification.actor.username %}" aria-label="{{ notification.actor.get_full_name|default:notification.actor.username }} profile">
-                        {% if notification.actor.profile.profile_photo %}
+                        {% if notification.actor.profile.profile_photo_is_available %}
                             <img src="{{ notification.actor.profile.profile_photo.url }}" alt="">
                         {% else %}
                             {{ notification.actor.get_full_name|default:notification.actor.username|first }}
@@ -60,7 +60,7 @@
             {% for activity in friend_activity %}
                 <article class="card activity-card notification-card">
                     <a class="mini-avatar profile-link" href="{% url 'user_profile' activity.user.username %}" aria-label="{{ activity.user.get_full_name|default:activity.user.username }} profile">
-                        {% if activity.user.profile.profile_photo %}
+                        {% if activity.user.profile.profile_photo_is_available %}
                             <img src="{{ activity.user.profile.profile_photo.url }}" alt="">
                         {% else %}
                             {{ activity.user.get_full_name|default:activity.user.username|first }}

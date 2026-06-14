@@ -118,7 +118,7 @@
                 <div class="scroll-list trending-user-list">
                     {% for person in trending_users %}
                         <div class="person-row">
-                            <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
+                            <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
                             <a class="button secondary" href="{% url 'user_profile' person.username %}">View</a>
                         </div>
                     {% empty %}
@@ -130,7 +130,7 @@
                 <h2 class="card-title">People You May Know</h2>
                 {% for person in suggested_users %}
                     <div class="person-row">
-                        <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
+                        <div class="person-name"><a class="avatar profile-link" href="{% url 'user_profile' person.username %}">{% if person.profile.profile_photo_is_available %}<img src="{{ person.profile.profile_photo.url }}" alt="">{% else %}{{ person.get_full_name|default:person.username|first }}{% endif %}</a><strong><a class="profile-link" href="{% url 'user_profile' person.username %}">{{ person.get_full_name|default:person.username }}</a></strong></div>
                         <form method="post" action="{% url 'add_friend' person.id %}" class="js-async-form">
                             {% csrf_token %}
                             <button type="submit" class="button secondary" data-plain-button="1">Follow</button>

@@ -29,7 +29,7 @@
             <article class="card people-match-card">
                 <div class="person-name">
                     <a class="avatar profile-link" href="{% url 'user_profile' row.user.username %}" aria-label="{{ row.user.get_full_name|default:row.user.username }} profile">
-                        {% if row.user.profile.profile_photo %}
+                        {% if row.user.profile.profile_photo_is_available %}
                             <img src="{{ row.user.profile.profile_photo.url }}" alt="">
                         {% else %}
                             {{ row.user.get_full_name|default:row.user.username|first }}
